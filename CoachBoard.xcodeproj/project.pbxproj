@@ -1,0 +1,843 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		02DECE5D23C1DA9D6BCD990E /* ConnectedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A23F65FE8437189D7D29246C /* ConnectedService.swift */; };
+		09BA93E305F8934E9C21A0D9 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = D9865A08DF4DC5784AA4D6B4 /* ElevenLabs */; };
+		0E2DC13F1585ABE46AF3FB29 /* TranscriptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32FE3E6F2B7A48A3AAFE4A7 /* TranscriptView.swift */; };
+		0F479D613DC58975881EAAD9 /* ContextEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3121744F517D4A816E75B9F2 /* ContextEditorView.swift */; };
+		140F30C67BD36363C2F18285 /* CreateCoachViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC165CE94BF2018DFF578CD /* CreateCoachViewModel.swift */; };
+		14E5CD0414A8EEFEE90A6DF0 /* SessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACF2EBDE4011E22D6FE44227 /* SessionViewModel.swift */; };
+		177ACC3DF8EEE80CD5ED2CD7 /* SessionDeepLinkAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB933D8C76CE845199CEF8E /* SessionDeepLinkAction.swift */; };
+		1B27894531015523041FAF4B /* CategoryBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15D327E92E04F968861559A3 /* CategoryBadge.swift */; };
+		22A5A0F7C6B8AB56C871E7D9 /* ElevenLabsComponents in Frameworks */ = {isa = PBXBuildFile; productRef = 3DE3C7EFBB246E4985DAB741 /* ElevenLabsComponents */; };
+		25B216A1534174BF2DFF0B02 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C96FD4CDE5C8831661082F /* AuthView.swift */; };
+		30242C322D7B3F714180F81B /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3989CEE3DB0EFC2EF4CD5B6D /* AuthViewModel.swift */; };
+		32404DDE2CBE5F28F5268EBA /* DiscoverViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 658FE3F5B5E3F044864D6700 /* DiscoverViewModel.swift */; };
+		34F4D2D6276DEEC1A5F68940 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171461C348A4ED9D9CB59FE6 /* ContentView.swift */; };
+		367EEE41A9A77EEB1525275E /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7864936E1A381C84A01B0A42 /* DiscoverView.swift */; };
+		3B05634470A53BE33F881B9D /* OrbAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A680C41200462F74754C294 /* OrbAvatar.swift */; };
+		426FD68FFF00AD280F47D5A6 /* CoachBoardLiveActivityBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CDD86FF21B59CC378949763 /* CoachBoardLiveActivityBundle.swift */; };
+		42E8D8686958360DABEBC004 /* VoicePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B949849C2A4BAA14AA11BF33 /* VoicePickerView.swift */; };
+		46EF75881243789C37D5D00A /* CoachDeepLinkAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DC4EEEB96D6A2D107FF8D2 /* CoachDeepLinkAction.swift */; };
+		4FB083B13EAA43DA7D7BE46A /* UserCoachConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F61AE35A063CDC07C28EC4 /* UserCoachConfig.swift */; };
+		53FD1665251C0A290046714F /* GoogleService-Info.plist.bak_20260206_164154 in Resources */ = {isa = PBXBuildFile; fileRef = 0364E84D3E80897E523AB7E1 /* GoogleService-Info.plist.bak_20260206_164154 */; };
+		59BE7081C6CBA5041A03852B /* FirebaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCE8AB62C511CE27B86DD4C5 /* FirebaseService.swift */; };
+		5B6836EF2550D43023054F49 /* CoachEditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8F3E45F063BC89128E01602 /* CoachEditSheet.swift */; };
+		6632CC591CB59F9F403E0D00 /* FeaturedCarousel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DDA4599C740EAD98E34ED78 /* FeaturedCarousel.swift */; };
+		6FACFDFA5C53400FB0D538B3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D828DCFA29DA4DC41ED11044 /* Assets.xcassets */; };
+		708B18F0E28A5C6EE36036BC /* CreateCoachView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E60DA7AE7EE42BD3B531F79 /* CreateCoachView.swift */; };
+		739F5BBC00F0227DA260FE8F /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 179E02BD6E6AB9EAF55702F9 /* AppColors.swift */; };
+		7BA3746B671E6CF90DD76C64 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE159D0180A41D14BA8F009 /* ProfileViewModel.swift */; };
+		7E0986CC24E6C04C724EAFE9 /* AppTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF2B8B061F11D071C1CDF73 /* AppTypography.swift */; };
+		7FC78BBD2EEC6CE7389903F2 /* CategorySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7163F609053C03D3E3C070B6 /* CategorySection.swift */; };
+		7FE19E01211FA6D0D54C3898 /* ElevenLabsComponents in Frameworks */ = {isa = PBXBuildFile; productRef = BF17C250BF7D1359F8AF7600 /* ElevenLabsComponents */; };
+		821773CCE49B942C5A7C7DB6 /* NotionOAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 457743DDAB8E203085FCC22C /* NotionOAuthService.swift */; };
+		85997F4723EC4C116C991D97 /* SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09873A30051FCC6127579FFD /* SessionView.swift */; };
+		8A416327C719A66EF997AC75 /* CoachDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F373A4882BE221CE2A149A08 /* CoachDetailView.swift */; };
+		8BFC00B85B15AB78D23D1BE6 /* CoachingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0D254C01FABC38F8B351D7 /* CoachingSession.swift */; };
+		93710AFB2E20E24C866630F2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = ED05E3ADC82FAC0474A45DA4 /* GoogleService-Info.plist */; };
+		965555D73AB7F9B3D4A34600 /* CoachBoardLiveActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 929C838CF206C13227FE705A /* CoachBoardLiveActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9D4919930EEF2B68E5C77411 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7705F22B57FF5C6F651CB14C /* LiveActivityManager.swift */; };
+		AB7C95E49CB539A18CC08BB1 /* CoachBoardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212D9B0A2DDC0C8123EB286C /* CoachBoardApp.swift */; };
+		B1D2083FDF92C244909510AC /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED4E6C401F0955C46E6543F3 /* UserProfile.swift */; };
+		B304EFB0A3A4483B1789150A /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0255F6D3899F2E9B21ACE437 /* ProfileView.swift */; };
+		B6C7EB638865A96A94B73AA6 /* CoachSessionLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B13F3E85204DA04037E3348 /* CoachSessionLiveActivityWidget.swift */; };
+		BC6E22E217CD80B1AA28D3F0 /* Coach.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE09578E43391A5DCA136444 /* Coach.swift */; };
+		BE5DFB7835A6B0DBC35774BB /* CoachCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52F8A64298C4E9F00BAA5048 /* CoachCard.swift */; };
+		C4A211C5300BFCFE9A8258DA /* CoachSessionActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C15EAF4D8DFD72B8ED9886B6 /* CoachSessionActivityAttributes.swift */; };
+		D2E9B4166EF69B939D0FDA57 /* SessionHistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23C6598642FD051F94142598 /* SessionHistoryViewModel.swift */; };
+		D5B24FA70D07BABDE11C850D /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CE80C1891B8396830251D9D /* AuthService.swift */; };
+		DCF28CD11857761F99262AE1 /* AppSpacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE872DBE1C6AF9FBE9976254 /* AppSpacing.swift */; };
+		DE21B6FF1BA709A11A598DBB /* ModelPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2181B5D809AFD8BF54EDC76F /* ModelPickerView.swift */; };
+		E4A944C83E242563FF9DD7DD /* CoachEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29D2C9C74F7E728A05ADB2F /* CoachEditViewModel.swift */; };
+		E6CAEB93E719D4470910F562 /* GradientCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61F1F735FB6CF3154E817820 /* GradientCard.swift */; };
+		F4E548608BBB7D38FD64BB1F /* SessionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8B5D410FECE161290CD202 /* SessionHistoryView.swift */; };
+		F50D70CB5D58252D4FCB9BFB /* CoachSessionActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C15EAF4D8DFD72B8ED9886B6 /* CoachSessionActivityAttributes.swift */; };
+		FB080EBD41F767FA02502741 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = F451668AD28D4503DC65ADB6 /* FirebaseAuth */; };
+		FCA68FB5D9CF3979B4FBEB86 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 189626B3A97F09AB58AFD734 /* FirebaseFunctions */; };
+		FF110031D212BD0803C36A5C /* ElevenLabsAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF999BCCB6F88F752EEEB66D /* ElevenLabsAPIService.swift */; };
+		FFF7577AE9E1D1E45830A224 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 12D77519B6EFD9A33E1DACB1 /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7281A8FBACF05C94963C2B37 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7FF86DBC9013C6B46E820AA1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F5FDCDFEE37493A92BC0A125;
+			remoteInfo = CoachBoardLiveActivityExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		6B7A2770D754AC4D32AB4C0B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				965555D73AB7F9B3D4A34600 /* CoachBoardLiveActivityExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0255F6D3899F2E9B21ACE437 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		0364E84D3E80897E523AB7E1 /* GoogleService-Info.plist.bak_20260206_164154 */ = {isa = PBXFileReference; path = "GoogleService-Info.plist.bak_20260206_164154"; sourceTree = "<group>"; };
+		09873A30051FCC6127579FFD /* SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionView.swift; sourceTree = "<group>"; };
+		0CDD86FF21B59CC378949763 /* CoachBoardLiveActivityBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachBoardLiveActivityBundle.swift; sourceTree = "<group>"; };
+		12957F4CD927B353E39FC669 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		15D327E92E04F968861559A3 /* CategoryBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryBadge.swift; sourceTree = "<group>"; };
+		171461C348A4ED9D9CB59FE6 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		179E02BD6E6AB9EAF55702F9 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
+		1CE80C1891B8396830251D9D /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		212D9B0A2DDC0C8123EB286C /* CoachBoardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachBoardApp.swift; sourceTree = "<group>"; };
+		2181B5D809AFD8BF54EDC76F /* ModelPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPickerView.swift; sourceTree = "<group>"; };
+		23C6598642FD051F94142598 /* SessionHistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistoryViewModel.swift; sourceTree = "<group>"; };
+		2D8B5D410FECE161290CD202 /* SessionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistoryView.swift; sourceTree = "<group>"; };
+		3121744F517D4A816E75B9F2 /* ContextEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextEditorView.swift; sourceTree = "<group>"; };
+		3989CEE3DB0EFC2EF4CD5B6D /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		3CE159D0180A41D14BA8F009 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
+		3DDA4599C740EAD98E34ED78 /* FeaturedCarousel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeaturedCarousel.swift; sourceTree = "<group>"; };
+		457743DDAB8E203085FCC22C /* NotionOAuthService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotionOAuthService.swift; sourceTree = "<group>"; };
+		52F8A64298C4E9F00BAA5048 /* CoachCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachCard.swift; sourceTree = "<group>"; };
+		5A680C41200462F74754C294 /* OrbAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbAvatar.swift; sourceTree = "<group>"; };
+		5E60DA7AE7EE42BD3B531F79 /* CreateCoachView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCoachView.swift; sourceTree = "<group>"; };
+		61F1F735FB6CF3154E817820 /* GradientCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientCard.swift; sourceTree = "<group>"; };
+		658FE3F5B5E3F044864D6700 /* DiscoverViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverViewModel.swift; sourceTree = "<group>"; };
+		668665FE93E0E2567B42F069 /* CoachBoard.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CoachBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B13F3E85204DA04037E3348 /* CoachSessionLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachSessionLiveActivityWidget.swift; sourceTree = "<group>"; };
+		7163F609053C03D3E3C070B6 /* CategorySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategorySection.swift; sourceTree = "<group>"; };
+		7705F22B57FF5C6F651CB14C /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
+		7864936E1A381C84A01B0A42 /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
+		78F61AE35A063CDC07C28EC4 /* UserCoachConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserCoachConfig.swift; sourceTree = "<group>"; };
+		7D0D254C01FABC38F8B351D7 /* CoachingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachingSession.swift; sourceTree = "<group>"; };
+		929C838CF206C13227FE705A /* CoachBoardLiveActivityExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = CoachBoardLiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A23F65FE8437189D7D29246C /* ConnectedService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConnectedService.swift; sourceTree = "<group>"; };
+		A29D2C9C74F7E728A05ADB2F /* CoachEditViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoachEditViewModel.swift; sourceTree = "<group>"; };
+		ACF2EBDE4011E22D6FE44227 /* SessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionViewModel.swift; sourceTree = "<group>"; };
+		AF999BCCB6F88F752EEEB66D /* ElevenLabsAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenLabsAPIService.swift; sourceTree = "<group>"; };
+		B32FE3E6F2B7A48A3AAFE4A7 /* TranscriptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptView.swift; sourceTree = "<group>"; };
+		B8C96FD4CDE5C8831661082F /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		B949849C2A4BAA14AA11BF33 /* VoicePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoicePickerView.swift; sourceTree = "<group>"; };
+		BCE8AB62C511CE27B86DD4C5 /* FirebaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseService.swift; sourceTree = "<group>"; };
+		BEC308387F9065948250E49E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C15EAF4D8DFD72B8ED9886B6 /* CoachSessionActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachSessionActivityAttributes.swift; sourceTree = "<group>"; };
+		CBC165CE94BF2018DFF578CD /* CreateCoachViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCoachViewModel.swift; sourceTree = "<group>"; };
+		CDF2B8B061F11D071C1CDF73 /* AppTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTypography.swift; sourceTree = "<group>"; };
+		CE872DBE1C6AF9FBE9976254 /* AppSpacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSpacing.swift; sourceTree = "<group>"; };
+		D828DCFA29DA4DC41ED11044 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DE09578E43391A5DCA136444 /* Coach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Coach.swift; sourceTree = "<group>"; };
+		E0DC4EEEB96D6A2D107FF8D2 /* CoachDeepLinkAction.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoachDeepLinkAction.swift; sourceTree = "<group>"; };
+		E76BB4E262311A4B31B1D920 /* CoachBoard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CoachBoard.entitlements; sourceTree = "<group>"; };
+		E8F3E45F063BC89128E01602 /* CoachEditSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoachEditSheet.swift; sourceTree = "<group>"; };
+		ED05E3ADC82FAC0474A45DA4 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		ED4E6C401F0955C46E6543F3 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		EEB933D8C76CE845199CEF8E /* SessionDeepLinkAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDeepLinkAction.swift; sourceTree = "<group>"; };
+		F373A4882BE221CE2A149A08 /* CoachDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachDetailView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A17B161EBA0E6CE407C9B71E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				09BA93E305F8934E9C21A0D9 /* ElevenLabs in Frameworks */,
+				7FE19E01211FA6D0D54C3898 /* ElevenLabsComponents in Frameworks */,
+				FB080EBD41F767FA02502741 /* FirebaseAuth in Frameworks */,
+				FFF7577AE9E1D1E45830A224 /* FirebaseFirestore in Frameworks */,
+				FCA68FB5D9CF3979B4FBEB86 /* FirebaseFunctions in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EBE5A2947796062421D4AB41 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22A5A0F7C6B8AB56C871E7D9 /* ElevenLabsComponents in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2C2F250E702471F5D6F05487 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				3989CEE3DB0EFC2EF4CD5B6D /* AuthViewModel.swift */,
+				CBC165CE94BF2018DFF578CD /* CreateCoachViewModel.swift */,
+				658FE3F5B5E3F044864D6700 /* DiscoverViewModel.swift */,
+				3CE159D0180A41D14BA8F009 /* ProfileViewModel.swift */,
+				23C6598642FD051F94142598 /* SessionHistoryViewModel.swift */,
+				ACF2EBDE4011E22D6FE44227 /* SessionViewModel.swift */,
+				A29D2C9C74F7E728A05ADB2F /* CoachEditViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		43B736B0D922E7FFF174C1D5 /* CoachBoard */ = {
+			isa = PBXGroup;
+			children = (
+				D828DCFA29DA4DC41ED11044 /* Assets.xcassets */,
+				E76BB4E262311A4B31B1D920 /* CoachBoard.entitlements */,
+				212D9B0A2DDC0C8123EB286C /* CoachBoardApp.swift */,
+				171461C348A4ED9D9CB59FE6 /* ContentView.swift */,
+				ED05E3ADC82FAC0474A45DA4 /* GoogleService-Info.plist */,
+				0364E84D3E80897E523AB7E1 /* GoogleService-Info.plist.bak_20260206_164154 */,
+				BEC308387F9065948250E49E /* Info.plist */,
+				CA4F509694B3175CF95B98B3 /* Models */,
+				6E5002B5CEA3FB3A2402DB82 /* Services */,
+				B9911F78B611803A005736C9 /* Theme */,
+				2C2F250E702471F5D6F05487 /* ViewModels */,
+				E9E3F6E4D89062247E6F1F00 /* Views */,
+			);
+			path = CoachBoard;
+			sourceTree = "<group>";
+		};
+		44330D81FF50CB3D46115D26 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				3121744F517D4A816E75B9F2 /* ContextEditorView.swift */,
+				0255F6D3899F2E9B21ACE437 /* ProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		4CD1E25EC8D6780F2E3D3C08 = {
+			isa = PBXGroup;
+			children = (
+				43B736B0D922E7FFF174C1D5 /* CoachBoard */,
+				6AD4276715C8586B07EA5460 /* CoachBoardLiveActivity */,
+				FDAD074A5B0B9EDE3ACC14A7 /* Shared */,
+				56C5BEDE8D1EBB75DC0B3119 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		51757EC9F603DC081DCC7039 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				B8C96FD4CDE5C8831661082F /* AuthView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		56C5BEDE8D1EBB75DC0B3119 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				668665FE93E0E2567B42F069 /* CoachBoard.app */,
+				929C838CF206C13227FE705A /* CoachBoardLiveActivityExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6AD4276715C8586B07EA5460 /* CoachBoardLiveActivity */ = {
+			isa = PBXGroup;
+			children = (
+				0CDD86FF21B59CC378949763 /* CoachBoardLiveActivityBundle.swift */,
+				6B13F3E85204DA04037E3348 /* CoachSessionLiveActivityWidget.swift */,
+				12957F4CD927B353E39FC669 /* Info.plist */,
+			);
+			path = CoachBoardLiveActivity;
+			sourceTree = "<group>";
+		};
+		6E5002B5CEA3FB3A2402DB82 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				1CE80C1891B8396830251D9D /* AuthService.swift */,
+				AF999BCCB6F88F752EEEB66D /* ElevenLabsAPIService.swift */,
+				BCE8AB62C511CE27B86DD4C5 /* FirebaseService.swift */,
+				7705F22B57FF5C6F651CB14C /* LiveActivityManager.swift */,
+				EEB933D8C76CE845199CEF8E /* SessionDeepLinkAction.swift */,
+				457743DDAB8E203085FCC22C /* NotionOAuthService.swift */,
+				E0DC4EEEB96D6A2D107FF8D2 /* CoachDeepLinkAction.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		6F77C111FF422D5F1788EB2F /* Create */ = {
+			isa = PBXGroup;
+			children = (
+				5E60DA7AE7EE42BD3B531F79 /* CreateCoachView.swift */,
+				2181B5D809AFD8BF54EDC76F /* ModelPickerView.swift */,
+				B949849C2A4BAA14AA11BF33 /* VoicePickerView.swift */,
+			);
+			path = Create;
+			sourceTree = "<group>";
+		};
+		8883BB1EC224F12C5787CBB4 /* Session */ = {
+			isa = PBXGroup;
+			children = (
+				09873A30051FCC6127579FFD /* SessionView.swift */,
+				B32FE3E6F2B7A48A3AAFE4A7 /* TranscriptView.swift */,
+			);
+			path = Session;
+			sourceTree = "<group>";
+		};
+		92819D512B00478A940A8A53 /* Discover */ = {
+			isa = PBXGroup;
+			children = (
+				7163F609053C03D3E3C070B6 /* CategorySection.swift */,
+				52F8A64298C4E9F00BAA5048 /* CoachCard.swift */,
+				7864936E1A381C84A01B0A42 /* DiscoverView.swift */,
+				3DDA4599C740EAD98E34ED78 /* FeaturedCarousel.swift */,
+				E8F3E45F063BC89128E01602 /* CoachEditSheet.swift */,
+			);
+			path = Discover;
+			sourceTree = "<group>";
+		};
+		9698F94EFAB5DDCA81A79307 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				15D327E92E04F968861559A3 /* CategoryBadge.swift */,
+				61F1F735FB6CF3154E817820 /* GradientCard.swift */,
+				5A680C41200462F74754C294 /* OrbAvatar.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		B9911F78B611803A005736C9 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				179E02BD6E6AB9EAF55702F9 /* AppColors.swift */,
+				CE872DBE1C6AF9FBE9976254 /* AppSpacing.swift */,
+				CDF2B8B061F11D071C1CDF73 /* AppTypography.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		CA4F509694B3175CF95B98B3 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				DE09578E43391A5DCA136444 /* Coach.swift */,
+				7D0D254C01FABC38F8B351D7 /* CoachingSession.swift */,
+				ED4E6C401F0955C46E6543F3 /* UserProfile.swift */,
+				A23F65FE8437189D7D29246C /* ConnectedService.swift */,
+				78F61AE35A063CDC07C28EC4 /* UserCoachConfig.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		CED3695FC2D667FBE5E61276 /* CoachDetail */ = {
+			isa = PBXGroup;
+			children = (
+				F373A4882BE221CE2A149A08 /* CoachDetailView.swift */,
+			);
+			path = CoachDetail;
+			sourceTree = "<group>";
+		};
+		DC7F488423E2C7ABE798A6F4 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				2D8B5D410FECE161290CD202 /* SessionHistoryView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		E9E3F6E4D89062247E6F1F00 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				51757EC9F603DC081DCC7039 /* Auth */,
+				CED3695FC2D667FBE5E61276 /* CoachDetail */,
+				9698F94EFAB5DDCA81A79307 /* Components */,
+				6F77C111FF422D5F1788EB2F /* Create */,
+				92819D512B00478A940A8A53 /* Discover */,
+				DC7F488423E2C7ABE798A6F4 /* History */,
+				44330D81FF50CB3D46115D26 /* Profile */,
+				8883BB1EC224F12C5787CBB4 /* Session */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		FDAD074A5B0B9EDE3ACC14A7 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				C15EAF4D8DFD72B8ED9886B6 /* CoachSessionActivityAttributes.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0F3431359EA2E51D522B25FD /* CoachBoard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 938627CEDCEAA817E131A2C6 /* Build configuration list for PBXNativeTarget "CoachBoard" */;
+			buildPhases = (
+				CF433FB3F68902D16699C65C /* Sources */,
+				BA2C880E99C47A08702EED77 /* Resources */,
+				A17B161EBA0E6CE407C9B71E /* Frameworks */,
+				6B7A2770D754AC4D32AB4C0B /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				805D1EFB2899403B541ADB3E /* PBXTargetDependency */,
+			);
+			name = CoachBoard;
+			packageProductDependencies = (
+				D9865A08DF4DC5784AA4D6B4 /* ElevenLabs */,
+				BF17C250BF7D1359F8AF7600 /* ElevenLabsComponents */,
+				F451668AD28D4503DC65ADB6 /* FirebaseAuth */,
+				12D77519B6EFD9A33E1DACB1 /* FirebaseFirestore */,
+				189626B3A97F09AB58AFD734 /* FirebaseFunctions */,
+			);
+			productName = CoachBoard;
+			productReference = 668665FE93E0E2567B42F069 /* CoachBoard.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F5FDCDFEE37493A92BC0A125 /* CoachBoardLiveActivityExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 750CA9CEFDC7BD09414ABE5C /* Build configuration list for PBXNativeTarget "CoachBoardLiveActivityExtension" */;
+			buildPhases = (
+				7506D414962C3E28CCA3C43E /* Sources */,
+				EBE5A2947796062421D4AB41 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CoachBoardLiveActivityExtension;
+			packageProductDependencies = (
+				3DE3C7EFBB246E4985DAB741 /* ElevenLabsComponents */,
+			);
+			productName = CoachBoardLiveActivityExtension;
+			productReference = 929C838CF206C13227FE705A /* CoachBoardLiveActivityExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7FF86DBC9013C6B46E820AA1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					0F3431359EA2E51D522B25FD = {
+						DevelopmentTeam = 55P8HSA8J6;
+						ProvisioningStyle = Automatic;
+					};
+					F5FDCDFEE37493A92BC0A125 = {
+						DevelopmentTeam = 55P8HSA8J6;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 1D4A0F984ACC62D754E577E1 /* Build configuration list for PBXProject "CoachBoard" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 4CD1E25EC8D6780F2E3D3C08;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BD32D7B7ACB08846BA6CC90A /* XCRemoteSwiftPackageReference "components-swift" */,
+				41B16131A64708A9EBB74142 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */,
+				7EAFCA2DF621B471ED4CBC2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 56C5BEDE8D1EBB75DC0B3119 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0F3431359EA2E51D522B25FD /* CoachBoard */,
+				F5FDCDFEE37493A92BC0A125 /* CoachBoardLiveActivityExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BA2C880E99C47A08702EED77 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FACFDFA5C53400FB0D538B3 /* Assets.xcassets in Resources */,
+				93710AFB2E20E24C866630F2 /* GoogleService-Info.plist in Resources */,
+				53FD1665251C0A290046714F /* GoogleService-Info.plist.bak_20260206_164154 in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7506D414962C3E28CCA3C43E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				426FD68FFF00AD280F47D5A6 /* CoachBoardLiveActivityBundle.swift in Sources */,
+				C4A211C5300BFCFE9A8258DA /* CoachSessionActivityAttributes.swift in Sources */,
+				B6C7EB638865A96A94B73AA6 /* CoachSessionLiveActivityWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CF433FB3F68902D16699C65C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				739F5BBC00F0227DA260FE8F /* AppColors.swift in Sources */,
+				DCF28CD11857761F99262AE1 /* AppSpacing.swift in Sources */,
+				7E0986CC24E6C04C724EAFE9 /* AppTypography.swift in Sources */,
+				D5B24FA70D07BABDE11C850D /* AuthService.swift in Sources */,
+				25B216A1534174BF2DFF0B02 /* AuthView.swift in Sources */,
+				30242C322D7B3F714180F81B /* AuthViewModel.swift in Sources */,
+				1B27894531015523041FAF4B /* CategoryBadge.swift in Sources */,
+				7FC78BBD2EEC6CE7389903F2 /* CategorySection.swift in Sources */,
+				BC6E22E217CD80B1AA28D3F0 /* Coach.swift in Sources */,
+				AB7C95E49CB539A18CC08BB1 /* CoachBoardApp.swift in Sources */,
+				BE5DFB7835A6B0DBC35774BB /* CoachCard.swift in Sources */,
+				8A416327C719A66EF997AC75 /* CoachDetailView.swift in Sources */,
+				F50D70CB5D58252D4FCB9BFB /* CoachSessionActivityAttributes.swift in Sources */,
+				8BFC00B85B15AB78D23D1BE6 /* CoachingSession.swift in Sources */,
+				34F4D2D6276DEEC1A5F68940 /* ContentView.swift in Sources */,
+				0F479D613DC58975881EAAD9 /* ContextEditorView.swift in Sources */,
+				708B18F0E28A5C6EE36036BC /* CreateCoachView.swift in Sources */,
+				140F30C67BD36363C2F18285 /* CreateCoachViewModel.swift in Sources */,
+				367EEE41A9A77EEB1525275E /* DiscoverView.swift in Sources */,
+				32404DDE2CBE5F28F5268EBA /* DiscoverViewModel.swift in Sources */,
+				FF110031D212BD0803C36A5C /* ElevenLabsAPIService.swift in Sources */,
+				6632CC591CB59F9F403E0D00 /* FeaturedCarousel.swift in Sources */,
+				59BE7081C6CBA5041A03852B /* FirebaseService.swift in Sources */,
+				E6CAEB93E719D4470910F562 /* GradientCard.swift in Sources */,
+				9D4919930EEF2B68E5C77411 /* LiveActivityManager.swift in Sources */,
+				DE21B6FF1BA709A11A598DBB /* ModelPickerView.swift in Sources */,
+				3B05634470A53BE33F881B9D /* OrbAvatar.swift in Sources */,
+				B304EFB0A3A4483B1789150A /* ProfileView.swift in Sources */,
+				7BA3746B671E6CF90DD76C64 /* ProfileViewModel.swift in Sources */,
+				177ACC3DF8EEE80CD5ED2CD7 /* SessionDeepLinkAction.swift in Sources */,
+				F4E548608BBB7D38FD64BB1F /* SessionHistoryView.swift in Sources */,
+				D2E9B4166EF69B939D0FDA57 /* SessionHistoryViewModel.swift in Sources */,
+				85997F4723EC4C116C991D97 /* SessionView.swift in Sources */,
+				14E5CD0414A8EEFEE90A6DF0 /* SessionViewModel.swift in Sources */,
+				0E2DC13F1585ABE46AF3FB29 /* TranscriptView.swift in Sources */,
+				B1D2083FDF92C244909510AC /* UserProfile.swift in Sources */,
+				42E8D8686958360DABEBC004 /* VoicePickerView.swift in Sources */,
+				02DECE5D23C1DA9D6BCD990E /* ConnectedService.swift in Sources */,
+				4FB083B13EAA43DA7D7BE46A /* UserCoachConfig.swift in Sources */,
+				821773CCE49B942C5A7C7DB6 /* NotionOAuthService.swift in Sources */,
+				E4A944C83E242563FF9DD7DD /* CoachEditViewModel.swift in Sources */,
+				5B6836EF2550D43023054F49 /* CoachEditSheet.swift in Sources */,
+				46EF75881243789C37D5D00A /* CoachDeepLinkAction.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		805D1EFB2899403B541ADB3E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F5FDCDFEE37493A92BC0A125 /* CoachBoardLiveActivityExtension */;
+			targetProxy = 7281A8FBACF05C94963C2B37 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		13E4AEA0912292AADD383EEA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 55P8HSA8J6;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CoachBoardLiveActivity/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = athenlabs.Council.LiveActivityExtension;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3695928F2B66E62AF02BF29D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 55P8HSA8J6;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CoachBoard/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = athenlabs.Council;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		3A130E0DF17007ED46764A16 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 55P8HSA8J6;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CoachBoard/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = athenlabs.Council;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		670A04E157E0C7E4C3CCF0DD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		870D6647C91847DD1D72F3AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 55P8HSA8J6;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CoachBoardLiveActivity/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = athenlabs.Council.LiveActivityExtension;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D0CED1A60A471EB34BED9AA0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1D4A0F984ACC62D754E577E1 /* Build configuration list for PBXProject "CoachBoard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				670A04E157E0C7E4C3CCF0DD /* Debug */,
+				D0CED1A60A471EB34BED9AA0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		750CA9CEFDC7BD09414ABE5C /* Build configuration list for PBXNativeTarget "CoachBoardLiveActivityExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				13E4AEA0912292AADD383EEA /* Debug */,
+				870D6647C91847DD1D72F3AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		938627CEDCEAA817E131A2C6 /* Build configuration list for PBXNativeTarget "CoachBoard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3A130E0DF17007ED46764A16 /* Debug */,
+				3695928F2B66E62AF02BF29D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		41B16131A64708A9EBB74142 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/elevenlabs/elevenlabs-swift-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
+		7EAFCA2DF621B471ED4CBC2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+		BD32D7B7ACB08846BA6CC90A /* XCRemoteSwiftPackageReference "components-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/elevenlabs/components-swift.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		12D77519B6EFD9A33E1DACB1 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7EAFCA2DF621B471ED4CBC2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		189626B3A97F09AB58AFD734 /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7EAFCA2DF621B471ED4CBC2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
+		};
+		3DE3C7EFBB246E4985DAB741 /* ElevenLabsComponents */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BD32D7B7ACB08846BA6CC90A /* XCRemoteSwiftPackageReference "components-swift" */;
+			productName = ElevenLabsComponents;
+		};
+		BF17C250BF7D1359F8AF7600 /* ElevenLabsComponents */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BD32D7B7ACB08846BA6CC90A /* XCRemoteSwiftPackageReference "components-swift" */;
+			productName = ElevenLabsComponents;
+		};
+		D9865A08DF4DC5784AA4D6B4 /* ElevenLabs */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 41B16131A64708A9EBB74142 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */;
+			productName = ElevenLabs;
+		};
+		F451668AD28D4503DC65ADB6 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7EAFCA2DF621B471ED4CBC2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 7FF86DBC9013C6B46E820AA1 /* Project object */;
+}

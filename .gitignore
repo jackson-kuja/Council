@@ -1,0 +1,40 @@
+# Xcode
+.build/
+DerivedData/
+*.xcuserdata
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+xcuserdata/
+
+# Swift Package Manager
+.swiftpm/
+
+# Cloud Functions
+CloudFunctions/node_modules/
+CloudFunctions/lib/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Build artifacts
+build/
+
+# Node modules
+**/node_modules/
+
+# Secrets
+*.env.local
+CloudFunctions/.env
+GoogleService-Info.plist
+GoogleService-Info.plist.bak*
+
+# Claude
+.claude/

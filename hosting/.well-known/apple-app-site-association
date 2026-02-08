@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "55P8HSA8J6.athenlabs.Council",
+        "paths": ["/coach/*"]
+      }
+    ]
+  }
+}
