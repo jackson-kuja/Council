@@ -2,28 +2,20 @@ import SwiftUI
 
 struct CreateCoachView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @ObservedObject private var subscriptionService = SubscriptionService.shared
     @StateObject private var viewModel = CreateCoachViewModel()
     @State private var showSuccess = false
+    @State private var showPaywall = false
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Progress indicator
-                progressBar
-
-                // Step content
-                TabView(selection: $viewModel.currentStep) {
-                    basicsStep.tag(0)
-                    promptStep.tag(1)
-                    voiceStep.tag(2)
-                    modelStep.tag(3)
-                    finalStep.tag(4)
+                if !subscriptionService.isPremium {
+                    // Premium gate
+                    premiumGate
+                } else {
+                    createFlow
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(.easeInOut, value: viewModel.currentStep)
-
-                // Navigation buttons
-                navigationButtons
             }
             .background(AppColors.background)
             .navigationTitle("Create Coach")
@@ -40,6 +32,73 @@ struct CreateCoachView: View {
             } message: {
                 Text("\(viewModel.name) is now live! Share it with others from the Discover tab.")
             }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView(trigger: .customCoach)
+            }
+        }
+    }
+
+    // MARK: - Premium Gate
+
+    private var premiumGate: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            Image(systemName: "plus.circle.fill")
+                .font(.system(size: 56))
+                .foregroundColor(AppColors.surfaceElevated)
+
+            VStack(spacing: 8) {
+                Text("Create Your Own Coach")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(AppColors.textPrimary)
+
+                Text("Name it, tell it how to think, pick a voice, and share it with one link.")
+                    .font(.system(size: 15))
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+
+            Button { showPaywall = true } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 14))
+                    Text("Upgrade to Premium")
+                        .font(.system(size: 16, weight: .semibold))
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(AppColors.accent)
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .padding(.horizontal, 48)
+
+            Spacer()
+        }
+    }
+
+    // MARK: - Create Flow
+
+    private var createFlow: some View {
+        VStack(spacing: 0) {
+            // Progress indicator
+            progressBar
+
+                // Step content
+                TabView(selection: $viewModel.currentStep) {
+                    basicsStep.tag(0)
+                    promptStep.tag(1)
+                    voiceStep.tag(2)
+                    modelStep.tag(3)
+                    finalStep.tag(4)
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(.easeInOut, value: viewModel.currentStep)
+
+                // Navigation buttons
+                navigationButtons
         }
     }
 

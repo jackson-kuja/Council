@@ -4,7 +4,6 @@ import ElevenLabsComponents
 
 struct SessionView: View {
     let coach: Coach
-    let heroNamespace: Namespace.ID?
     let onDismiss: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -13,9 +12,8 @@ struct SessionView: View {
     @State private var showAddCoach = false
     @State private var sessionContentVisible = false
 
-    init(coach: Coach, heroNamespace: Namespace.ID? = nil, onDismiss: (() -> Void)? = nil) {
+    init(coach: Coach, onDismiss: (() -> Void)? = nil) {
         self.coach = coach
-        self.heroNamespace = heroNamespace
         self.onDismiss = onDismiss
         _viewModel = StateObject(wrappedValue: SessionViewModel(coach: coach))
     }
@@ -126,7 +124,17 @@ struct SessionView: View {
 
             // Add Coach button
             if viewModel.canAddCoach {
-                Button { showAddCoach = true } label: {
+                Button {
+                    if SubscriptionService.shared.isPremium {
+                        showAddCoach = true
+                    } else {
+                        NotificationCenter.default.post(
+                            name: .showPaywall,
+                            object: nil,
+                            userInfo: ["trigger": PaywallTrigger.multiCoach]
+                        )
+                    }
+                } label: {
                     Image(systemName: "person.badge.plus")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(AppColors.textSecondary)
@@ -201,14 +209,8 @@ struct SessionView: View {
 
     // MARK: - Orb
 
-    @ViewBuilder
     private var heroOrbView: some View {
-        if let ns = heroNamespace {
-            orbView
-                .matchedGeometryEffect(id: "heroOrb-\(coach.id)", in: ns)
-        } else {
-            orbView
-        }
+        orbView
     }
 
     private var orbView: some View {

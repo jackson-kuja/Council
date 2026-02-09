@@ -31,8 +31,10 @@
     </array>
     <key>LSRequiresIPhoneOS</key>
     <true/>
+    <key>NSCameraUsageDescription</key>
+    <string>Council may need camera access for features used by integrated services.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>CoachBoard needs microphone access to have voice conversations with your AI coach.</string>
+    <string>Council needs microphone access to have voice conversations with your AI coach.</string>
     <key>NSSupportsLiveActivities</key>
     <true/>
     <key>NSSupportsLiveActivitiesFrequentUpdates</key>

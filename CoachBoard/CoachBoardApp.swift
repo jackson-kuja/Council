@@ -1,24 +1,49 @@
 import SwiftUI
 import FirebaseCore
+import FirebaseAuth
+import RevenueCat
 
 @main
 struct CoachBoardApp: App {
     @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var subscriptionService = SubscriptionService.shared
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     init() {
         FirebaseApp.configure()
+        SubscriptionService.shared.configure()
         configureAppearance()
     }
 
     var body: some Scene {
         WindowGroup {
             Group {
-                if authViewModel.isAuthenticated {
+                if authViewModel.isAuthenticated && hasCompletedOnboarding {
                     ContentView()
                         .environmentObject(authViewModel)
+                        .environmentObject(subscriptionService)
                 } else {
-                    AuthView()
-                        .environmentObject(authViewModel)
+                    OnboardingView {
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            hasCompletedOnboarding = true
+                        }
+                    }
+                    .environmentObject(authViewModel)
+                    .environmentObject(subscriptionService)
+                }
+            }
+            .onChange(of: authViewModel.isAuthenticated) { _, isAuth in
+                Task {
+                    if isAuth, let uid = Auth.auth().currentUser?.uid {
+                        await subscriptionService.login(userId: uid)
+                    } else {
+                        await subscriptionService.logout()
+                    }
+                }
+            }
+            .task {
+                if authViewModel.isAuthenticated, let uid = Auth.auth().currentUser?.uid {
+                    await subscriptionService.login(userId: uid)
                 }
             }
             .onOpenURL { url in

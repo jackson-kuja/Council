@@ -1,4 +1,4 @@
-# CoachBoard - Demo Video Script
+# Council — Demo Video Script
 
 **Length:** 2:50 (hard max 3:00)
 **Format:** iPhone screen recording, voiceover recorded separately. Quiet room.
@@ -22,7 +22,7 @@
 
 > "I started with a question. Before you choose a coach, before you start a conversation — what if the app knew who you were first?"
 
-**[Profile → Context Editor. Typing in values. Goals. Current focus. Let the keyboard be the only sound.]**
+**[Onboarding flows in — clean, unhurried. Typing in values. Goals. Current focus. Let the keyboard be the only sound.]**
 
 > "Your values. What you're building. What you're trying to figure out."
 
@@ -30,13 +30,13 @@
 
 > "This shapes everything. Every coach in this app reads this before they say a word. It's the reason the very first conversation already feels like the fifth."
 
-**[Swipe to Library. The grid loads in — orbs glowing, categories, clean type.]**
+**[Transition to Library. The grid loads in — orbs glowing, categories, clean type.]**
 
 ---
 
 ## THE CONVERSATION (0:35 - 1:08)
 
-**[Tap Marcus. Detail view. Tap Start. Session opens — full screen, dark, the orb.]**
+**[Tap Marcus. The orb morphs from the library into the session — full screen, dark, breathing.]**
 
 > "I made a decision early on. Coaching is a voice experience. It's rhythm, it's pacing, it's the pause before a question that makes you think."
 
@@ -78,27 +78,23 @@
 
 ---
 
-## IT STAYS WITH YOU (1:40 - 1:58)
+## IT STAYS WITH YOU (1:40 - 1:55)
 
 **[Swipe home. Dynamic Island — session active, coach names, timer, gradient.]**
 
-> "I thought a lot about what happens when you leave the app. A coaching session shouldn't end because you got a text."
+> "A coaching session shouldn't end because you got a text."
 
 **[Open another app. Dynamic Island still there. Expand it — mute, end, timer.]**
 
-> "It's on the lock screen. It's in the Dynamic Island. Mute, end, or just keep going."
-
-**[Swipe back to CoachBoard. Session picks up mid-thought. Seamless.]**
-
-> "Come back and it's right where you left off."
+> "It's on the lock screen. It's in the Dynamic Island. Come back and it's right where you left off."
 
 ---
 
-## IT SEES YOUR WORLD (1:58 - 2:22)
+## IT SEES YOUR WORLD (1:55 - 2:15)
 
 **[Profile → Connected Services → Notion. Connect. OAuth. Authorize.]**
 
-> "I kept coming back to something. A great coach asks what you're working on. But what if they could just... see it?"
+> "I kept coming back to something. A great coach asks what you're working on. But what if they could just see it?"
 
 **[New session. Ask the coach about a project in your Notion workspace. The coach searches, finds the page, references real content — project names, deadlines, your actual notes.]**
 
@@ -108,25 +104,29 @@
 
 **[Beat.]**
 
-> "I built this on the Model Context Protocol, which means adding new tools is the same architecture. Notion is today. Calendar, task management, reminders on your device — that's where this is going. Coaches that help you act, not just think."
+> "I built this on the Model Context Protocol. Notion is today. Calendar, task management, your device — that's where this is going. Coaches that help you act, not just think."
 
 ---
 
-## MAKE IT YOURS (2:22 - 2:45)
+## MAKE IT YOURS (2:15 - 2:35)
 
 **[Create tab. Walk through the five steps — name, system prompt, voice picker (scroll to show the depth — 50+), model selection, orb colors. Unhurried but efficient.]**
 
-> "I wanted people to be able to build their own. Name it. Tell it how to think. Pick a voice that fits — there are over fifty. Choose the model behind it. Set the colors. It takes about a minute."
+> "Build your own in about a minute. Name it, tell it how to think, pick a voice, choose the model, set the colors."
 
 **[Share the coach. Link copies.]**
 
 **[Cut to: another phone. Tap the link. Coach appears in their library instantly.]**
 
-> "And then share it. One link. They tap it and that coach is in their library, ready to go."
+> "Share it with one link. They tap it and that coach is in their library, ready to go."
 
-**[Back to Library. Scroll — built-in coaches, user-created coaches, community coaches.]**
+---
 
-> "The library isn't static. It grows with the people using it. Every coach someone creates and shares makes the whole platform deeper."
+## THE VALUE (2:35 - 2:45)
+
+**[Paywall appears naturally — user hits a premium trigger. Clean design, clear tiers.]**
+
+> "The free experience is real. You have a conversation, feel the context working, walk away with a decision. Premium is for when you want more depth — unlimited sessions, multi-coach, Notion, your own coaches. A month costs less than fifteen minutes with a human coach."
 
 ---
 
@@ -134,7 +134,7 @@
 
 **[Library. Still. Orbs glowing. Hold for 2 seconds.]**
 
-> "CoachBoard."
+> "Council."
 
 **[Fade to black. 3 seconds of silence.]**
 
@@ -146,14 +146,15 @@
 - You're not announcing. You're explaining something you care about to someone you respect.
 - Speak to one person, not a crowd.
 - Slow down on the design decisions: "I made a decision early on." "I kept coming back to something." These are the lines that separate this from a feature tour.
-- Drop your voice on the landing lines. "That's coaching." "He carried it forward on his own." "It matters." Quieter hits harder.
+- Drop your voice on the landing lines. "He carried it forward on his own." "It matters." "Council." Quieter hits harder.
 
-**The five moments:**
+**The six moments:**
 1. **Cold open** — Marcus's voice alone, no context. The quality speaks first.
 2. **"The first conversation feels like the fifth"** — the personal context payoff. Don't rush past this.
 3. **Marcus remembering** — let the silence after he references yesterday do the work. The audience needs a second to realize what happened.
 4. **Two voices** — Sage speaking with a completely different voice in the same session. This is the moment that stays.
 5. **The Notion quote** — the coach citing real content from the user's own workspace. Show real data. If it's blurred, it doesn't hit.
+6. **The paywall** — brief, earned, natural. Not a pitch. A moment where the value is already felt and the upgrade is obvious.
 
 **Music:**
 - Ambient, warm, no rhythm. Felt, not heard.

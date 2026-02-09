@@ -2,9 +2,11 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @ObservedObject private var subscriptionService = SubscriptionService.shared
     @StateObject private var viewModel = ProfileViewModel()
     @State private var enabledModels = ModelPreferences.shared.enabledModels
     @State private var selectedVoiceModel = VoiceModelPreferences.shared.selectedModel
+    @State private var showPaywall = false
 
     var body: some View {
         NavigationStack {
@@ -12,6 +14,13 @@ struct ProfileView: View {
                 VStack(spacing: AppSpacing.xxl) {
                     // Profile header
                     profileHeader
+
+                    // Subscription status
+                    if !subscriptionService.isPremium {
+                        upgradeRow
+                    } else {
+                        premiumBadge
+                    }
 
                     // Connected services section
                     connectedServicesSection
@@ -50,6 +59,9 @@ struct ProfileView: View {
             .navigationBarTitleDisplayMode(.large)
             .task {
                 await viewModel.loadProfile()
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView(trigger: .general)
             }
             .alert("Error", isPresented: Binding(
                 get: { viewModel.error != nil },
@@ -90,6 +102,63 @@ struct ProfileView: View {
                 .font(AppTypography.bodySmall)
                 .foregroundColor(AppColors.textSecondary)
         }
+    }
+
+    // MARK: - Subscription
+
+    private var upgradeRow: some View {
+        Button { showPaywall = true } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.white)
+                    .frame(width: 40, height: 40)
+                    .background(AppColors.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Upgrade to Premium")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(AppColors.textPrimary)
+
+                    Text("Unlimited sessions, multi-coach, Notion & more")
+                        .font(.system(size: 13))
+                        .foregroundColor(AppColors.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(AppColors.textTertiary)
+            }
+            .padding(14)
+            .background(AppColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .padding(.horizontal, AppSpacing.lg)
+    }
+
+    private var premiumBadge: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 16))
+                .foregroundColor(AppColors.accent)
+
+            Text("Premium")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(AppColors.textPrimary)
+
+            Spacer()
+
+            Text("Active")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(AppColors.success)
+        }
+        .padding(14)
+        .background(AppColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal, AppSpacing.lg)
     }
 
     // MARK: - Connected Services Section
@@ -147,20 +216,30 @@ struct ProfileView: View {
                         }
                     } else {
                         Button {
-                            Task {
-                                switch serviceType {
-                                case .notion:
-                                    await viewModel.connectNotion()
+                            if subscriptionService.isPremium {
+                                Task {
+                                    switch serviceType {
+                                    case .notion:
+                                        await viewModel.connectNotion()
+                                    }
                                 }
+                            } else {
+                                showPaywall = true
                             }
                         } label: {
-                            Text("Connect")
-                                .font(AppTypography.captionLarge)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 6)
-                                .background(AppColors.accent)
-                                .clipShape(Capsule())
+                            HStack(spacing: 4) {
+                                if !subscriptionService.isPremium {
+                                    Image(systemName: "lock.fill")
+                                        .font(.system(size: 10))
+                                }
+                                Text("Connect")
+                                    .font(AppTypography.captionLarge)
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 6)
+                            .background(AppColors.accent)
+                            .clipShape(Capsule())
                         }
                     }
                 }

@@ -15,8 +15,6 @@ struct DiscoverView: View {
     @State private var lastReorderTargetCoachID: String?
     @State private var hoveredTargetCoachID: String?
 
-    // Hero transition
-    @Namespace private var heroNamespace
     @State private var showSession = false
 
     private let columns = [
@@ -38,7 +36,7 @@ struct DiscoverView: View {
                             // Header
                             HStack(alignment: .top) {
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text("CoachBoard")
+                                    Text("Council")
                                         .font(.system(size: 32, weight: .bold, design: .default))
                                         .foregroundColor(AppColors.textPrimary)
 
@@ -84,8 +82,6 @@ struct DiscoverView: View {
                             isJiggling: false,
                             isLifted: true,
                             isDropTarget: false,
-                            isHeroActive: false,
-                            heroNamespace: nil,
                             onDelete: {},
                             onEdit: {}
                         )
@@ -152,7 +148,7 @@ struct DiscoverView: View {
 
             // Session overlay
             if showSession, let coach = selectedCoach {
-                SessionView(coach: coach, heroNamespace: heroNamespace, onDismiss: dismissSession)
+                SessionView(coach: coach, onDismiss: dismissSession)
                     .zIndex(2)
             }
         }
@@ -251,15 +247,12 @@ struct DiscoverView: View {
     @ViewBuilder
     private func coachCell(for coach: Coach) -> some View {
         let isDraggingThisCell = draggingCoach?.id == coach.id
-        let isHeroActive = selectedCoach?.id == coach.id && showSession
         let isDropTarget = hoveredTargetCoachID == coach.id && draggingCoach?.id != coach.id
         let tappableCell = CoachCell(
             coach: coach,
             isJiggling: isJiggling,
             isLifted: false,
             isDropTarget: isDropTarget,
-            isHeroActive: isHeroActive,
-            heroNamespace: heroNamespace,
             onDelete: { coachToDelete = coach },
             onEdit: { coachToEdit = coach }
         )
@@ -399,8 +392,6 @@ private struct CoachCell: View {
     let isJiggling: Bool
     let isLifted: Bool
     let isDropTarget: Bool
-    let isHeroActive: Bool
-    let heroNamespace: Namespace.ID?
     let onDelete: () -> Void
     let onEdit: () -> Void
 
@@ -409,22 +400,17 @@ private struct CoachCell: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            // Orb — hidden when this cell is the hero source
-            if !isHeroActive {
-                orbContent
-                    .scaleEffect(isLifted ? 1.07 : 1)
-                    .overlay {
-                        if isLifted {
-                            Circle()
-                                .stroke(Color.white.opacity(0.5), lineWidth: 1.5)
-                                .frame(width: 94, height: 94)
-                                .shadow(color: .white.opacity(0.22), radius: 8, x: 0, y: 0)
-                        }
+            orbContent
+                .scaleEffect(isLifted ? 1.07 : 1)
+                .overlay {
+                    if isLifted {
+                        Circle()
+                            .stroke(Color.white.opacity(0.5), lineWidth: 1.5)
+                            .frame(width: 94, height: 94)
+                            .shadow(color: .white.opacity(0.22), radius: 8, x: 0, y: 0)
                     }
-                    .animation(.easeOut(duration: 0.12), value: isLifted)
-            } else {
-                Color.clear.frame(width: 120, height: 130)
-            }
+                }
+                .animation(.easeOut(duration: 0.12), value: isLifted)
 
             VStack(spacing: 3) {
                 Text(coach.name)
@@ -435,7 +421,6 @@ private struct CoachCell: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(AppColors.textTertiary)
             }
-            .opacity(isHeroActive ? 0 : 1)
         }
         .padding(.vertical, 8)
         .scaleEffect(isDropTarget ? 1.025 : 1)
@@ -489,15 +474,8 @@ private struct CoachCell: View {
         }
     }
 
-    @ViewBuilder
     private var orbContent: some View {
-        let orb = OrbAvatar(colors: coach.orbColorPair, size: 120)
+        OrbAvatar(colors: coach.orbColorPair, size: 120)
             .frame(height: 130)
-
-        if let ns = heroNamespace {
-            orb.matchedGeometryEffect(id: "heroOrb-\(coach.id)", in: ns)
-        } else {
-            orb
-        }
     }
 }
