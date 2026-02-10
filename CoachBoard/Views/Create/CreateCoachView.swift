@@ -18,8 +18,8 @@ struct CreateCoachView: View {
                 }
             }
             .background(AppColors.background)
-            .navigationTitle("Create Coach")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("Community")
+            .navigationBarTitleDisplayMode(.large)
             .alert("Coach Created!", isPresented: $showSuccess) {
                 Button("OK") {
                     viewModel.currentStep = 0
@@ -30,7 +30,7 @@ struct CreateCoachView: View {
                     viewModel.selectedVoice = nil
                 }
             } message: {
-                Text("\(viewModel.name) is now live! Share it with others from the Discover tab.")
+                Text("\(viewModel.name) is now live! Share it with others from the Council tab.")
             }
             .sheet(isPresented: $showPaywall) {
                 PaywallView(trigger: .customCoach)

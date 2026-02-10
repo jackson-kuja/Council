@@ -113,12 +113,19 @@ struct OnboardingView: View {
             progressBar
                 .padding(.top, AppSpacing.sm)
 
-            TabView(selection: $currentStep) {
-                welcomeStep.tag(0)
-                contextStep.tag(1)
-                coachStep.tag(2)
+            Group {
+                switch currentStep {
+                case 0: welcomeStep
+                case 1: contextStep
+                case 2: coachStep
+                default: welcomeStep
+                }
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .transition(.asymmetric(
+                insertion: .move(edge: .trailing).combined(with: .opacity),
+                removal: .move(edge: .leading).combined(with: .opacity)
+            ))
             .animation(.easeInOut(duration: 0.3), value: currentStep)
 
             navigationButtons
@@ -212,24 +219,24 @@ struct OnboardingView: View {
 
     private var contextStep: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+            VStack(alignment: .leading, spacing: AppSpacing.xxl) {
+                VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     Text("A little about you")
-                        .font(AppTypography.displaySmall)
+                        .font(.system(size: 28, weight: .bold))
                         .foregroundColor(AppColors.textPrimary)
 
-                    Text("This helps your coaches give relevant, personalized advice. You can always update this later.")
-                        .font(AppTypography.bodyMedium)
+                    Text("Tap what resonates. You can always change this later.")
+                        .font(.body)
                         .foregroundColor(AppColors.textSecondary)
                 }
 
                 // Values
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Label("What do you value?", systemImage: "heart.fill")
-                        .font(AppTypography.titleSmall)
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    Text("What do you value?")
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(AppColors.textPrimary)
 
-                    FlowLayout(spacing: AppSpacing.xs) {
+                    FlowLayout(spacing: AppSpacing.sm) {
                         ForEach(valueSuggestions, id: \.self) { suggestion in
                             let isSelected = values.contains(suggestion)
                             Button {
@@ -242,10 +249,10 @@ struct OnboardingView: View {
                                 }
                             } label: {
                                 Text(suggestion)
-                                    .font(AppTypography.bodySmall)
+                                    .font(.system(size: 16))
                                     .foregroundColor(isSelected ? .white : AppColors.textPrimary)
-                                    .padding(.horizontal, AppSpacing.sm)
-                                    .padding(.vertical, AppSpacing.xs)
+                                    .padding(.horizontal, AppSpacing.md)
+                                    .padding(.vertical, AppSpacing.sm)
                                     .background(isSelected ? AppColors.accent : AppColors.surface)
                                     .overlay(
                                         Capsule()
@@ -258,17 +265,18 @@ struct OnboardingView: View {
 
                     HStack(spacing: AppSpacing.xs) {
                         TextField("Add your own...", text: $newValue)
-                            .font(AppTypography.bodySmall)
+                            .font(.body)
                             .foregroundColor(AppColors.textPrimary)
                             .onSubmit { addValue() }
 
                         Button { addValue() } label: {
                             Image(systemName: "plus.circle.fill")
+                                .font(.title3)
                                 .foregroundColor(AppColors.accent)
                         }
                         .disabled(newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
-                    .padding(AppSpacing.sm)
+                    .padding(AppSpacing.md)
                     .background(AppColors.surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: AppSpacing.buttonRadius)
@@ -277,23 +285,23 @@ struct OnboardingView: View {
                     .clipShape(RoundedRectangle(cornerRadius: AppSpacing.buttonRadius))
 
                     if !customValues.isEmpty {
-                        FlowLayout(spacing: AppSpacing.xs) {
+                        FlowLayout(spacing: AppSpacing.sm) {
                             ForEach(Array(customValues.enumerated()), id: \.offset) { _, item in
-                                HStack(spacing: 4) {
+                                HStack(spacing: 6) {
                                     Text(item)
-                                        .font(AppTypography.bodySmall)
+                                        .font(.system(size: 16))
                                         .foregroundColor(.white)
 
                                     Button {
                                         withAnimation { values.removeAll { $0 == item } }
                                     } label: {
                                         Image(systemName: "xmark")
-                                            .font(.system(size: 10, weight: .bold))
+                                            .font(.system(size: 12, weight: .bold))
                                             .foregroundColor(.white.opacity(0.7))
                                     }
                                 }
-                                .padding(.horizontal, AppSpacing.sm)
-                                .padding(.vertical, AppSpacing.xs)
+                                .padding(.horizontal, AppSpacing.md)
+                                .padding(.vertical, AppSpacing.sm)
                                 .background(AppColors.accent)
                                 .clipShape(Capsule())
                             }
@@ -302,12 +310,12 @@ struct OnboardingView: View {
                 }
 
                 // Goals
-                VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Label("What are you working toward?", systemImage: "target")
-                        .font(AppTypography.titleSmall)
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    Text("What are you working toward?")
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(AppColors.textPrimary)
 
-                    FlowLayout(spacing: AppSpacing.xs) {
+                    FlowLayout(spacing: AppSpacing.sm) {
                         ForEach(goalSuggestions, id: \.self) { suggestion in
                             let isSelected = goals.contains(suggestion)
                             Button {
@@ -320,10 +328,10 @@ struct OnboardingView: View {
                                 }
                             } label: {
                                 Text(suggestion)
-                                    .font(AppTypography.bodySmall)
+                                    .font(.system(size: 16))
                                     .foregroundColor(isSelected ? .white : AppColors.textPrimary)
-                                    .padding(.horizontal, AppSpacing.sm)
-                                    .padding(.vertical, AppSpacing.xs)
+                                    .padding(.horizontal, AppSpacing.md)
+                                    .padding(.vertical, AppSpacing.sm)
                                     .background(isSelected ? AppColors.accent : AppColors.surface)
                                     .overlay(
                                         Capsule()
@@ -336,17 +344,18 @@ struct OnboardingView: View {
 
                     HStack(spacing: AppSpacing.xs) {
                         TextField("Add your own...", text: $newGoal)
-                            .font(AppTypography.bodySmall)
+                            .font(.body)
                             .foregroundColor(AppColors.textPrimary)
                             .onSubmit { addGoal() }
 
                         Button { addGoal() } label: {
                             Image(systemName: "plus.circle.fill")
+                                .font(.title3)
                                 .foregroundColor(AppColors.accent)
                         }
                         .disabled(newGoal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
-                    .padding(AppSpacing.sm)
+                    .padding(AppSpacing.md)
                     .background(AppColors.surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: AppSpacing.buttonRadius)
@@ -355,23 +364,23 @@ struct OnboardingView: View {
                     .clipShape(RoundedRectangle(cornerRadius: AppSpacing.buttonRadius))
 
                     if !customGoals.isEmpty {
-                        FlowLayout(spacing: AppSpacing.xs) {
+                        FlowLayout(spacing: AppSpacing.sm) {
                             ForEach(Array(customGoals.enumerated()), id: \.offset) { _, item in
-                                HStack(spacing: 4) {
+                                HStack(spacing: 6) {
                                     Text(item)
-                                        .font(AppTypography.bodySmall)
+                                        .font(.system(size: 16))
                                         .foregroundColor(.white)
 
                                     Button {
                                         withAnimation { goals.removeAll { $0 == item } }
                                     } label: {
                                         Image(systemName: "xmark")
-                                            .font(.system(size: 10, weight: .bold))
+                                            .font(.system(size: 12, weight: .bold))
                                             .foregroundColor(.white.opacity(0.7))
                                     }
                                 }
-                                .padding(.horizontal, AppSpacing.sm)
-                                .padding(.vertical, AppSpacing.xs)
+                                .padding(.horizontal, AppSpacing.md)
+                                .padding(.vertical, AppSpacing.sm)
                                 .background(AppColors.accent)
                                 .clipShape(Capsule())
                             }
@@ -379,7 +388,8 @@ struct OnboardingView: View {
                     }
                 }
             }
-            .padding(AppSpacing.lg)
+            .padding(.horizontal, AppSpacing.xl)
+            .padding(.vertical, AppSpacing.lg)
         }
     }
 
@@ -398,49 +408,63 @@ struct OnboardingView: View {
                         .foregroundColor(AppColors.textSecondary)
                 }
 
-                LazyVGrid(
-                    columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)],
-                    spacing: 20
-                ) {
+                VStack(spacing: AppSpacing.sm) {
                     ForEach(coaches) { coach in
+                        let isSelected = selectedCoach?.id == coach.id
+                        let coachColor = coach.orbColorPair.0
                         Button {
                             withAnimation(.easeInOut(duration: 0.2)) {
-                                selectedCoach = selectedCoach?.id == coach.id ? nil : coach
+                                selectedCoach = isSelected ? nil : coach
                             }
                         } label: {
-                            VStack(spacing: AppSpacing.sm) {
-                                OrbAvatar(colors: coach.orbColorPair, size: 80)
+                            HStack(spacing: AppSpacing.md) {
+                                OrbAvatar(colors: coach.orbColorPair, size: 52)
 
-                                VStack(spacing: 2) {
-                                    Text(coach.name)
-                                        .font(AppTypography.titleSmall)
-                                        .foregroundColor(AppColors.textPrimary)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(spacing: AppSpacing.xs) {
+                                        Text(coach.name)
+                                            .font(.system(size: 17, weight: .semibold))
+                                            .foregroundColor(AppColors.textPrimary)
 
-                                    Text(coach.category.displayName)
-                                        .font(AppTypography.captionLarge)
-                                        .foregroundColor(AppColors.textTertiary)
+                                        let provider = coach.llmModel.provider
+                                        Text(provider.personalityLabel)
+                                            .font(.system(size: 11, weight: .medium))
+                                            .foregroundColor(Color(hex: provider.labelColorHex))
+                                            .padding(.horizontal, 7)
+                                            .padding(.vertical, 3)
+                                            .background(Color(hex: provider.labelColorHex).opacity(0.12))
+                                            .clipShape(Capsule())
+                                    }
+
+                                    Text(coach.description)
+                                        .font(.system(size: 14))
+                                        .foregroundColor(AppColors.textSecondary)
+                                        .lineLimit(2)
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
 
-                                Text(coach.description)
-                                    .font(AppTypography.captionSmall)
-                                    .foregroundColor(AppColors.textSecondary)
-                                    .lineLimit(2)
-                                    .multilineTextAlignment(.center)
+                                Spacer(minLength: 0)
+
+                                if isSelected {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 22))
+                                        .foregroundColor(coachColor)
+                                }
                             }
                             .padding(AppSpacing.md)
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .background(
-                                selectedCoach?.id == coach.id
-                                    ? AppColors.accent.opacity(0.06)
+                                isSelected
+                                    ? coachColor.opacity(0.08)
                                     : AppColors.surface
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: AppSpacing.cardRadius)
                                     .strokeBorder(
-                                        selectedCoach?.id == coach.id
-                                            ? AppColors.accent
+                                        isSelected
+                                            ? coachColor
                                             : AppColors.border,
-                                        lineWidth: selectedCoach?.id == coach.id ? 2 : 1
+                                        lineWidth: isSelected ? 2 : 1
                                     )
                             )
                             .clipShape(RoundedRectangle(cornerRadius: AppSpacing.cardRadius))
@@ -500,8 +524,8 @@ struct OnboardingView: View {
             }
             .disabled(isSaving || authViewModel.isLoading)
         }
-        .padding(.horizontal, AppSpacing.lg)
-        .padding(.bottom, AppSpacing.md)
+        .padding(.horizontal, AppSpacing.xl)
+        .padding(.bottom, AppSpacing.lg)
         .blurRevealEffect(currentStep == 0 ? welcomeAnimated : true)
     }
 
@@ -517,14 +541,14 @@ struct OnboardingView: View {
     // MARK: - Data
 
     private let valueSuggestions = [
-        "Growth", "Focus", "Balance", "Discipline",
-        "Creativity", "Health", "Authenticity", "Impact"
+        "Growth", "Focus", "Balance",
+        "Creativity", "Health", "Impact"
     ]
 
     private let goalSuggestions = [
-        "Build better habits", "Launch a project", "Get promoted",
-        "Improve fitness", "Reduce stress", "Learn a new skill",
-        "Start a business", "Write more"
+        "Build better habits", "Launch a project",
+        "Improve fitness", "Reduce stress",
+        "Learn a new skill", "Start a business"
     ]
 
     private var customValues: [String] {

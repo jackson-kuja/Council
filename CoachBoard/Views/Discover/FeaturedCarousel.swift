@@ -43,8 +43,7 @@ struct FeaturedCard: View {
                         ModelBadge(model: coach.llmModel)
 
                         HStack(spacing: 3) {
-                            Image(systemName: "waveform")
-                                .font(.system(size: 10))
+                            OrbAvatar(colors: (color1, color2), size: 10)
                             Text("\(coach.usageCount) sessions")
                                 .font(AppTypography.captionSmall)
                         }

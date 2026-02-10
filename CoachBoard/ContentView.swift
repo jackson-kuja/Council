@@ -12,13 +12,13 @@ struct ContentView: View {
         TabView(selection: $selectedTab) {
             DiscoverView()
                 .tabItem {
-                    Label("Library", systemImage: "square.grid.2x2.fill")
+                    Label("Council", systemImage: "circle.hexagonpath")
                 }
                 .tag(0)
 
             CreateCoachView()
                 .tabItem {
-                    Label("Create", systemImage: "plus.circle.fill")
+                    Label("Community", systemImage: "person.2.badge.fill")
                 }
                 .tag(1)
 

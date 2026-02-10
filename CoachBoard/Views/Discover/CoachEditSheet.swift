@@ -244,7 +244,7 @@ struct CoachEditSheet: View {
                 .foregroundColor(AppColors.textTertiary)
                 .tracking(0.5)
 
-            ForEach(ServiceType.allCases) { serviceType in
+            ForEach(ServiceType.allCases.filter(\.isAvailable)) { serviceType in
                 let isConnected = viewModel.isServiceConnected(serviceType)
                 let isEnabled = viewModel.isMCPEnabled(serviceType)
 

@@ -124,6 +124,15 @@ class SessionViewModel: ObservableObject {
             userId: userId, sourceCoachId: coach.id
         ) {
             resolvedAgentId = config.clonedAgentId
+
+            // Ensure MCP servers are applied if the user has enabled any
+            if !config.enabledMCPServiceTypes.isEmpty {
+                await applyMCPServers(
+                    agentId: config.clonedAgentId,
+                    enabledTypes: config.enabledMCPServiceTypes,
+                    userId: userId
+                )
+            }
             return
         }
 
@@ -151,6 +160,25 @@ class SessionViewModel: ObservableObject {
         } catch {
             // Fall back to shared agent if cloning fails
             resolvedAgentId = nil
+        }
+    }
+
+    /// Applies MCP server attachments to a cloned agent based on enabled service types
+    private func applyMCPServers(agentId: String, enabledTypes: [String], userId: String) async {
+        do {
+            let connectedServices = try await FirebaseService.shared.fetchConnectedServices(userId: userId)
+            let mcpServerIds = enabledTypes.compactMap { typeRaw -> String? in
+                guard let type = ServiceType(rawValue: typeRaw) else { return nil }
+                return connectedServices.first { $0.serviceType == type && $0.isConnected }?.mcpServerId
+            }
+            if !mcpServerIds.isEmpty {
+                try await ElevenLabsAPIService.shared.updateAgentMCP(
+                    agentId: agentId,
+                    mcpServerIds: mcpServerIds
+                )
+            }
+        } catch {
+            // Non-fatal: session can proceed without MCP
         }
     }
 

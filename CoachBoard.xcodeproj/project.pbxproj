@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -95,7 +95,7 @@
 
 /* Begin PBXFileReference section */
 		0255F6D3899F2E9B21ACE437 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		0364E84D3E80897E523AB7E1 /* GoogleService-Info.plist.bak_20260206_164154 */ = {isa = PBXFileReference; path = "GoogleService-Info.plist.bak_20260206_164154"; sourceTree = "<group>"; };
+		0364E84D3E80897E523AB7E1 /* GoogleService-Info.plist.bak_20260206_164154 */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "GoogleService-Info.plist.bak_20260206_164154"; sourceTree = "<group>"; };
 		09873A30051FCC6127579FFD /* SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionView.swift; sourceTree = "<group>"; };
 		0CDD86FF21B59CC378949763 /* CoachBoardLiveActivityBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachBoardLiveActivityBundle.swift; sourceTree = "<group>"; };
 		12957F4CD927B353E39FC669 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -119,7 +119,7 @@
 		5E60DA7AE7EE42BD3B531F79 /* CreateCoachView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCoachView.swift; sourceTree = "<group>"; };
 		61F1F735FB6CF3154E817820 /* GradientCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientCard.swift; sourceTree = "<group>"; };
 		658FE3F5B5E3F044864D6700 /* DiscoverViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverViewModel.swift; sourceTree = "<group>"; };
-		668665FE93E0E2567B42F069 /* CoachBoard.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = CoachBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		668665FE93E0E2567B42F069 /* CoachBoard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CoachBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		698F6332988BE060EFA7767F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		6B13F3E85204DA04037E3348 /* CoachSessionLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachSessionLiveActivityWidget.swift; sourceTree = "<group>"; };
 		7163F609053C03D3E3C070B6 /* CategorySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategorySection.swift; sourceTree = "<group>"; };
@@ -467,7 +467,6 @@
 				7EAFCA2DF621B471ED4CBC2E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				0D5226FD6DD1FE1292CE1C5C /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -603,8 +602,12 @@
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = athenlabs.Council;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -625,8 +628,12 @@
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = athenlabs.Council;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};

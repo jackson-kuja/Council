@@ -73,6 +73,22 @@ enum ModelProvider: String, CaseIterable, Identifiable {
     case google = "Google"
 
     var id: String { rawValue }
+
+    var personalityLabel: String {
+        switch self {
+        case .openAI: return "Friendly"
+        case .anthropic: return "Sociable"
+        case .google: return "Well-Rounded"
+        }
+    }
+
+    var labelColorHex: String {
+        switch self {
+        case .openAI: return "10A37F"
+        case .anthropic: return "D97757"
+        case .google: return "4285F4"
+        }
+    }
 }
 
 enum LLMModel: String, Codable, CaseIterable, Identifiable {

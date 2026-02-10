@@ -35,8 +35,7 @@ struct CoachCard: View {
                     Spacer()
 
                     HStack(spacing: 3) {
-                        Image(systemName: "waveform")
-                            .font(.system(size: 9))
+                        OrbAvatar(colors: (color1, color2), size: 9)
                         Text("\(coach.usageCount)")
                             .font(AppTypography.captionSmall)
                     }

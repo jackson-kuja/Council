@@ -5,13 +5,18 @@ struct TranscriptView: View {
     let session: CoachingSession
     @Environment(\.dismiss) private var dismiss
 
+    private var allCoachNames: String {
+        let names = [session.coachName] + session.additionalCoachNames
+        return names.joined(separator: " + ")
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.md) {
                     // Session info header
                     VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text(session.coachName)
+                        Text(allCoachNames)
                             .font(AppTypography.titleLarge)
                             .foregroundColor(AppColors.textPrimary)
 
@@ -25,18 +30,18 @@ struct TranscriptView: View {
                     .padding(AppSpacing.md)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(AppColors.surface)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppSpacing.cardRadius)
-                            .strokeBorder(AppColors.border, lineWidth: 1)
-                    )
                     .clipShape(RoundedRectangle(cornerRadius: AppSpacing.cardRadius))
 
                     // Transcript messages
                     ForEach(session.transcript) { message in
                         VStack(alignment: message.role == .user ? .trailing : .leading, spacing: AppSpacing.xxs) {
-                            Text(message.role == .user ? "You" : session.coachName)
+                            Text(message.role == .user ? "You" : (message.coachName ?? session.coachName))
                                 .font(AppTypography.captionSmall)
-                                .foregroundColor(AppColors.textTertiary)
+                                .foregroundColor(
+                                    message.role == .user
+                                        ? AppColors.textTertiary
+                                        : coachColor(for: message.coachId)
+                                )
 
                             Text(message.content)
                                 .font(AppTypography.bodyMedium)
@@ -46,10 +51,6 @@ struct TranscriptView: View {
                                     message.role == .user
                                         ? AppColors.accent.opacity(0.08)
                                         : AppColors.surface
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppSpacing.buttonRadius)
-                                        .strokeBorder(AppColors.border, lineWidth: 1)
                                 )
                                 .clipShape(RoundedRectangle(cornerRadius: AppSpacing.buttonRadius))
                         }
@@ -70,5 +71,14 @@ struct TranscriptView: View {
                 }
             }
         }
+    }
+
+    private func coachColor(for coachId: String?) -> Color {
+        guard let coachId else { return AppColors.textTertiary }
+        if let coach = Coach.builtInCoaches.first(where: { $0.id == coachId }) {
+            return coach.orbColorPair.0
+        }
+        let index = abs(coachId.hashValue) % AppColors.orbPalettes.count
+        return AppColors.orbPalettes[index].0
     }
 }

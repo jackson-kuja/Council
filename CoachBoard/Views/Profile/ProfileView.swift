@@ -7,56 +7,29 @@ struct ProfileView: View {
     @State private var enabledModels = ModelPreferences.shared.enabledModels
     @State private var selectedVoiceModel = VoiceModelPreferences.shared.selectedModel
     @State private var showPaywall = false
+    @State private var showModels = false
+    @State private var showComingSoon = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: AppSpacing.xxl) {
-                    // Profile header
+                VStack(spacing: 0) {
                     profileHeader
+                        .padding(.bottom, 28)
 
-                    // Subscription status
-                    if !subscriptionService.isPremium {
-                        upgradeRow
-                    } else {
-                        premiumBadge
+                    VStack(spacing: 24) {
+                        subscriptionSection
+                        connectedServicesSection
+                        contextSection
+                        modelsSection
+                        signOutRow
                     }
-
-                    // Connected services section
-                    connectedServicesSection
-
-                    // Personal context section
-                    contextSection
-
-                    // Models section
-                    modelsSection
-
-                    // Sign out
-                    Button {
-                        authViewModel.signOut()
-                    } label: {
-                        HStack {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                            Text("Sign Out")
-                                .font(AppTypography.buttonSmall)
-                        }
-                        .foregroundColor(AppColors.error)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 48)
-                        .background(AppColors.error.opacity(0.08))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: AppSpacing.buttonRadius)
-                                .strokeBorder(AppColors.error.opacity(0.2), lineWidth: 1)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.buttonRadius))
-                    }
-                    .padding(.horizontal, AppSpacing.lg)
                 }
-                .padding(.vertical, AppSpacing.lg)
+                .padding(.bottom, 40)
             }
             .background(AppColors.background)
             .navigationTitle("Profile")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .task {
                 await viewModel.loadProfile()
             }
@@ -71,374 +44,430 @@ struct ProfileView: View {
             } message: {
                 Text(viewModel.error ?? "")
             }
+            .alert("Coming Soon", isPresented: $showComingSoon) {
+                Button("OK") {}
+            } message: {
+                Text("This integration is coming soon. We'll let you know when it's ready.")
+            }
         }
     }
 
     // MARK: - Profile Header
 
     private var profileHeader: some View {
-        VStack(spacing: AppSpacing.md) {
-            // Avatar
-            Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [AppColors.accent, AppColors.accentSecondary],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 80, height: 80)
-                .overlay(
-                    Text(viewModel.profile.displayName.prefix(1).uppercased())
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(.white)
-                )
+        VStack(spacing: 12) {
+            OrbAvatar(
+                colors: AppColors.orbPalettes[0],
+                size: 72
+            )
 
-            Text(viewModel.profile.displayName)
-                .font(AppTypography.titleLarge)
-                .foregroundColor(AppColors.textPrimary)
+            VStack(spacing: 3) {
+                Text(viewModel.profile.displayName)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundColor(AppColors.textPrimary)
 
-            Text(viewModel.profile.email)
-                .font(AppTypography.bodySmall)
-                .foregroundColor(AppColors.textSecondary)
+                Text(viewModel.profile.email)
+                    .font(.system(size: 13))
+                    .foregroundColor(AppColors.textSecondary)
+            }
         }
+        .padding(.top, 12)
     }
 
     // MARK: - Subscription
 
-    private var upgradeRow: some View {
-        Button { showPaywall = true } label: {
-            HStack(spacing: 14) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(width: 40, height: 40)
-                    .background(AppColors.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+    private var subscriptionSection: some View {
+        ProfileCardGroup {
+            if !subscriptionService.isPremium {
+                Button { showPaywall = true } label: {
+                    ProfileRow {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 30, height: 30)
+                            .background(AppColors.accent)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Upgrade to Premium")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(AppColors.textPrimary)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Upgrade to Premium")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(AppColors.textPrimary)
 
-                    Text("Unlimited sessions, multi-coach, Notion & more")
-                        .font(.system(size: 13))
-                        .foregroundColor(AppColors.textSecondary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(AppColors.textTertiary)
-            }
-            .padding(14)
-            .background(AppColors.surface)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-        }
-        .padding(.horizontal, AppSpacing.lg)
-    }
-
-    private var premiumBadge: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 16))
-                .foregroundColor(AppColors.accent)
-
-            Text("Premium")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(AppColors.textPrimary)
-
-            Spacer()
-
-            Text("Active")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(AppColors.success)
-        }
-        .padding(14)
-        .background(AppColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .padding(.horizontal, AppSpacing.lg)
-    }
-
-    // MARK: - Connected Services Section
-
-    private var connectedServicesSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.lg) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Connected Services")
-                    .font(AppTypography.titleMedium)
-                    .foregroundColor(AppColors.textPrimary)
-
-                Text("Connect services to give your coaches access to tools")
-                    .font(AppTypography.captionLarge)
-                    .foregroundColor(AppColors.textSecondary)
-            }
-
-            ForEach(ServiceType.allCases) { serviceType in
-                let service = viewModel.connectedService(for: serviceType)
-                let isConnected = service?.isConnected ?? false
-
-                HStack(spacing: 12) {
-                    Image(systemName: serviceType.icon)
-                        .font(.system(size: 18))
-                        .foregroundColor(isConnected ? AppColors.accent : AppColors.textTertiary)
-                        .frame(width: 28)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(serviceType.displayName)
-                            .font(AppTypography.bodyMedium)
-                            .foregroundColor(AppColors.textPrimary)
-
-                        if isConnected, let workspaceName = service?.workspaceName, !workspaceName.isEmpty {
-                            Text(workspaceName)
-                                .font(AppTypography.captionLarge)
-                                .foregroundColor(AppColors.textTertiary)
-                        } else if !isConnected {
-                            Text("Not connected")
-                                .font(AppTypography.captionLarge)
-                                .foregroundColor(AppColors.textTertiary)
+                            Text("Unlimited sessions, multi-coach & more")
+                                .font(.system(size: 12))
+                                .foregroundColor(AppColors.textSecondary)
                         }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(AppColors.textTertiary)
                     }
+                }
+            } else {
+                ProfileRow {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(AppColors.accent)
+                        .frame(width: 30, height: 30)
+                        .background(AppColors.accent.opacity(0.08))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                    Text("Premium")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(AppColors.textPrimary)
 
                     Spacer()
 
-                    if viewModel.isConnectingService {
-                        ProgressView()
-                            .tint(AppColors.textTertiary)
-                    } else if isConnected {
-                        Button {
-                            Task { await viewModel.disconnectService(serviceType) }
-                        } label: {
-                            Text("Disconnect")
-                                .font(AppTypography.captionLarge)
-                                .foregroundColor(AppColors.error)
-                        }
-                    } else {
-                        Button {
-                            if subscriptionService.isPremium {
-                                Task {
-                                    switch serviceType {
-                                    case .notion:
-                                        await viewModel.connectNotion()
-                                    }
-                                }
-                            } else {
-                                showPaywall = true
-                            }
-                        } label: {
-                            HStack(spacing: 4) {
-                                if !subscriptionService.isPremium {
-                                    Image(systemName: "lock.fill")
-                                        .font(.system(size: 10))
-                                }
-                                Text("Connect")
-                                    .font(AppTypography.captionLarge)
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 6)
-                            .background(AppColors.accent)
-                            .clipShape(Capsule())
-                        }
-                    }
+                    Text("Active")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(AppColors.success)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(AppColors.success.opacity(0.1))
+                        .clipShape(Capsule())
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .background(AppColors.surface)
-                .clipShape(RoundedRectangle(cornerRadius: AppSpacing.buttonRadius))
             }
         }
-        .padding(.horizontal, AppSpacing.lg)
     }
 
-    // MARK: - Models Section
+    // MARK: - Connected Services
 
-    private var modelsSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.lg) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Models")
-                    .font(AppTypography.titleMedium)
-                    .foregroundColor(AppColors.textPrimary)
+    private var connectedServicesSection: some View {
+        ProfileSection(title: "Integrations") {
+            ProfileCardGroup {
+                ForEach(Array(ServiceType.allCases.enumerated()), id: \.element.id) { index, serviceType in
+                    let service = viewModel.connectedService(for: serviceType)
+                    let isConnected = service?.isConnected ?? false
 
-                Text("Choose which models appear during sessions")
-                    .font(AppTypography.captionLarge)
-                    .foregroundColor(AppColors.textSecondary)
-            }
+                    if index > 0 {
+                        Divider().padding(.leading, 54)
+                    }
 
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text("Voice")
-                    .font(AppTypography.captionLarge)
-                    .foregroundColor(AppColors.textTertiary)
-                    .textCase(.uppercase)
-                    .tracking(0.5)
+                    ProfileRow {
+                        Image(systemName: serviceType.icon)
+                            .font(.system(size: 14))
+                            .foregroundColor(isConnected ? .white : AppColors.textTertiary)
+                            .frame(width: 30, height: 30)
+                            .background(isConnected ? AppColors.accent : AppColors.surfaceElevated)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                ForEach(TTSVoiceModel.allCases) { model in
-                    Button {
-                        selectedVoiceModel = model
-                        VoiceModelPreferences.shared.setSelectedModel(model)
-                    } label: {
-                        HStack(spacing: 12) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(model.displayName)
-                                    .font(AppTypography.bodyMedium)
-                                    .foregroundColor(AppColors.textPrimary)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(serviceType.displayName)
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(AppColors.textPrimary)
 
-                                Text(model.subtitle)
-                                    .font(AppTypography.captionLarge)
+                            if isConnected, let ws = service?.workspaceName, !ws.isEmpty {
+                                Text(ws)
+                                    .font(.system(size: 12))
                                     .foregroundColor(AppColors.textTertiary)
                             }
-
-                            Spacer()
-
-                            Image(systemName: selectedVoiceModel == model ? "checkmark.circle.fill" : "circle")
-                                .font(.system(size: 20))
-                                .foregroundColor(
-                                    selectedVoiceModel == model
-                                        ? AppColors.accent
-                                        : AppColors.textTertiary
-                                )
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 12)
-                        .background(AppColors.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: AppSpacing.buttonRadius))
-                    }
-                }
-            }
 
-            ForEach(ModelProvider.allCases) { provider in
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(provider.rawValue)
-                        .font(AppTypography.captionLarge)
-                        .foregroundColor(AppColors.textTertiary)
-                        .textCase(.uppercase)
-                        .tracking(0.5)
+                        Spacer()
 
-                    ForEach(LLMModel.models(for: provider)) { model in
-                        Button {
-                            ModelPreferences.shared.toggle(model)
-                            enabledModels = ModelPreferences.shared.enabledModels
-                        } label: {
-                            HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(model.displayName)
-                                        .font(AppTypography.bodyMedium)
-                                        .foregroundColor(AppColors.textPrimary)
-
-                                    Text(model.subtitle)
-                                        .font(AppTypography.captionLarge)
-                                        .foregroundColor(AppColors.textTertiary)
-                                }
-
-                                Spacer()
-
-                                Image(systemName: enabledModels.contains(model) ? "checkmark.circle.fill" : "circle")
-                                    .font(.system(size: 20))
-                                    .foregroundColor(
-                                        enabledModels.contains(model)
-                                            ? AppColors.accent
-                                            : AppColors.textTertiary
-                                    )
+                        if !serviceType.isAvailable {
+                            Button {
+                                showComingSoon = true
+                            } label: {
+                                Text("Connect")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 5)
+                                    .background(AppColors.accent)
+                                    .clipShape(Capsule())
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 12)
-                            .background(AppColors.surface)
-                            .clipShape(RoundedRectangle(cornerRadius: AppSpacing.buttonRadius))
+                        } else if viewModel.isConnectingService {
+                            ProgressView()
+                                .tint(AppColors.textTertiary)
+                        } else if isConnected {
+                            Button {
+                                Task { await viewModel.disconnectService(serviceType) }
+                            } label: {
+                                Text("Disconnect")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(AppColors.error)
+                            }
+                        } else {
+                            Button {
+                                if subscriptionService.isPremium {
+                                    Task {
+                                        switch serviceType {
+                                        case .notion:
+                                            await viewModel.connectNotion()
+                                        default:
+                                            break
+                                        }
+                                    }
+                                } else {
+                                    showPaywall = true
+                                }
+                            } label: {
+                                HStack(spacing: 3) {
+                                    if !subscriptionService.isPremium {
+                                        Image(systemName: "lock.fill")
+                                            .font(.system(size: 8))
+                                    }
+                                    Text("Connect")
+                                        .font(.system(size: 12, weight: .semibold))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 5)
+                                .background(AppColors.accent)
+                                .clipShape(Capsule())
+                            }
                         }
                     }
                 }
             }
         }
-        .padding(.horizontal, AppSpacing.lg)
     }
 
     // MARK: - Context Section
 
     private var contextSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.lg) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Personal Context")
-                        .font(AppTypography.titleMedium)
-                        .foregroundColor(AppColors.textPrimary)
+        ProfileSection(title: "Personal Context") {
+            VStack(spacing: 10) {
+                ContextEditorSection(
+                    title: "Values",
+                    icon: "heart.fill",
+                    items: $viewModel.editingValues,
+                    newItem: $viewModel.newValue,
+                    placeholder: "Add a value (e.g. Growth)",
+                    onAdd: viewModel.addValue,
+                    onRemove: viewModel.removeValue
+                )
 
-                    Text("Shared with your coaches to personalize sessions")
-                        .font(AppTypography.captionLarge)
+                ContextEditorSection(
+                    title: "Goals",
+                    icon: "target",
+                    items: $viewModel.editingGoals,
+                    newItem: $viewModel.newGoal,
+                    placeholder: "Add a goal (e.g. Launch my startup)",
+                    onAdd: viewModel.addGoal,
+                    onRemove: viewModel.removeGoal
+                )
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Notes", systemImage: "note.text")
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(AppColors.textSecondary)
+
+                    TextEditor(text: $viewModel.editingNotes)
+                        .font(.system(size: 14))
+                        .foregroundColor(AppColors.textPrimary)
+                        .scrollContentBackground(.hidden)
+                        .frame(minHeight: 60)
+                        .padding(10)
+                        .background(AppColors.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
 
-                Spacer()
-
-                if viewModel.saveSuccess {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(AppColors.success)
-                        .transition(.scale.combined(with: .opacity))
+                Button {
+                    Task { await viewModel.saveContext() }
+                } label: {
+                    HStack(spacing: 6) {
+                        if viewModel.isSaving {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            if viewModel.saveSuccess {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 13, weight: .bold))
+                            }
+                            Text(viewModel.saveSuccess ? "Saved" : "Save Context")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(viewModel.saveSuccess ? AppColors.success : AppColors.accent)
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .animation(.easeInOut(duration: 0.2), value: viewModel.saveSuccess)
                 }
             }
+            .padding(.horizontal, 20)
+        }
+    }
 
-            // Values
-            ContextEditorSection(
-                title: "Values",
-                icon: "heart.fill",
-                items: $viewModel.editingValues,
-                newItem: $viewModel.newValue,
-                placeholder: "Add a value (e.g. Growth)",
-                onAdd: viewModel.addValue,
-                onRemove: viewModel.removeValue
-            )
+    // MARK: - Models Section
 
-            // Goals
-            ContextEditorSection(
-                title: "Goals",
-                icon: "target",
-                items: $viewModel.editingGoals,
-                newItem: $viewModel.newGoal,
-                placeholder: "Add a goal (e.g. Launch my startup)",
-                onAdd: viewModel.addGoal,
-                onRemove: viewModel.removeGoal
-            )
+    private var modelsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ProfileSection(title: "Models") {
+                ProfileCardGroup {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            showModels.toggle()
+                        }
+                    } label: {
+                        ProfileRow {
+                            Image(systemName: "cpu")
+                                .font(.system(size: 14))
+                                .foregroundColor(AppColors.textSecondary)
+                                .frame(width: 30, height: 30)
+                                .background(AppColors.surfaceElevated)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
 
-            // Notes
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Label("Notes", systemImage: "note.text")
-                    .font(AppTypography.captionLarge)
-                    .foregroundColor(AppColors.textSecondary)
+                            Text("Voice & AI Models")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(AppColors.textPrimary)
 
-                TextEditor(text: $viewModel.editingNotes)
-                    .font(AppTypography.bodySmall)
-                    .foregroundColor(AppColors.textPrimary)
-                    .scrollContentBackground(.hidden)
-                    .frame(minHeight: 80)
-                    .padding(AppSpacing.sm)
-                    .background(AppColors.surface)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppSpacing.buttonRadius)
-                            .strokeBorder(AppColors.border, lineWidth: 1)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: AppSpacing.buttonRadius))
-            }
+                            Spacer()
 
-            // Save
-            Button {
-                Task { await viewModel.saveContext() }
-            } label: {
-                Group {
-                    if viewModel.isSaving {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Text("Save Context")
-                            .font(AppTypography.buttonLarge)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(AppColors.textTertiary)
+                                .rotationEffect(.degrees(showModels ? 90 : 0))
+                        }
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 48)
-                .background(AppColors.accent)
-                .foregroundColor(.white)
-                .clipShape(RoundedRectangle(cornerRadius: AppSpacing.buttonRadius))
+            }
+
+            if showModels {
+                VStack(spacing: 16) {
+                    // Voice model
+                    modelGroup(title: "Voice Model") {
+                        ForEach(Array(TTSVoiceModel.allCases.enumerated()), id: \.element.id) { index, model in
+                            if index > 0 { Divider().padding(.leading, 16) }
+                            Button {
+                                selectedVoiceModel = model
+                                VoiceModelPreferences.shared.setSelectedModel(model)
+                            } label: {
+                                modelRow(
+                                    name: model.displayName,
+                                    detail: model.subtitle,
+                                    isSelected: selectedVoiceModel == model
+                                )
+                            }
+                        }
+                    }
+
+                    // AI models by provider
+                    ForEach(ModelProvider.allCases) { provider in
+                        modelGroup(title: provider.rawValue) {
+                            ForEach(Array(LLMModel.models(for: provider).enumerated()), id: \.element.id) { index, model in
+                                if index > 0 { Divider().padding(.leading, 16) }
+                                Button {
+                                    ModelPreferences.shared.toggle(model)
+                                    enabledModels = ModelPreferences.shared.enabledModels
+                                } label: {
+                                    modelRow(
+                                        name: model.displayName,
+                                        detail: model.subtitle,
+                                        isSelected: enabledModels.contains(model)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .padding(.horizontal, AppSpacing.lg)
+    }
+
+    private func modelGroup<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title.uppercased())
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(AppColors.textTertiary)
+                .tracking(0.5)
+
+            VStack(spacing: 0) {
+                content()
+            }
+            .background(AppColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
+    private func modelRow(name: String, detail: String, isSelected: Bool) -> some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(name)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(AppColors.textPrimary)
+                Text(detail)
+                    .font(.system(size: 11))
+                    .foregroundColor(AppColors.textTertiary)
+            }
+            Spacer()
+            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 16))
+                .foregroundColor(isSelected ? AppColors.accent : AppColors.border)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .contentShape(Rectangle())
+    }
+
+    // MARK: - Sign Out
+
+    private var signOutRow: some View {
+        ProfileCardGroup {
+            Button {
+                authViewModel.signOut()
+            } label: {
+                HStack {
+                    Spacer()
+                    Text("Sign Out")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(AppColors.error)
+                    Spacer()
+                }
+                .padding(.vertical, 13)
+            }
+        }
+    }
+}
+
+// MARK: - Profile Building Blocks
+
+private struct ProfileSection<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title.uppercased())
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(AppColors.textTertiary)
+                .tracking(0.5)
+                .padding(.horizontal, 20)
+
+            content()
+        }
+    }
+}
+
+private struct ProfileCardGroup<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            content()
+        }
+        .background(AppColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 20)
+    }
+}
+
+private struct ProfileRow<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        HStack(spacing: 12) {
+            content()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .contentShape(Rectangle())
     }
 }

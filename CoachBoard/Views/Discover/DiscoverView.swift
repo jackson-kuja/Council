@@ -32,22 +32,11 @@ struct DiscoverView: View {
             NavigationStack {
                 ZStack(alignment: .topLeading) {
                     ScrollView(showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 40) {
-                            // Header
-                            HStack(alignment: .top) {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text("Council")
-                                        .font(.system(size: 32, weight: .bold, design: .default))
-                                        .foregroundColor(AppColors.textPrimary)
-
-                                    Text("Your coaches")
-                                        .font(.system(size: 17, weight: .regular))
-                                        .foregroundColor(AppColors.textTertiary)
-                                }
-
-                                Spacer()
-
-                                if isJiggling {
+                        VStack(alignment: .leading, spacing: 0) {
+                            // Done button for jiggle mode
+                            if isJiggling {
+                                HStack {
+                                    Spacer()
                                     Button("Done") {
                                         withAnimation {
                                             isJiggling = false
@@ -56,11 +45,10 @@ struct DiscoverView: View {
                                     }
                                     .font(.system(size: 17, weight: .semibold))
                                     .foregroundColor(AppColors.accent)
-                                    .padding(.top, 8)
                                 }
+                                .padding(.horizontal, 24)
+                                .padding(.top, 8)
                             }
-                            .padding(.horizontal, 24)
-                            .padding(.top, 8)
 
                             // Coach grid
                             LazyVGrid(columns: columns, spacing: 28) {
@@ -69,6 +57,7 @@ struct DiscoverView: View {
                                 }
                             }
                             .padding(.horizontal, 24)
+                            .padding(.top, 24)
                         }
                         .padding(.bottom, 40)
                     }

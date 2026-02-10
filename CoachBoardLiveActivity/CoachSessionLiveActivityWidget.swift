@@ -1,7 +1,6 @@
 import ActivityKit
 import WidgetKit
 import SwiftUI
-import ElevenLabsComponents
 
 private enum SessionWidgetAction: String {
     case open
@@ -17,8 +16,8 @@ struct CoachSessionLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: CoachSessionActivityAttributes.self) { context in
             SessionLockScreenLiveActivityView(context: context)
-                .activityBackgroundTint(.clear)
-                .activitySystemActionForegroundColor(.black)
+                .activityBackgroundTint(.black.opacity(0.75))
+                .activitySystemActionForegroundColor(.white)
                 .widgetURL(sessionActionURL(.open))
         } dynamicIsland: { context in
             DynamicIsland {
@@ -26,8 +25,7 @@ struct CoachSessionLiveActivityWidget: Widget {
                     HStack(spacing: 8) {
                         LiveActivityOrb(
                             primaryColorHex: context.attributes.primaryColorHex,
-                            secondaryColorHex: context.attributes.secondaryColorHex,
-                            statusLabel: context.state.statusLabel
+                            secondaryColorHex: context.attributes.secondaryColorHex
                         )
                         .frame(width: 24, height: 24)
 
@@ -67,8 +65,7 @@ struct CoachSessionLiveActivityWidget: Widget {
             } compactLeading: {
                 LiveActivityOrb(
                     primaryColorHex: context.attributes.primaryColorHex,
-                    secondaryColorHex: context.attributes.secondaryColorHex,
-                    statusLabel: context.state.statusLabel
+                    secondaryColorHex: context.attributes.secondaryColorHex
                 )
                 .frame(width: 20, height: 20)
             } compactTrailing: {
@@ -78,8 +75,7 @@ struct CoachSessionLiveActivityWidget: Widget {
             } minimal: {
                 LiveActivityOrb(
                     primaryColorHex: context.attributes.primaryColorHex,
-                    secondaryColorHex: context.attributes.secondaryColorHex,
-                    statusLabel: context.state.statusLabel
+                    secondaryColorHex: context.attributes.secondaryColorHex
                 )
                 .frame(width: 18, height: 18)
             }
@@ -93,118 +89,65 @@ private struct SessionLockScreenLiveActivityView: View {
     let context: ActivityViewContext<CoachSessionActivityAttributes>
 
     var body: some View {
-        VStack(spacing: 14) {
-            HStack(spacing: 8) {
-                Text(context.attributes.coachName)
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.black)
-                    .lineLimit(1)
-
-                Spacer(minLength: 12)
-
-                ConnectionBadge(
-                    statusLabel: context.state.statusLabel,
-                    isConnected: context.state.isConnected
-                )
-            }
-
+        HStack(spacing: 14) {
             LiveActivityOrb(
                 primaryColorHex: context.attributes.primaryColorHex,
-                secondaryColorHex: context.attributes.secondaryColorHex,
-                statusLabel: context.state.statusLabel
+                secondaryColorHex: context.attributes.secondaryColorHex
             )
-            .frame(width: 112, height: 112)
+            .frame(width: 48, height: 48)
 
-            HStack(spacing: 8) {
-                SessionActionLink(
-                    title: context.state.isMuted ? "Unmute" : "Mute",
-                    systemImage: context.state.isMuted ? "mic.fill" : "mic.slash.fill",
-                    url: sessionActionURL(.mute)
-                )
-                SessionActionLink(
-                    title: "End",
-                    systemImage: "xmark",
-                    url: sessionActionURL(.end),
-                    isDestructive: true
-                )
-                SessionActionLink(
-                    title: "Open",
-                    systemImage: "arrow.up.forward",
-                    url: sessionActionURL(.open)
-                )
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text(context.attributes.coachName)
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+
+                    Spacer(minLength: 4)
+
+                    ConnectionBadge(
+                        statusLabel: context.state.statusLabel,
+                        isConnected: context.state.isConnected
+                    )
+                }
+
+                HStack(spacing: 6) {
+                    SessionActionLink(
+                        title: context.state.isMuted ? "Unmute" : "Mute",
+                        systemImage: context.state.isMuted ? "mic.fill" : "mic.slash.fill",
+                        url: sessionActionURL(.mute)
+                    )
+                    SessionActionLink(
+                        title: "End",
+                        systemImage: "xmark",
+                        url: sessionActionURL(.end),
+                        isDestructive: true
+                    )
+                    SessionActionLink(
+                        title: "Open",
+                        systemImage: "arrow.up.forward",
+                        url: sessionActionURL(.open)
+                    )
+                }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
-                )
-        )
-        .padding(.horizontal, 2)
+        .padding(16)
     }
 }
 
 private struct LiveActivityOrb: View {
     let primaryColorHex: String
     let secondaryColorHex: String
-    let statusLabel: String
-
-    private var visualizerState: VisualizerAgentState {
-        switch statusLabel.lowercased() {
-        case "speaking":
-            return .speaking
-        case "thinking":
-            return .thinking
-        case "listening":
-            return .listening
-        default:
-            return .unknown
-        }
-    }
-
-    private var inputVolume: Float {
-        switch visualizerState {
-        case .listening:
-            return 0.35
-        case .thinking:
-            return 0.22
-        case .speaking:
-            return 0.12
-        default:
-            return 0.16
-        }
-    }
-
-    private var outputVolume: Float {
-        switch visualizerState {
-        case .speaking:
-            return 0.45
-        case .thinking:
-            return 0.18
-        case .listening:
-            return 0.1
-        default:
-            return 0.14
-        }
-    }
 
     var body: some View {
-        Orb(
-            color1: Color(hex: primaryColorHex),
-            color2: Color(hex: secondaryColorHex),
-            inputVolume: inputVolume,
-            outputVolume: outputVolume,
-            agentState: visualizerState
-        )
-        .clipShape(Circle())
-        .overlay(
-            Circle()
-                .stroke(Color.black.opacity(0.1), lineWidth: 1)
-        )
+        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [Color(hex: primaryColorHex), Color(hex: secondaryColorHex)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
     }
 }
 
@@ -213,21 +156,21 @@ private struct ConnectionBadge: View {
     let isConnected: Bool
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 5) {
             Circle()
                 .fill(isConnected ? Color.green : Color.red)
-                .frame(width: 6, height: 6)
+                .frame(width: 5, height: 5)
 
             Text(statusLabel)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: 10, weight: .semibold))
                 .lineLimit(1)
         }
-        .foregroundStyle(.black)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
+        .foregroundStyle(.white.opacity(0.8))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
         .background(
             Capsule(style: .continuous)
-                .fill(Color.black.opacity(0.06))
+                .fill(Color.white.opacity(0.15))
         )
     }
 }
@@ -241,13 +184,13 @@ private struct SessionActionLink: View {
     var body: some View {
         Link(destination: url) {
             Label(title, systemImage: systemImage)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(isDestructive ? Color.red : Color.black)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(isDestructive ? Color.red : Color.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
+                .padding(.vertical, 7)
                 .background(
                     Capsule(style: .continuous)
-                        .fill(isDestructive ? Color.red.opacity(0.1) : Color.black.opacity(0.06))
+                        .fill(isDestructive ? Color.red.opacity(0.25) : Color.white.opacity(0.15))
                 )
         }
         .buttonStyle(.plain)

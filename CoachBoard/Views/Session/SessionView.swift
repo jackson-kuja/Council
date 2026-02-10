@@ -77,28 +77,31 @@ struct SessionView: View {
     private var topBar: some View {
         HStack {
             // Coach name(s)
-            if viewModel.activeCoaches.count == 1 {
-                Text(coach.name)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(AppColors.textPrimary)
-            } else {
-                HStack(spacing: 4) {
-                    ForEach(Array(viewModel.activeCoaches.enumerated()), id: \.element.id) { index, activeCoach in
-                        Text(activeCoach.name)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(
-                                viewModel.speakingCoachId == activeCoach.id
-                                    ? AppColors.textPrimary
-                                    : AppColors.textTertiary
-                            )
-                            .animation(.easeInOut(duration: 0.3), value: viewModel.speakingCoachId)
-                        if index < viewModel.activeCoaches.count - 1 {
-                            Text("·")
-                                .foregroundColor(AppColors.textTertiary)
+            Group {
+                if viewModel.activeCoaches.count == 1 {
+                    Text(coach.name)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(AppColors.textPrimary)
+                } else {
+                    HStack(spacing: 4) {
+                        ForEach(Array(viewModel.activeCoaches.enumerated()), id: \.element.id) { index, activeCoach in
+                            Text(activeCoach.name)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(
+                                    viewModel.speakingCoachId == activeCoach.id
+                                        ? activeCoach.orbColorPair.0
+                                        : AppColors.textTertiary
+                                )
+                            if index < viewModel.activeCoaches.count - 1 {
+                                Text("·")
+                                    .foregroundColor(AppColors.textTertiary)
+                            }
                         }
                     }
                 }
             }
+            .animation(.easeInOut(duration: 0.3), value: viewModel.speakingCoachId)
+            .animation(.easeInOut(duration: 0.3), value: viewModel.activeCoaches.count)
 
             Spacer()
 
@@ -309,9 +312,8 @@ struct SessionView: View {
                             if message.role == .user { Spacer(minLength: 60) }
 
                             VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 2) {
-                                // Coach name label for multi-coach agent messages
+                                // Coach name label for agent messages
                                 if message.role == .agent,
-                                   viewModel.activeCoaches.count > 1,
                                    let coachName = message.coachName {
                                     Text(coachName)
                                         .font(.system(size: 11, weight: .semibold))
