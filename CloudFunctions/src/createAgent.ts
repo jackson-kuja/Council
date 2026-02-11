@@ -1,6 +1,11 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineString } from "firebase-functions/params";
 import { logger } from "firebase-functions";
+import {
+  audioTagsFromStyle,
+  clampSpeechSpeed,
+  turnEagernessFromPace,
+} from "./agentStyle";
 
 const elevenLabsApiKey = defineString("ELEVENLABS_API_KEY");
 
@@ -9,12 +14,25 @@ export const createAgent = onCall(async (request) => {
     throw new HttpsError("unauthenticated", "Must be signed in to create a coach");
   }
 
-  const { name, systemPrompt, firstMessage, voiceId, llmModel, ttsModelId } = request.data;
+  const {
+    name,
+    systemPrompt,
+    firstMessage,
+    voiceId,
+    llmModel,
+    speechSpeed,
+    responsePace,
+    quickReplies,
+    expressiveStyle,
+  } = request.data;
   logger.info("createAgent called", {
     name,
     voiceId,
     llmModel,
-    ttsModelId,
+    speechSpeed,
+    responsePace,
+    quickReplies,
+    expressiveStyle,
     hasPrompt: !!systemPrompt,
   });
 
@@ -26,12 +44,22 @@ export const createAgent = onCall(async (request) => {
     const apiKey = elevenLabsApiKey.value();
     logger.info("API key loaded", { keyLength: apiKey?.length ?? 0 });
 
+    const safeSpeechSpeed = clampSpeechSpeed(speechSpeed, 1.0);
+    const turnEagerness = turnEagernessFromPace(responsePace, "normal");
+    const suggestedAudioTags = audioTagsFromStyle(expressiveStyle);
+
     const body = {
       name: name,
       conversation_config: {
         tts: {
           voice_id: voiceId,
-          model_id: ttsModelId || "eleven_flash_v2_5",
+          model_id: "eleven_v3_conversational",
+          speed: safeSpeechSpeed,
+          suggested_audio_tags: suggestedAudioTags,
+        },
+        turn: {
+          turn_eagerness: turnEagerness,
+          speculative_turn: quickReplies === true,
         },
         agent: {
           first_message: firstMessage || "Hello! How can I help you today?",

@@ -25,6 +25,7 @@ export const updateAgentMultiVoice = onCall(async (request) => {
     const patch: any = {
       conversation_config: {
         tts: {
+          model_id: "eleven_v3_conversational",
           supported_voices: (supportedVoices || []).map((v: any) => ({
             voice_id: v.voiceId || v.voice_id,
             label: v.label,

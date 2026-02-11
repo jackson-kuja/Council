@@ -20,6 +20,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "site": "council-coaching",
     "public": "hosting",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "headers": [

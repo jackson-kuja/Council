@@ -1,7 +1,7 @@
 {
-  "name": "coachboard-functions",
+  "name": "council-functions",
   "version": "1.0.0",
-  "description": "CoachBoard Firebase Cloud Functions - ElevenLabs agent management",
+  "description": "Council Firebase Cloud Functions - ElevenLabs agent management",
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",

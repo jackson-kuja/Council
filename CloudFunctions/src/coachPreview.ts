@@ -110,8 +110,8 @@ a{display:inline-block;padding:14px 32px;background:#fff;color:#000;text-decorat
 
   const c1 = coach.orbColors[0] || "4F46E5";
   const c2 = coach.orbColors[1] || "7C3AED";
-  const universalLink = `https://coachboard-app.web.app/coach/${coachId}`;
-  const testFlightLink = "https://testflight.apple.com/join/council"; // TODO: Replace with real TestFlight link
+  const universalLink = `https://council-coaching.web.app/coach/${coachId}`;
+  const testflightLink = "https://testflight.apple.com/join/cTqUKBrM";
   const escapedName = escapeHtml(coach.name);
   const escapedDesc = escapeHtml(coach.description);
   const escapedCategory = escapeHtml(coach.category);
@@ -153,11 +153,11 @@ h1{font-size:32px;font-weight:700;margin-bottom:10px;letter-spacing:-0.5px}
 <h1>${escapedName}</h1>
 <p class="desc">${escapedDesc}</p>
 <a class="btn" href="#" id="openApp" onclick="openInApp();return false">Open in Council</a>
-<a class="btn btn-secondary" href="${testFlightLink}" id="getApp">Get Council on TestFlight</a>
+<a class="btn btn-secondary" href="${testflightLink}" id="getApp">Get Council on TestFlight</a>
 <script>
 function openInApp(){
-  var scheme="coachboard://coach/${coachId}";
-  var fallback="${testFlightLink}";
+  var scheme="council://coach/${coachId}";
+  var fallback="${testflightLink}";
   var clicked=Date.now();
   window.location.href=scheme;
   setTimeout(function(){

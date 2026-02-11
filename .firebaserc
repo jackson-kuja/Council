@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "coachboard-app"
-  }
+  },
+  "targets": {
+    "coachboard-app": {
+      "hosting": {
+        "council-coaching": [
+          "council-coaching"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

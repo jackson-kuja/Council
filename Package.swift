@@ -2,10 +2,10 @@
 import PackageDescription
 
 let package = Package(
-    name: "CoachBoard",
+    name: "Council",
     platforms: [.iOS(.v17)],
     products: [
-        .library(name: "CoachBoard", targets: ["CoachBoard"]),
+        .library(name: "Council", targets: ["Council"]),
     ],
     dependencies: [
         .package(url: "https://github.com/elevenlabs/elevenlabs-swift-sdk.git", from: "3.0.0"),
@@ -14,7 +14,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "CoachBoard",
+            name: "Council",
             dependencies: [
                 .product(name: "ElevenLabs", package: "elevenlabs-swift-sdk"),
                 .product(name: "ElevenLabsComponents", package: "components-swift"),
@@ -22,7 +22,7 @@ let package = Package(
                 .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
                 .product(name: "FirebaseFunctions", package: "firebase-ios-sdk"),
             ],
-            path: "CoachBoard"
+            path: "Council"
         ),
     ]
 )

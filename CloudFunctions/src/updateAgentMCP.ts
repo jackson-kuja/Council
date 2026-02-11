@@ -22,6 +22,9 @@ export const updateAgentMCP = onCall(async (request) => {
 
     const body = {
       conversation_config: {
+        tts: {
+          model_id: "eleven_v3_conversational",
+        },
         agent: {
           prompt: {
             mcp_server_ids: mcpServerIds || [],

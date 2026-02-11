@@ -1,6 +1,11 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineString } from "firebase-functions/params";
 import { logger } from "firebase-functions";
+import {
+  audioTagsFromStyle,
+  clampSpeechSpeed,
+  turnEagernessFromPace,
+} from "./agentStyle";
 
 const elevenLabsApiKey = defineString("ELEVENLABS_API_KEY");
 
@@ -9,9 +14,26 @@ export const updateAgent = onCall(async (request) => {
     throw new HttpsError("unauthenticated", "Must be signed in");
   }
 
-  const { agentId, llmModel, systemPrompt, firstMessage, voiceId, ttsModelId } =
-    request.data;
-  logger.info("updateAgent called", { agentId, llmModel, voiceId, ttsModelId });
+  const {
+    agentId,
+    llmModel,
+    systemPrompt,
+    firstMessage,
+    voiceId,
+    speechSpeed,
+    responsePace,
+    quickReplies,
+    expressiveStyle,
+  } = request.data;
+  logger.info("updateAgent called", {
+    agentId,
+    llmModel,
+    voiceId,
+    speechSpeed,
+    responsePace,
+    quickReplies,
+    expressiveStyle,
+  });
 
   if (!agentId) {
     throw new HttpsError("invalid-argument", "Missing agentId");
@@ -20,8 +42,13 @@ export const updateAgent = onCall(async (request) => {
   try {
     const apiKey = elevenLabsApiKey.value();
 
-    // Build patch body with only provided fields
-    const patch: any = { conversation_config: {} };
+    const patch: any = {
+      conversation_config: {
+        tts: {
+          model_id: "eleven_v3_conversational",
+        },
+      },
+    };
 
     if (llmModel || systemPrompt) {
       patch.conversation_config.agent = { prompt: {} };
@@ -36,10 +63,27 @@ export const updateAgent = onCall(async (request) => {
       patch.conversation_config.agent.first_message = firstMessage;
     }
 
-    if (voiceId || ttsModelId) {
-      patch.conversation_config.tts = {};
+    if (voiceId || speechSpeed !== undefined || expressiveStyle !== undefined) {
       if (voiceId) patch.conversation_config.tts.voice_id = voiceId;
-      if (ttsModelId) patch.conversation_config.tts.model_id = ttsModelId;
+      if (speechSpeed !== undefined) {
+        patch.conversation_config.tts.speed = clampSpeechSpeed(speechSpeed, 1.0);
+      }
+      if (expressiveStyle !== undefined) {
+        patch.conversation_config.tts.suggested_audio_tags = audioTagsFromStyle(expressiveStyle);
+      }
+    }
+
+    if (responsePace !== undefined || quickReplies !== undefined) {
+      patch.conversation_config.turn = {};
+      if (responsePace !== undefined) {
+        patch.conversation_config.turn.turn_eagerness = turnEagernessFromPace(
+          responsePace,
+          "normal"
+        );
+      }
+      if (quickReplies !== undefined) {
+        patch.conversation_config.turn.speculative_turn = quickReplies === true;
+      }
     }
 
     logger.info("Patching agent", {

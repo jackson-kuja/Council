@@ -24,7 +24,7 @@
 		367EEE41A9A77EEB1525275E /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7864936E1A381C84A01B0A42 /* DiscoverView.swift */; };
 		370B50408CA67A1D0E6D6BAB /* ConnectedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC69CF1797588515D53D677 /* ConnectedService.swift */; };
 		3B05634470A53BE33F881B9D /* OrbAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A680C41200462F74754C294 /* OrbAvatar.swift */; };
-		426FD68FFF00AD280F47D5A6 /* CoachBoardLiveActivityBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CDD86FF21B59CC378949763 /* CoachBoardLiveActivityBundle.swift */; };
+		426FD68FFF00AD280F47D5A6 /* CouncilLiveActivityBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CDD86FF21B59CC378949763 /* CouncilLiveActivityBundle.swift */; };
 		42E8D8686958360DABEBC004 /* VoicePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B949849C2A4BAA14AA11BF33 /* VoicePickerView.swift */; };
 		44EB3913F99882DE535F0FB8 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 698F6332988BE060EFA7767F /* OnboardingView.swift */; };
 		4999F7CAB798CE3E73280D05 /* CoachDeepLinkAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1542294CACA7605373118BC4 /* CoachDeepLinkAction.swift */; };
@@ -46,7 +46,7 @@
 		93710AFB2E20E24C866630F2 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = ED05E3ADC82FAC0474A45DA4 /* GoogleService-Info.plist */; };
 		965555D73AB7F9B3D4A34600 /* CouncilLiveActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 929C838CF206C13227FE705A /* CouncilLiveActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9D4919930EEF2B68E5C77411 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7705F22B57FF5C6F651CB14C /* LiveActivityManager.swift */; };
-		AB7C95E49CB539A18CC08BB1 /* CoachBoardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212D9B0A2DDC0C8123EB286C /* CoachBoardApp.swift */; };
+		AB7C95E49CB539A18CC08BB1 /* CouncilApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212D9B0A2DDC0C8123EB286C /* CouncilApp.swift */; };
 		B1D2083FDF92C244909510AC /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED4E6C401F0955C46E6543F3 /* UserProfile.swift */; };
 		B304EFB0A3A4483B1789150A /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0255F6D3899F2E9B21ACE437 /* ProfileView.swift */; };
 		B6C7EB638865A96A94B73AA6 /* CoachSessionLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B13F3E85204DA04037E3348 /* CoachSessionLiveActivityWidget.swift */; };
@@ -75,7 +75,7 @@
 			containerPortal = 7FF86DBC9013C6B46E820AA1 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = F5FDCDFEE37493A92BC0A125;
-			remoteInfo = CoachBoardLiveActivityExtension;
+			remoteInfo = CouncilLiveActivityExtension;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -97,14 +97,14 @@
 		0255F6D3899F2E9B21ACE437 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		0364E84D3E80897E523AB7E1 /* GoogleService-Info.plist.bak_20260206_164154 */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "GoogleService-Info.plist.bak_20260206_164154"; sourceTree = "<group>"; };
 		09873A30051FCC6127579FFD /* SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionView.swift; sourceTree = "<group>"; };
-		0CDD86FF21B59CC378949763 /* CoachBoardLiveActivityBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachBoardLiveActivityBundle.swift; sourceTree = "<group>"; };
+		0CDD86FF21B59CC378949763 /* CouncilLiveActivityBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CouncilLiveActivityBundle.swift; sourceTree = "<group>"; };
 		12957F4CD927B353E39FC669 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1542294CACA7605373118BC4 /* CoachDeepLinkAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachDeepLinkAction.swift; sourceTree = "<group>"; };
 		15D327E92E04F968861559A3 /* CategoryBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryBadge.swift; sourceTree = "<group>"; };
 		171461C348A4ED9D9CB59FE6 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		179E02BD6E6AB9EAF55702F9 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
 		1CE80C1891B8396830251D9D /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
-		212D9B0A2DDC0C8123EB286C /* CoachBoardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachBoardApp.swift; sourceTree = "<group>"; };
+		212D9B0A2DDC0C8123EB286C /* CouncilApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CouncilApp.swift; sourceTree = "<group>"; };
 		2181B5D809AFD8BF54EDC76F /* ModelPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPickerView.swift; sourceTree = "<group>"; };
 		23C6598642FD051F94142598 /* SessionHistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistoryViewModel.swift; sourceTree = "<group>"; };
 		2D8B5D410FECE161290CD202 /* SessionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistoryView.swift; sourceTree = "<group>"; };
@@ -144,7 +144,7 @@
 		CE872DBE1C6AF9FBE9976254 /* AppSpacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSpacing.swift; sourceTree = "<group>"; };
 		D828DCFA29DA4DC41ED11044 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DE09578E43391A5DCA136444 /* Coach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Coach.swift; sourceTree = "<group>"; };
-		E76BB4E262311A4B31B1D920 /* CoachBoard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CoachBoard.entitlements; sourceTree = "<group>"; };
+		E76BB4E262311A4B31B1D920 /* Council.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Council.entitlements; sourceTree = "<group>"; };
 		ED05E3ADC82FAC0474A45DA4 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		ED4E6C401F0955C46E6543F3 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		EE5246135FD3CDAA429255A9 /* UserCoachConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCoachConfig.swift; sourceTree = "<group>"; };
@@ -191,12 +191,12 @@
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
-		43B736B0D922E7FFF174C1D5 /* CoachBoard */ = {
+		43B736B0D922E7FFF174C1D5 /* Council */ = {
 			isa = PBXGroup;
 			children = (
 				D828DCFA29DA4DC41ED11044 /* Assets.xcassets */,
-				E76BB4E262311A4B31B1D920 /* CoachBoard.entitlements */,
-				212D9B0A2DDC0C8123EB286C /* CoachBoardApp.swift */,
+				E76BB4E262311A4B31B1D920 /* Council.entitlements */,
+				212D9B0A2DDC0C8123EB286C /* CouncilApp.swift */,
 				171461C348A4ED9D9CB59FE6 /* ContentView.swift */,
 				ED05E3ADC82FAC0474A45DA4 /* GoogleService-Info.plist */,
 				0364E84D3E80897E523AB7E1 /* GoogleService-Info.plist.bak_20260206_164154 */,
@@ -207,7 +207,7 @@
 				2C2F250E702471F5D6F05487 /* ViewModels */,
 				E9E3F6E4D89062247E6F1F00 /* Views */,
 			);
-			path = CoachBoard;
+			path = Council;
 			sourceTree = "<group>";
 		};
 		44330D81FF50CB3D46115D26 /* Profile */ = {
@@ -222,8 +222,8 @@
 		4CD1E25EC8D6780F2E3D3C08 = {
 			isa = PBXGroup;
 			children = (
-				43B736B0D922E7FFF174C1D5 /* CoachBoard */,
-				6AD4276715C8586B07EA5460 /* CoachBoardLiveActivity */,
+				43B736B0D922E7FFF174C1D5 /* Council */,
+				6AD4276715C8586B07EA5460 /* CouncilLiveActivity */,
 				FDAD074A5B0B9EDE3ACC14A7 /* Shared */,
 				56C5BEDE8D1EBB75DC0B3119 /* Products */,
 			);
@@ -245,14 +245,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		6AD4276715C8586B07EA5460 /* CoachBoardLiveActivity */ = {
+		6AD4276715C8586B07EA5460 /* CouncilLiveActivity */ = {
 			isa = PBXGroup;
 			children = (
-				0CDD86FF21B59CC378949763 /* CoachBoardLiveActivityBundle.swift */,
+				0CDD86FF21B59CC378949763 /* CouncilLiveActivityBundle.swift */,
 				6B13F3E85204DA04037E3348 /* CoachSessionLiveActivityWidget.swift */,
 				12957F4CD927B353E39FC669 /* Info.plist */,
 			);
-			path = CoachBoardLiveActivity;
+			path = CouncilLiveActivity;
 			sourceTree = "<group>";
 		};
 		6E5002B5CEA3FB3A2402DB82 /* Services */ = {
@@ -417,7 +417,7 @@
 				189626B3A97F09AB58AFD734 /* FirebaseFunctions */,
 				EDF24164C6BD7DCBD9048139 /* RevenueCat */,
 			);
-			productName = CoachBoard;
+			productName = Council;
 			productReference = 668665FE93E0E2567B42F069 /* Council.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -436,7 +436,7 @@
 			packageProductDependencies = (
 				3DE3C7EFBB246E4985DAB741 /* ElevenLabsComponents */,
 			);
-			productName = CoachBoardLiveActivityExtension;
+			productName = CouncilLiveActivityExtension;
 			productReference = 929C838CF206C13227FE705A /* CouncilLiveActivityExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
@@ -502,7 +502,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				426FD68FFF00AD280F47D5A6 /* CoachBoardLiveActivityBundle.swift in Sources */,
+				426FD68FFF00AD280F47D5A6 /* CouncilLiveActivityBundle.swift in Sources */,
 				C4A211C5300BFCFE9A8258DA /* CoachSessionActivityAttributes.swift in Sources */,
 				B6C7EB638865A96A94B73AA6 /* CoachSessionLiveActivityWidget.swift in Sources */,
 			);
@@ -520,7 +520,7 @@
 				1B27894531015523041FAF4B /* CategoryBadge.swift in Sources */,
 				7FC78BBD2EEC6CE7389903F2 /* CategorySection.swift in Sources */,
 				BC6E22E217CD80B1AA28D3F0 /* Coach.swift in Sources */,
-				AB7C95E49CB539A18CC08BB1 /* CoachBoardApp.swift in Sources */,
+				AB7C95E49CB539A18CC08BB1 /* CouncilApp.swift in Sources */,
 				BE5DFB7835A6B0DBC35774BB /* CoachCard.swift in Sources */,
 				4999F7CAB798CE3E73280D05 /* CoachDeepLinkAction.swift in Sources */,
 				8A416327C719A66EF997AC75 /* CoachDetailView.swift in Sources */,
@@ -579,7 +579,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 55P8HSA8J6;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = CoachBoardLiveActivity/Info.plist;
+				INFOPLIST_FILE = CouncilLiveActivity/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -603,7 +603,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 55P8HSA8J6;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = CoachBoard/Info.plist;
+				INFOPLIST_FILE = Council/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -626,7 +626,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 55P8HSA8J6;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = CoachBoard/Info.plist;
+				INFOPLIST_FILE = Council/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -710,7 +710,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 55P8HSA8J6;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = CoachBoardLiveActivity/Info.plist;
+				INFOPLIST_FILE = CouncilLiveActivity/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

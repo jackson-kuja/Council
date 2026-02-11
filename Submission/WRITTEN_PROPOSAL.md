@@ -4,6 +4,8 @@
 **Developer:** Jackson Kuja
 **Platform:** iOS, native SwiftUI
 
+Council is built for Simon's audience: systems-builders, productivity-obsessed professionals, and design-lovers who live inside tools like Notion and treat their workflows as infrastructure. These are people who already invest in themselves — they read, they iterate, they optimize — but most have never had a coach. Not because they don't want one, but because the access model has never matched how they operate.
+
 ---
 
 ## Problem and Approach
@@ -52,9 +54,18 @@ The long-term shape is a community library where the most useful coaches surface
 
 ## Monetization
 
-RevenueCat powers the subscription layer. The free tier includes all six built-in coaches with capped monthly sessions and efficient AI models. I was deliberate about making the free experience complete — you should be able to have a real coaching conversation, feel the personal context working, and walk away having made a decision. That's the conversion engine. Not frustration, but the desire for more depth.
+RevenueCat powers the subscription layer with two plans: monthly and yearly auto-renewing subscriptions, both granting a single `premium` entitlement that unlocks the full app. The RevenueCat Purchases iOS SDK handles offerings, purchase flow, entitlement checks, restore, and real-time subscription state via `PurchasesDelegate`.
 
-Premium unlocks unlimited sessions, multi-coach conversations, Notion and future tool integrations, custom coach creation and sharing, flagship AI models (Claude, GPT-4o, Gemini Pro), and full session history with continuity. The upgrade triggers are specific and intentional: "I want my coach to remember this next time" is session continuity. "I want both of them in the same conversation" is multi-coach. "I want my coach to see my Notion" is tool access. Each maps to a moment where the user already felt the value.
+The free tier includes all six built-in coaches with capped monthly sessions and efficient AI models. I was deliberate about making the free experience complete — you should be able to have a real coaching conversation, feel the personal context working, and walk away having made a decision. That's the conversion engine. Not frustration, but the desire for more depth.
+
+**Why this monetization works for this audience:** Simon's followers are already paying for Notion, for apps, for systems that make them better. They understand the value of tools. The free tier proves the product; the upgrade is the obvious next step once they feel it working. Every premium gate maps to a moment where the user already experienced the value:
+
+- "I want my coach to remember this next time" → session continuity
+- "I want both of them in the same conversation" → multi-coach
+- "I want my coach to see my Notion" → tool access
+- "I want to build my own" → custom coaches
+
+There are seven distinct paywall triggers in the app, each with contextual copy that explains exactly what the user was trying to do. This isn't a single gate — it's seven opportunities to convert at the moment of highest intent.
 
 Voice AI costs more per session than text. I see that as alignment — the cost reflects the quality, and the subscription model delivers it sustainably. A month of unlimited AI coaching costs less than fifteen minutes with a human coach. Looking further ahead, community-created coaches shared via deep link are a natural path toward creator-led monetization. Revenue sharing on popular coaches is a direct extension of the architecture that already exists.
 
@@ -76,8 +87,12 @@ Key architectural decisions: per-user agent cloning is lazy (created on first se
 - AI-generated session summaries
 - Home screen widgets for instant session launch
 
+**With Simon (post-competition):**
+- Co-design the featured coach library with Simon's audience feedback — which coaching styles resonate, which system prompts produce the best sessions
+- Build the community coach marketplace as a natural extension of Simon's creator ecosystem
+- Leverage Simon's content (videos, frameworks, systems) as source material for specialized coaches his audience would pay for
+
 **Further out:**
-- Community coach marketplace with ratings and discovery
 - Android client (the architecture is backend-heavy by design — the iOS app is a client, not the product)
 - Team coaching with shared contexts for co-founders and small teams
 - Coaching analytics — patterns, themes, and progress visible over time
