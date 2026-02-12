@@ -52,6 +52,10 @@ class FirebaseService {
         try await db.collection("coaches").document(coach.id).setData(data)
     }
 
+    func deleteCoach(id: String) async throws {
+        try await db.collection("coaches").document(id).delete()
+    }
+
     func incrementUsageCount(coachId: String) async throws {
         try await db.collection("coaches").document(coachId)
             .updateData(["usageCount": FieldValue.increment(Int64(1))])

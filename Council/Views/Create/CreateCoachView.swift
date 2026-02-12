@@ -22,6 +22,15 @@ struct CreateCoachView: View {
             .navigationBarTitleDisplayMode(.large)
             .alert("Coach Created!", isPresented: $showSuccess) {
                 Button("View in Council") {
+                    // Add the new coach to the board so it appears in the grid
+                    if let coach = viewModel.createdCoach {
+                        var ids = UserDefaults.standard.stringArray(forKey: "boardCoachIds") ?? []
+                        if !ids.contains(coach.id) {
+                            ids.append(coach.id)
+                            UserDefaults.standard.set(ids, forKey: "boardCoachIds")
+                        }
+                    }
+
                     viewModel.currentStep = 0
                     viewModel.name = ""
                     viewModel.description = ""

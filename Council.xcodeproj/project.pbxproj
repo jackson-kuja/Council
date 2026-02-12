@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -113,7 +113,7 @@
 		2C43B376B8EC9A3C975E1BF7 /* ContextEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextEditorView.swift; sourceTree = "<group>"; };
 		301DBEBCD7BB4BDEACB6F971 /* CoachEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachEditViewModel.swift; sourceTree = "<group>"; };
 		3253B59B9124D681A8A67088 /* GradientCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientCard.swift; sourceTree = "<group>"; };
-		4BEED7C989383DDD8A4FD06D /* GoogleService-Info.plist.bak_20260206_164154 */ = {isa = PBXFileReference; path = "GoogleService-Info.plist.bak_20260206_164154"; sourceTree = "<group>"; };
+		4BEED7C989383DDD8A4FD06D /* GoogleService-Info.plist.bak_20260206_164154 */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "GoogleService-Info.plist.bak_20260206_164154"; sourceTree = "<group>"; };
 		5100ACDB2F323992CBFFAEDC /* VoicePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoicePickerView.swift; sourceTree = "<group>"; };
 		537DDC2C172065A42954DEC7 /* NotionOAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotionOAuthService.swift; sourceTree = "<group>"; };
 		5C33AE6CA888DFF7EBC06F32 /* CouncilApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CouncilApp.swift; sourceTree = "<group>"; };
@@ -139,7 +139,7 @@
 		BD045951AC01BBCA6AD8260D /* CoachSessionLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachSessionLiveActivityWidget.swift; sourceTree = "<group>"; };
 		BE1CE59764DE58455A71A47E /* OrbAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbAvatar.swift; sourceTree = "<group>"; };
 		C1F437B428F61F3376F7C0A0 /* SessionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistoryView.swift; sourceTree = "<group>"; };
-		C2A7D06E2CEE0DC43EA4715D /* Council.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Council.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C2A7D06E2CEE0DC43EA4715D /* Council.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Council.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2B855C7E474C2AB2305C40A /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		C2D6354E5457C894C31DC389 /* CouncilLiveActivityExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = CouncilLiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9ABA1E35C20C6EE7FDD8895 /* ConnectedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedService.swift; sourceTree = "<group>"; };
@@ -473,7 +473,6 @@
 				6DB32FCD392BA340984A739D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				6B8E904E098A92ADE5245C29 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -640,6 +639,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Council/Council.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
@@ -760,6 +760,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Council/Council.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;

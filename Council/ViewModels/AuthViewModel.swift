@@ -26,6 +26,7 @@ class AuthViewModel: ObservableObject {
 
     /// Generates a nonce and returns its SHA256 hash for the Apple Sign In request.
     func startSignInWithApple() -> String {
+        errorMessage = nil
         let nonce = randomNonceString()
         currentNonce = nonce
         return sha256(nonce)
@@ -72,8 +73,10 @@ class AuthViewModel: ObservableObject {
             }
 
         case .failure(let error):
-            // User cancelled or other error
-            if (error as NSError).code != ASAuthorizationError.canceled.rawValue {
+            let code = (error as NSError).code
+            let isCancellation = code == ASAuthorizationError.canceled.rawValue
+                || code == ASAuthorizationError.unknown.rawValue
+            if !isCancellation {
                 errorMessage = error.localizedDescription
             }
         }

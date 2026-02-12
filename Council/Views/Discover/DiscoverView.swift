@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import FirebaseAuth
 
 struct DiscoverView: View {
     @StateObject private var viewModel = DiscoverViewModel()
@@ -98,11 +99,17 @@ struct DiscoverView: View {
                     cellFrames = frames
                 }
                 .navigationBarHidden(true)
-                .alert("Remove Coach", isPresented: Binding(
-                    get: { coachToDelete != nil },
-                    set: { if !$0 { coachToDelete = nil } }
-                )) {
-                    Button("Remove", role: .destructive) {
+                .alert(
+                    coachToDelete.map { isUserCreated($0) ? "Delete Coach" : "Remove Coach" } ?? "Remove Coach",
+                    isPresented: Binding(
+                        get: { coachToDelete != nil },
+                        set: { if !$0 { coachToDelete = nil } }
+                    )
+                ) {
+                    Button(
+                        coachToDelete.map { isUserCreated($0) ? "Delete" : "Remove" } ?? "Remove",
+                        role: .destructive
+                    ) {
                         if let coach = coachToDelete {
                             removeCoach(coach)
                         }
@@ -113,7 +120,9 @@ struct DiscoverView: View {
                     }
                 } message: {
                     if let coach = coachToDelete {
-                        Text("Remove \(coach.name) from your board?")
+                        Text(isUserCreated(coach)
+                            ? "Permanently delete \(coach.name)? This cannot be undone."
+                            : "Remove \(coach.name) from your board?")
                     }
                 }
                 .sheet(item: $coachToEdit, onDismiss: {
@@ -257,7 +266,21 @@ struct DiscoverView: View {
         let all = allCoachesFromVM
         guard !all.isEmpty else { return }
 
-        let onBoard = boardCoachIds
+        // Auto-add user-created coaches to the board
+        let currentUserId = FirebaseAuth.Auth.auth().currentUser?.uid
+        var boardIds = UserDefaults.standard.stringArray(forKey: Self.boardKey) ?? []
+        var boardChanged = false
+        for coach in all {
+            if let uid = currentUserId, coach.creatorId == uid, !boardIds.contains(coach.id) {
+                boardIds.append(coach.id)
+                boardChanged = true
+            }
+        }
+        if boardChanged {
+            UserDefaults.standard.set(boardIds, forKey: Self.boardKey)
+        }
+
+        let onBoard = Set(boardIds)
         let visible = all.filter { onBoard.contains($0.id) }
         let savedOrder = UserDefaults.standard.stringArray(forKey: Self.orderKey) ?? []
 
@@ -285,7 +308,13 @@ struct DiscoverView: View {
         UserDefaults.standard.set(ids, forKey: Self.orderKey)
     }
 
+    private func isUserCreated(_ coach: Coach) -> Bool {
+        guard let uid = Auth.auth().currentUser?.uid else { return false }
+        return coach.creatorId == uid
+    }
+
     private func removeCoach(_ coach: Coach) {
+        // Remove from board UI
         withAnimation {
             orderedCoaches.removeAll { $0.id == coach.id }
         }
@@ -298,6 +327,20 @@ struct DiscoverView: View {
         }
 
         saveOrder()
+
+        // For user-created coaches, fully delete from Firestore + ElevenLabs
+        if isUserCreated(coach) {
+            Task {
+                // Delete ElevenLabs agent
+                if !coach.elevenlabsAgentId.isEmpty {
+                    try? await ElevenLabsAPIService.shared.deleteAgent(agentId: coach.elevenlabsAgentId)
+                }
+                // Delete from Firestore
+                try? await FirebaseService.shared.deleteCoach(id: coach.id)
+                // Reload to remove from view model state
+                await viewModel.loadCoaches()
+            }
+        }
     }
 
     private func selectCoach(_ coach: Coach) {
