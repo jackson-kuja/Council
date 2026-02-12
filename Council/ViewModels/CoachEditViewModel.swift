@@ -175,21 +175,24 @@ class CoachEditViewModel: ObservableObject {
             }
 
             // Save config to Firestore
+            // Always persist current values — the coach passed to us already
+            // has overrides applied, so comparing against it would incorrectly
+            // nil-out previously saved customizations on subsequent edits.
             let updatedConfig = UserCoachConfig(
                 id: coach.id,
                 userId: userId,
                 sourceCoachId: coach.id,
                 clonedAgentId: agentId,
                 enabledMCPServiceTypes: Array(enabledMCPServiceTypes),
-                customName: name != coach.name ? name : nil,
-                customCategory: category != coach.category ? category.rawValue : nil,
-                customOrbColors: orbColors != coach.orbColors ? orbColors : nil,
-                customVoiceId: selectedVoiceId != coach.voiceId ? selectedVoiceId : nil,
-                customVoiceName: selectedVoiceName != coach.voiceName ? selectedVoiceName : nil,
-                customSpeechSpeed: abs(speechSpeed - coach.speechSpeed) > 0.0001 ? speechSpeed : nil,
-                customResponsePace: responsePace != coach.responsePace ? responsePace.rawValue : nil,
-                customQuickReplies: quickReplies != coach.quickReplies ? quickReplies : nil,
-                customExpressiveStyle: expressiveStyle != coach.expressiveStyle ? expressiveStyle.rawValue : nil,
+                customName: name,
+                customCategory: category.rawValue,
+                customOrbColors: orbColors,
+                customVoiceId: selectedVoiceId,
+                customVoiceName: selectedVoiceName,
+                customSpeechSpeed: speechSpeed,
+                customResponsePace: responsePace.rawValue,
+                customQuickReplies: quickReplies,
+                customExpressiveStyle: expressiveStyle.rawValue,
                 createdAt: config?.createdAt ?? Date(),
                 updatedAt: Date()
             )

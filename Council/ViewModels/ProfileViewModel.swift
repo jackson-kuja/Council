@@ -100,20 +100,29 @@ class ProfileViewModel: ObservableObject {
         guard let service = connectedService(for: type), service.isConnected else { return }
 
         do {
-            // 1. Delete MCP server from ElevenLabs
+            // 1. Detach MCP server from all agents that use it
             if let mcpServerId = service.mcpServerId {
+                let configs = try await FirebaseService.shared.fetchAllCoachConfigs(userId: userId)
+                for config in configs where config.enabledMCPServiceTypes.contains(type.rawValue) {
+                    try await ElevenLabsAPIService.shared.updateAgentMCP(
+                        agentId: config.clonedAgentId,
+                        mcpServerIds: []
+                    )
+                }
+
+                // 2. Delete MCP server from ElevenLabs
                 try await ElevenLabsAPIService.shared.deleteMCPServer(mcpServerId: mcpServerId)
             }
 
-            // 2. Remove service type from all coach configs
+            // 3. Remove service type from all coach configs
             try await FirebaseService.shared.removeServiceFromAllConfigs(
                 userId: userId, serviceType: type.rawValue
             )
 
-            // 3. Delete from Firestore
+            // 4. Delete from Firestore
             try await FirebaseService.shared.deleteConnectedService(userId: userId, serviceType: type.rawValue)
 
-            // 4. Update local state
+            // 5. Update local state
             connectedServices.removeAll { $0.serviceType == type }
         } catch {
             self.error = "Failed to disconnect \(type.displayName): \(error.localizedDescription)"

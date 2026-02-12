@@ -107,4 +107,5 @@ extension PaywallTrigger: Identifiable {
 extension Notification.Name {
     static let showPaywall = Notification.Name("showPaywall")
     static let switchToCouncilTab = Notification.Name("switchToCouncilTab")
+    static let dismissSessionFromDeepLink = Notification.Name("dismissSessionFromDeepLink")
 }

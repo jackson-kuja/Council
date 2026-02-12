@@ -177,12 +177,15 @@ class ElevenLabsAPIService {
 
         return voicesData.compactMap { voice in
             guard let id = voice["voice_id"] as? String,
-                  let name = voice["name"] as? String else { return nil }
+                  let name = voice["name"] as? String,
+                  let previewUrl = voice["preview_url"] as? String,
+                  !previewUrl.isEmpty,
+                  URL(string: previewUrl) != nil else { return nil }
             return VoiceOption(
                 id: id,
                 name: name,
                 category: voice["category"] as? String ?? "premade",
-                previewUrl: voice["preview_url"] as? String,
+                previewUrl: previewUrl,
                 labels: voice["labels"] as? [String: String] ?? [:]
             )
         }

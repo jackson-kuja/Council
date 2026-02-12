@@ -274,6 +274,11 @@ struct PaywallView: View {
                 let success = await subscriptionService.purchase(package)
                 isPurchasing = false
                 if success {
+                    NotificationCenter.default.post(
+                        name: .paywallPurchaseCompleted,
+                        object: nil,
+                        userInfo: ["trigger": trigger]
+                    )
                     dismiss()
                 }
             }
@@ -334,7 +339,7 @@ struct PaywallView: View {
 
 // MARK: - Trigger
 
-enum PaywallTrigger {
+enum PaywallTrigger: Equatable {
     case multiCoach
     case notion
     case customCoach
@@ -380,4 +385,8 @@ enum PaywallTrigger {
             return "Unlimited sessions, multi-coach calls, Notion integration, and coaches that remember you."
         }
     }
+}
+
+extension Notification.Name {
+    static let paywallPurchaseCompleted = Notification.Name("paywallPurchaseCompleted")
 }

@@ -27,10 +27,14 @@ export const deleteMCPServer = onCall(async (request) => {
       },
     });
 
-    if (!response.ok) {
+    if (!response.ok && response.status !== 404) {
       const responseText = await response.text();
       logger.error("ElevenLabs MCP delete error", { status: response.status, body: responseText.substring(0, 500) });
       throw new HttpsError("internal", `ElevenLabs MCP API error: ${response.status} - ${responseText}`);
+    }
+
+    if (response.status === 404) {
+      logger.info("MCP server already deleted or not found", { mcpServerId });
     }
 
     return { success: true };

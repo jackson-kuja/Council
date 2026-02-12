@@ -95,5 +95,8 @@ struct CouncilApp: App {
             object: nil,
             userInfo: ["action": action.rawValue]
         )
+        if action == .end {
+            NotificationCenter.default.post(name: .dismissSessionFromDeepLink, object: nil)
+        }
     }
 }

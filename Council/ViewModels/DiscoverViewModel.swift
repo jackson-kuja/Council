@@ -4,6 +4,7 @@ import FirebaseAuth
 @MainActor
 class DiscoverViewModel: ObservableObject {
     @Published var featuredCoaches: [Coach] = []
+    @Published var communityCoaches: [Coach] = []
     @Published var coachesByCategory: [CoachCategory: [Coach]] = [:]
     @Published var searchResults: [Coach] = []
     @Published var searchText = ""
@@ -33,25 +34,28 @@ class DiscoverViewModel: ObservableObject {
             }
         }
 
-        // Start with built-in coaches (always available)
+        // Prefer Firestore coaches; fall back to built-in if offline
         let builtIn = Coach.builtInCoaches
-        var allCoaches = builtIn
-        let builtInIds = Set(builtIn.map { $0.id })
+        var allCoaches: [Coach]
 
-        // Merge in any Firestore coaches
         do {
             let firestoreCoaches = try await service.fetchCoaches()
-            for coach in firestoreCoaches where !builtInIds.contains(coach.id) {
+            let firestoreIds = Set(firestoreCoaches.map { $0.id })
+            allCoaches = firestoreCoaches
+            // Add any built-in coaches not yet in Firestore
+            for coach in builtIn where !firestoreIds.contains(coach.id) {
                 allCoaches.append(coach)
             }
         } catch {
-            // Firestore failed — still show built-in coaches
+            // Firestore failed — fall back to built-in coaches
+            allCoaches = builtIn
         }
 
         // Apply per-user overrides from coach configs
         allCoaches = allCoaches.map { applyUserOverrides($0) }
 
         featuredCoaches = allCoaches.filter { $0.isFeatured }
+        communityCoaches = allCoaches.filter { $0.creatorId == "community" }
 
         var grouped: [CoachCategory: [Coach]] = [:]
         for coach in allCoaches {

@@ -12,17 +12,6 @@ private struct VoiceSegment {
     let text: String
 }
 
-private struct ResponseSpeakerSegment {
-    let coachId: String
-    let characterCount: Int
-}
-
-private struct PendingResponsePlayback {
-    let segments: [ResponseSpeakerSegment]
-    let totalCharacterCount: Int
-    var spokenCharacterCount: Int
-}
-
 @MainActor
 class SessionViewModel: ObservableObject {
     @Published var conversation: Conversation?
@@ -62,11 +51,23 @@ class SessionViewModel: ObservableObject {
     private var isEndingSession = false
     private var ignoreNextDisconnect = false
     private var reconnectAttempts = 0
-    private var pendingResponsePlaybackByEventId: [Int: PendingResponsePlayback] = [:]
 
     private let maxStartupAttempts = 2
     private let startupRetryDelayNanoseconds: UInt64 = 800_000_000
     private let maxReconnectAttempts = 3
+
+    private static let warmUpPhrases = [
+        "Setting the stage",
+        "Getting ready",
+        "One moment",
+        "Warming up",
+        "Almost there",
+        "Tuning in",
+    ]
+
+    private lazy var sessionWarmUpPhrase: String = {
+        Self.warmUpPhrases.randomElement() ?? "Getting ready"
+    }()
 
     /// The agent ID to use for ElevenLabs API calls (always user's v3-configured clone)
     private var effectiveAgentId: String {
@@ -213,7 +214,7 @@ class SessionViewModel: ObservableObject {
         guard !isConnecting, !isConnected else { return }
 
         isConnecting = true
-        agentState = isRecovery ? "Reconnecting" : "Preparing"
+        agentState = isRecovery ? "Reconnecting" : sessionWarmUpPhrase
         if !isRecovery {
             error = nil
         }
@@ -344,17 +345,6 @@ class SessionViewModel: ObservableObject {
             await syncLiveActivity()
         } catch {
             self.error = "Failed to toggle mute"
-        }
-    }
-
-    func sendTextMessage(_ text: String) async {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let conv = conversation, isConnected else { return }
-        addMessage(role: .user, content: trimmed)
-        do {
-            try await conv.sendMessage(trimmed)
-        } catch {
-            self.error = "Failed to send message"
         }
     }
 
@@ -622,7 +612,7 @@ class SessionViewModel: ObservableObject {
         return lines.joined(separator: "\n")
     }
 
-    private func processAgentResponse(_ rawText: String, eventId: Int) {
+    private func processAgentResponse(_ rawText: String) {
         guard activeCoaches.count > 1 else {
             addMessage(role: .agent, content: rawText, coachId: coach.id, coachName: coach.name)
             speakingCoachId = coach.id
@@ -632,70 +622,8 @@ class SessionViewModel: ObservableObject {
         let segments = parseMultiVoiceResponse(rawText)
         for segment in segments {
             addMessage(role: .agent, content: segment.text, coachId: segment.coachId, coachName: segment.coachName)
+            speakingCoachId = segment.coachId
         }
-
-        registerPlaybackSegments(segments, eventId: eventId)
-        if let firstSpeakerId = segments.first?.coachId {
-            speakingCoachId = firstSpeakerId
-        }
-    }
-
-    private func registerPlaybackSegments(_ segments: [VoiceSegment], eventId: Int) {
-        let playbackSegments = segments.map {
-            ResponseSpeakerSegment(
-                coachId: $0.coachId,
-                characterCount: max($0.text.count, 1)
-            )
-        }
-
-        let totalCharacterCount = playbackSegments.reduce(0) { $0 + $1.characterCount }
-        guard totalCharacterCount > 0 else { return }
-
-        pendingResponsePlaybackByEventId[eventId] = PendingResponsePlayback(
-            segments: playbackSegments,
-            totalCharacterCount: totalCharacterCount,
-            spokenCharacterCount: 0
-        )
-
-        // Keep only recent events to avoid stale buildup.
-        pendingResponsePlaybackByEventId = pendingResponsePlaybackByEventId.filter { $0.key >= eventId - 8 }
-    }
-
-    private func handleAudioAlignment(_ alignment: AudioAlignment) {
-        guard activeCoaches.count > 1 else { return }
-        guard let eventId = conversation?.latestAudioEvent?.eventId else { return }
-        guard var playback = pendingResponsePlaybackByEventId[eventId], !playback.segments.isEmpty else { return }
-        guard !alignment.chars.isEmpty else { return }
-
-        playback.spokenCharacterCount = min(
-            playback.spokenCharacterCount + alignment.chars.count,
-            playback.totalCharacterCount
-        )
-
-        let speakingIndex = playbackSegmentIndex(
-            for: playback.spokenCharacterCount,
-            segments: playback.segments
-        )
-        let speakingSegment = playback.segments[speakingIndex]
-        if speakingCoachId != speakingSegment.coachId {
-            speakingCoachId = speakingSegment.coachId
-        }
-
-        pendingResponsePlaybackByEventId[eventId] = playback
-    }
-
-    private func playbackSegmentIndex(
-        for spokenCharacterCount: Int,
-        segments: [ResponseSpeakerSegment]
-    ) -> Int {
-        var runningTotal = 0
-        for (index, segment) in segments.enumerated() {
-            runningTotal += segment.characterCount
-            if spokenCharacterCount <= runningTotal {
-                return index
-            }
-        }
-        return max(segments.count - 1, 0)
     }
 
     private func parseMultiVoiceResponse(_ rawText: String) -> [VoiceSegment] {
@@ -764,7 +692,6 @@ class SessionViewModel: ObservableObject {
         isConnecting = false
         previousAgentState = "Idle"
         speakingCoachId = nil
-        pendingResponsePlaybackByEventId.removeAll()
         conversationStateTask?.cancel()
         conversationStateTask = nil
         durationTimer?.invalidate()
@@ -1037,19 +964,14 @@ class SessionViewModel: ObservableObject {
                             initRetryDelays: [0, 0.4, 1.0],
                             failIfAgentNotReady: false
                         ),
-                        onAgentResponse: { [weak self] text, eventId in
+                        onAgentResponse: { [weak self] text, _ in
                             Task { @MainActor in
-                                self?.processAgentResponse(text, eventId: eventId)
+                                self?.processAgentResponse(text)
                             }
                         },
                         onUserTranscript: { [weak self] text, _ in
                             Task { @MainActor in
                                 self?.addMessage(role: .user, content: text)
-                            }
-                        },
-                        onAudioAlignment: { [weak self] alignment in
-                            Task { @MainActor in
-                                self?.handleAudioAlignment(alignment)
                             }
                         }
                     )
@@ -1095,16 +1017,8 @@ class SessionViewModel: ObservableObject {
         switch state {
         case .idle:
             return "Idle"
-        case .resolvingToken:
-            return "Fetching token"
-        case .connectingRoom:
-            return "Connecting"
-        case .waitingForAgent:
-            return "Waiting for agent"
-        case .agentReady:
-            return "Agent ready"
-        case .sendingConversationInit:
-            return "Initializing"
+        case .resolvingToken, .connectingRoom, .waitingForAgent, .sendingConversationInit, .agentReady:
+            return sessionWarmUpPhrase
         case .active:
             return "Listening"
         case .failed:
@@ -1137,7 +1051,6 @@ class SessionViewModel: ObservableObject {
                         self.startAudioHaptics()
                     } else if self.previousAgentState == "Speaking" {
                         self.stopAudioHaptics()
-                        self.speakingCoachId = nil
                     }
                     self.previousAgentState = newState
                     shouldSyncActivity = true

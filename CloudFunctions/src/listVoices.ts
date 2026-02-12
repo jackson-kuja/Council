@@ -30,13 +30,15 @@ export const listVoices = onCall(async (request) => {
 
     const data = await response.json();
 
-    const voices = (data.voices || []).map((voice: any) => ({
-      voice_id: voice.voice_id,
-      name: voice.name,
-      category: voice.category || "premade",
-      preview_url: voice.preview_url,
-      labels: voice.labels || {},
-    }));
+    const voices = (data.voices || [])
+      .filter((voice: any) => !!voice?.preview_url)
+      .map((voice: any) => ({
+        voice_id: voice.voice_id,
+        name: voice.name,
+        category: voice.category || "premade",
+        preview_url: voice.preview_url,
+        labels: voice.labels || {},
+      }));
 
     logger.info("listVoices success", { count: voices.length });
     return { voices };

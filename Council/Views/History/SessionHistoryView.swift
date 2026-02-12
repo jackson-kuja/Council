@@ -7,30 +7,33 @@ struct SessionHistoryView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                if viewModel.isLoading {
-                    ProgressView()
-                        .tint(AppColors.textSecondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 100)
-                } else if viewModel.sessions.isEmpty {
-                    emptyState
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 80)
-                } else {
-                    LazyVStack(spacing: AppSpacing.sm) {
-                        ForEach(viewModel.sessions) { session in
-                            SessionRow(session: session, coaches: viewModel.coaches)
-                                .onTapGesture {
-                                    selectedSession = session
-                                }
+                VStack(spacing: 0) {
+                    pageHeader
+
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .tint(AppColors.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 100)
+                    } else if viewModel.sessions.isEmpty {
+                        emptyState
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 80)
+                    } else {
+                        LazyVStack(spacing: AppSpacing.sm) {
+                            ForEach(viewModel.sessions) { session in
+                                SessionRow(session: session, coaches: viewModel.coaches)
+                                    .onTapGesture {
+                                        selectedSession = session
+                                    }
+                            }
                         }
+                        .padding(AppSpacing.lg)
                     }
-                    .padding(AppSpacing.lg)
                 }
             }
             .background(AppColors.background)
-            .navigationTitle("Sessions")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarHidden(true)
             .sheet(item: $selectedSession) { session in
                 TranscriptView(session: session, coaches: viewModel.coaches)
             }
@@ -38,6 +41,16 @@ struct SessionHistoryView: View {
                 await viewModel.loadSessions()
             }
         }
+    }
+
+    private var pageHeader: some View {
+        Text("Sessions")
+            .font(AppTypography.displaySmall)
+            .foregroundColor(AppColors.textPrimary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.top, AppSpacing.sm)
+            .padding(.bottom, AppSpacing.xs)
     }
 
     private var emptyState: some View {

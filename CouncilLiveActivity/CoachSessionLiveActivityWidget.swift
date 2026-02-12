@@ -9,7 +9,7 @@ private enum SessionWidgetAction: String {
 }
 
 private func sessionActionURL(_ action: SessionWidgetAction) -> URL {
-    URL(string: "coachboard://session/\(action.rawValue)")!
+    URL(string: "council://session/\(action.rawValue)")!
 }
 
 struct CoachSessionLiveActivityWidget: Widget {
@@ -44,11 +44,6 @@ struct CoachSessionLiveActivityWidget: Widget {
 
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack(spacing: 10) {
-                        SessionActionIconLink(
-                            systemImage: context.state.isMuted ? "mic.fill" : "mic.slash.fill",
-                            url: sessionActionURL(.mute)
-                        )
-
                         SessionActionIconLink(
                             systemImage: "xmark.circle.fill",
                             url: sessionActionURL(.end),
@@ -112,11 +107,6 @@ private struct SessionLockScreenLiveActivityView: View {
                 }
 
                 HStack(spacing: 6) {
-                    SessionActionLink(
-                        title: context.state.isMuted ? "Unmute" : "Mute",
-                        systemImage: context.state.isMuted ? "mic.fill" : "mic.slash.fill",
-                        url: sessionActionURL(.mute)
-                    )
                     SessionActionLink(
                         title: "End",
                         systemImage: "xmark",

@@ -7,7 +7,7 @@ import { logger } from "firebase-functions";
  *
  * Notion requires HTTPS redirect URIs, so we bounce through this function:
  *   Notion → https://[project].cloudfunctions.net/notionOAuthCallback?code=xxx
- *        → coachboard://notion-callback?code=xxx → iOS app
+ *        → council://notion-callback?code=xxx → iOS app
  */
 export const notionOAuthCallback = onRequest(async (req, res) => {
   const code = req.query.code as string | undefined;
@@ -26,6 +26,6 @@ export const notionOAuthCallback = onRequest(async (req, res) => {
   }
 
   // Redirect to the iOS app with the authorization code
-  const appRedirect = `coachboard://notion-callback?code=${encodeURIComponent(code)}`;
+  const appRedirect = `council://notion-callback?code=${encodeURIComponent(code)}`;
   res.redirect(302, appRedirect);
 });

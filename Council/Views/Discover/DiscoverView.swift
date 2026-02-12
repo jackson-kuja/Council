@@ -16,6 +16,8 @@ struct DiscoverView: View {
     @State private var hoveredTargetCoachID: String?
 
     @State private var showSession = false
+    @State private var communityCoachToPreview: Coach?
+    @State private var isCommunityExpanded = true
 
     private let columns = [
         GridItem(.flexible(), spacing: 20),
@@ -24,7 +26,7 @@ struct DiscoverView: View {
 
     // MARK: - Persistence keys
     private static let orderKey = "libraryCoachOrder"
-    private static let hiddenKey = "libraryHiddenCoaches"
+    private static let boardKey = "boardCoachIds"
 
     var body: some View {
         ZStack {
@@ -50,7 +52,7 @@ struct DiscoverView: View {
                                 .padding(.top, 8)
                             }
 
-                            // Coach grid
+                            // My Board grid
                             LazyVGrid(columns: columns, spacing: 28) {
                                 ForEach(orderedCoaches) { coach in
                                     coachCell(for: coach)
@@ -58,6 +60,11 @@ struct DiscoverView: View {
                             }
                             .padding(.horizontal, 24)
                             .padding(.top, 24)
+
+                            // Community section
+                            if !communityCoachesForDisplay.isEmpty {
+                                communitySection
+                            }
                         }
                         .padding(.bottom, 40)
                     }
@@ -106,7 +113,7 @@ struct DiscoverView: View {
                     }
                 } message: {
                     if let coach = coachToDelete {
-                        Text("Remove \(coach.name) from your library?")
+                        Text("Remove \(coach.name) from your board?")
                     }
                 }
                 .sheet(item: $coachToEdit, onDismiss: {
@@ -118,7 +125,16 @@ struct DiscoverView: View {
                         connectedServices: viewModel.connectedServices
                     )
                 }
+                .sheet(item: $communityCoachToPreview) { coach in
+                    CommunityCoachSheet(
+                        coach: coach,
+                        isOnBoard: boardCoachIds.contains(coach.id),
+                        onAdd: { addToBoard(coach) },
+                        onStart: { selectCoach(coach) }
+                    )
+                }
                 .task {
+                    initializeBoardIfNeeded()
                     if viewModel.featuredCoaches.isEmpty {
                         await viewModel.loadCoaches()
                     }
@@ -126,6 +142,9 @@ struct DiscoverView: View {
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .switchToCouncilTab)) { _ in
                     Task { await viewModel.loadCoaches() }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .dismissSessionFromDeepLink)) { _ in
+                    dismissSession()
                 }
                 .onReceive(viewModel.objectWillChange) { _ in
                     guard draggingCoach == nil else { return }
@@ -145,6 +164,75 @@ struct DiscoverView: View {
             }
         }
         .animation(.spring(response: 0.55, dampingFraction: 0.86), value: showSession)
+    }
+
+    // MARK: - Community Section
+
+    @ViewBuilder
+    private var communitySection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    isCommunityExpanded.toggle()
+                }
+            } label: {
+                HStack {
+                    Text("Community")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(AppColors.textSecondary)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(AppColors.textTertiary)
+                        .rotationEffect(.degrees(isCommunityExpanded ? 0 : -90))
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 32)
+
+            if isCommunityExpanded {
+                HoneycombGrid(
+                    coaches: communityCoachesForDisplay,
+                    onTap: { coach in communityCoachToPreview = coach }
+                )
+                .padding(.horizontal, 24)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+    }
+
+    // MARK: - Board management
+
+    private var boardCoachIds: Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: Self.boardKey) ?? [])
+    }
+
+    private var communityCoachesForDisplay: [Coach] {
+        let onBoard = boardCoachIds
+        return viewModel.communityCoaches.filter { !onBoard.contains($0.id) }
+    }
+
+    private func initializeBoardIfNeeded() {
+        if UserDefaults.standard.object(forKey: Self.boardKey) == nil {
+            let builtInIds = Coach.builtInCoaches.map(\.id)
+            UserDefaults.standard.set(builtInIds, forKey: Self.boardKey)
+        }
+    }
+
+    private func addToBoard(_ coach: Coach) {
+        var ids = UserDefaults.standard.stringArray(forKey: Self.boardKey) ?? []
+        if !ids.contains(coach.id) {
+            ids.append(coach.id)
+            UserDefaults.standard.set(ids, forKey: Self.boardKey)
+        }
+        if !orderedCoaches.contains(where: { $0.id == coach.id }) {
+            withAnimation {
+                orderedCoaches.append(coach)
+            }
+            saveOrder()
+        }
     }
 
     // MARK: - Data helpers
@@ -169,8 +257,8 @@ struct DiscoverView: View {
         let all = allCoachesFromVM
         guard !all.isEmpty else { return }
 
-        let hiddenIds = Set(UserDefaults.standard.stringArray(forKey: Self.hiddenKey) ?? [])
-        let visible = all.filter { !hiddenIds.contains($0.id) }
+        let onBoard = boardCoachIds
+        let visible = all.filter { onBoard.contains($0.id) }
         let savedOrder = UserDefaults.standard.stringArray(forKey: Self.orderKey) ?? []
 
         if savedOrder.isEmpty {
@@ -201,9 +289,9 @@ struct DiscoverView: View {
         withAnimation {
             orderedCoaches.removeAll { $0.id == coach.id }
         }
-        var hidden = Set(UserDefaults.standard.stringArray(forKey: Self.hiddenKey) ?? [])
-        hidden.insert(coach.id)
-        UserDefaults.standard.set(Array(hidden), forKey: Self.hiddenKey)
+        var ids = UserDefaults.standard.stringArray(forKey: Self.boardKey) ?? []
+        ids.removeAll { $0 == coach.id }
+        UserDefaults.standard.set(ids, forKey: Self.boardKey)
 
         if draggingCoach?.id == coach.id {
             endDragging()

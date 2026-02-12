@@ -10,8 +10,6 @@ struct SessionView: View {
     @StateObject private var viewModel: SessionViewModel
     @State private var showAddCoach = false
     @State private var sessionContentVisible = false
-    @State private var textInput = ""
-    @FocusState private var isTextInputFocused: Bool
 
     init(coach: Coach, onDismiss: (() -> Void)? = nil) {
         self.coach = coach
@@ -46,16 +44,9 @@ struct SessionView: View {
 
                 // Transcript
                 transcript
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 24)
                     .opacity(sessionContentVisible ? 1 : 0)
                     .offset(y: sessionContentVisible ? 0 : 24)
-
-                // Text input
-                if viewModel.isConnected {
-                    textInputBar
-                        .opacity(sessionContentVisible ? 1 : 0)
-                        .offset(y: sessionContentVisible ? 0 : 24)
-                }
             }
         }
         .onAppear {
@@ -71,6 +62,17 @@ struct SessionView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             viewModel.handleScenePhaseChange(newPhase)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .paywallPurchaseCompleted)) { notification in
+            guard let trigger = notification.userInfo?["trigger"] as? PaywallTrigger,
+                  trigger == .multiCoach,
+                  viewModel.canAddCoach,
+                  !showAddCoach else { return }
+
+            // Let the paywall sheet finish dismissing before presenting the add-coach sheet.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                showAddCoach = true
+            }
         }
 .sheet(isPresented: $showAddCoach) {
             AddCoachSheet(viewModel: viewModel)
@@ -349,44 +351,6 @@ struct SessionView: View {
         }
     }
 
-    // MARK: - Text Input
-
-    private var textInputBar: some View {
-        HStack(spacing: 10) {
-            TextField("Message...", text: $textInput)
-                .textFieldStyle(.plain)
-                .font(.system(size: 15))
-                .foregroundColor(AppColors.textPrimary)
-                .focused($isTextInputFocused)
-                .onSubmit { sendText() }
-
-            Button(action: sendText) {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundColor(
-                        textInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                            ? AppColors.textTertiary
-                            : AppColors.accent
-                    )
-            }
-            .disabled(textInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        }
-        .padding(.leading, 16)
-        .padding(.trailing, 8)
-        .padding(.vertical, 6)
-        .background(AppColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 22))
-        .padding(.horizontal, 24)
-        .padding(.bottom, 8)
-    }
-
-    private func sendText() {
-        let message = textInput
-        textInput = ""
-        isTextInputFocused = false
-        Task { await viewModel.sendTextMessage(message) }
-    }
-
     private func coachColor(for coachId: String?) -> Color {
         guard let coachId,
               let activeCoach = viewModel.activeCoaches.first(where: { $0.id == coachId }) else {
@@ -464,4 +428,3 @@ struct AddCoachSheet: View {
         .presentationDetents([.medium, .large])
     }
 }
-
