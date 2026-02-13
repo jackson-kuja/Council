@@ -1,8 +1,8 @@
 # Council — Technical Documentation
 
 **Brief:** Simon (Better Creating)
+**Developer:** Jackson Kuja
 **Platform:** iOS (native SwiftUI)
-**Bundle ID:** athenlabs.Council
 
 ---
 
@@ -45,13 +45,7 @@ MCP Proxy (Node.js on Cloud Run)
 - **Platform:** App Store (`appl_` API key prefix)
 - **Not using RevenueCat Test Store** — products are configured through App Store Connect
 
-### RevenueCat Dashboard Configuration
-
-**Project:** Council (`proj6a588ff9`)
-
-**App:** Council iOS (`appa0bdadb0a2`)
-- Type: App Store
-- Bundle ID: `athenlabs.Council`
+### Dashboard Configuration
 
 **Products:**
 
@@ -60,12 +54,11 @@ MCP Proxy (Node.js on Cloud Run)
 | Council Premium Monthly | `council_premium_monthly` | Subscription | P1M |
 | Council Premium Yearly | `council_premium_yearly` | Subscription | P1Y |
 
-**Entitlement:** `premium` (`entl1d6cbdce52`)
+**Entitlement:** `premium`
 - Both monthly and yearly products grant the `premium` entitlement
 
-**Offering:** Default (`ofrng380ad7091f`)
-- Current/active offering
-- Contains both monthly and yearly packages
+**Offering:** Default
+- Current/active offering containing both monthly and yearly packages
 
 ### Monetization Implementation
 
