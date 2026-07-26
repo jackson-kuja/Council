@@ -3,3 +3,4 @@ Controlled inert marker. No executable content. No secrets.
 Synchronization trigger for isolated guard validation.
 Result artifact capture revision.
 Missing head repository guard revision.
+Public pull_request_target payload sampling revision.
