@@ -1,0 +1,121 @@
+name: GHBB download artifact Windows normalization consumer
+
+on:
+  workflow_run:
+    workflows: ["GHBB artifact Windows normalization producer"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  consume:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: windows-latest
+    timeout-minutes: 10
+    env:
+      GHBB_DUMMY_SECRET: GHBB-OWNED-DUMMY-SECRET-WINDOWS-NORMALIZATION-20260726
+    steps:
+      - name: Prepare trusted destination and baseline script
+        id: baseline
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path 'sandbox\drop' | Out-Null
+          New-Item -ItemType Directory -Force -Path 'sandbox\victim' | Out-Null
+          @'
+          $ErrorActionPreference = 'Stop'
+          @(
+            'marker=TRUSTED-BASELINE-SCRIPT'
+            'source=trusted-consumer'
+          ) | Set-Content -Path (Join-Path $env:RUNNER_TEMP 'ghbb-download-artifact-proof.txt') -Encoding utf8
+          '@ | Set-Content -Path 'sandbox\victim\trusted-consumer.ps1' -Encoding utf8
+          $hash = (Get-FileHash -Algorithm SHA256 'sandbox\victim\trusted-consumer.ps1').Hash.ToLowerInvariant()
+          "baseline_hash=$hash" | Tee-Object -FilePath 'baseline.txt'
+          "hash=$hash" >> $env:GITHUB_OUTPUT
+
+      - name: Download untrusted upstream artifact with released action
+        id: download
+        uses: actions/download-artifact@v8
+        with:
+          name: ghbb-win-normalization-${{ github.event.workflow_run.id }}
+          path: sandbox/drop
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Evaluate overwrite and execute resulting trusted-path script
+        id: evaluate
+        shell: pwsh
+        env:
+          BASELINE_HASH: ${{ steps.baseline.outputs.hash }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $outside = 'sandbox\victim\trusted-consumer.ps1'
+          $insideLiteral = 'sandbox\drop\.. \victim\trusted-consumer.ps1'
+          $outsideExists = Test-Path -LiteralPath $outside
+          $insideLiteralExists = Test-Path -LiteralPath $insideLiteral
+          $outsideHash = if ($outsideExists) {
+            (Get-FileHash -Algorithm SHA256 -LiteralPath $outside).Hash.ToLowerInvariant()
+          } else { '<missing>' }
+          $outsideChanged = $outsideExists -and ($outsideHash -ne $env:BASELINE_HASH)
+          $payloadMarkerPresent = $false
+          if ($outsideExists) {
+            $payloadMarkerPresent = [bool](Select-String -LiteralPath $outside -SimpleMatch 'GHBB-DOWNLOAD-ARTIFACT-WINDOWS-NORMALIZATION-20260726' -Quiet)
+          }
+
+          Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $env:RUNNER_TEMP 'ghbb-download-artifact-proof.txt')
+          if ($outsideExists) {
+            & pwsh -NoLogo -NoProfile -NonInteractive -File $outside
+          }
+
+          $proofPath = Join-Path $env:RUNNER_TEMP 'ghbb-download-artifact-proof.txt'
+          $proofExists = Test-Path -LiteralPath $proofPath
+          $proof = if ($proofExists) { Get-Content -LiteralPath $proofPath -Raw } else { '' }
+          $expectedSecretHash = [System.BitConverter]::ToString(
+            [System.Security.Cryptography.SHA256]::Create().ComputeHash(
+              [System.Text.Encoding]::UTF8.GetBytes($env:GHBB_DUMMY_SECRET)
+            )
+          ).Replace('-', '').ToLowerInvariant()
+          $payloadExecuted = $proof -match 'marker=GHBB-DOWNLOAD-ARTIFACT-WINDOWS-NORMALIZATION-20260726'
+          $secretHashMatched = $proof -match [regex]::Escape("dummy_secret_sha256=$expectedSecretHash")
+          $boundaryFailure = $outsideChanged -and $payloadMarkerPresent -and $payloadExecuted -and $secretHashMatched
+
+          @(
+            "download_outcome=${{ steps.download.outcome }}"
+            "baseline_hash=$env:BASELINE_HASH"
+            "outside_exists=$($outsideExists.ToString().ToLowerInvariant())"
+            "outside_hash=$outsideHash"
+            "outside_changed=$($outsideChanged.ToString().ToLowerInvariant())"
+            "inside_literal_exists=$($insideLiteralExists.ToString().ToLowerInvariant())"
+            "payload_marker_present=$($payloadMarkerPresent.ToString().ToLowerInvariant())"
+            "payload_executed=$($payloadExecuted.ToString().ToLowerInvariant())"
+            "dummy_secret_sha256_match=$($secretHashMatched.ToString().ToLowerInvariant())"
+            'dummy_secret_raw_exposed=false'
+            "authorization_boundary_failure=$($boundaryFailure.ToString().ToLowerInvariant())"
+          ) | Set-Content -Path 'ghbb-win-normalization-result.txt' -Encoding utf8
+          Get-Content -LiteralPath 'ghbb-win-normalization-result.txt'
+          "boundary_failure=$($boundaryFailure.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+
+      - name: Upload sanitized result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ghbb-win-normalization-result-${{ github.run_id }}
+          path: ghbb-win-normalization-result.txt
+          retention-days: 1
+          if-no-files-found: warn
+
+      - name: Fail closed on confirmed path-normalization escape
+        if: always()
+        shell: pwsh
+        env:
+          BOUNDARY_FAILURE: ${{ steps.evaluate.outputs.boundary_failure }}
+        run: |
+          if ($env:BOUNDARY_FAILURE -eq 'true') {
+            Write-Error 'CONFIRMED_DOWNLOAD_ARTIFACT_WINDOWS_PATH_NORMALIZATION_ESCAPE'
+            exit 1
+          }
+          Write-Host 'RESULT=NO_CONFIRMED_WINDOWS_PATH_NORMALIZATION_ESCAPE'
