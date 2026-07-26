@@ -3,7 +3,7 @@ name: GHBB checkout repository alias guard probe
 on:
   pull_request:
     branches: [main]
-    types: [synchronize, reopened]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
@@ -32,6 +32,8 @@ jobs:
           PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          MARKER_PATH: ghbb-checkout-dotgit-canary.txt
+          EXPECTED_MARKER: GHBB-CHECKOUT-DOTGIT-CANARY-20260726
         run: |
           set -euo pipefail
           umask 077
@@ -83,12 +85,12 @@ jobs:
             else
               printf '%s_guard_refusal=false\n' "$label"
             fi
-            if [[ -f "simulated-workspace/$target/ghbb-results-log-trigger-20260726.txt" ]]; then
-              printf '%s_exact_pr_marker=true\n' "$label"
-              sha256sum "simulated-workspace/$target/ghbb-results-log-trigger-20260726.txt"
-            else
-              printf '%s_exact_pr_marker=false\n' "$label"
+            marker_ok=false
+            if [[ -f "simulated-workspace/$target/$MARKER_PATH" ]] && grep -qx "$EXPECTED_MARKER" "simulated-workspace/$target/$MARKER_PATH"; then
+              marker_ok=true
+              sha256sum "simulated-workspace/$target/$MARKER_PATH"
             fi
+            printf '%s_exact_pr_marker=%s\n' "$label" "$marker_ok"
             return 0
           }
 
