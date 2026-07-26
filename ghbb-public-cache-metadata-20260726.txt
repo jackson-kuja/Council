@@ -1,2 +1,3 @@
 Controlled public Actions execution target for GitHub bug-bounty cache authorization testing.
 No executable content. No secrets. No production code changes.
+Trigger: writable pull_request cache scope.
