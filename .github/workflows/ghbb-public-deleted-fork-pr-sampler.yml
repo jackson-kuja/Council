@@ -1,0 +1,128 @@
+name: GHBB public deleted-fork pull request sampler
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Find public PRs with missing head repositories
+        uses: actions/github-script@v7
+        env:
+          SAMPLE_REPOSITORIES: github/docs,github/codeql,actions/checkout,ossf/scorecard,microsoft/vscode,kubernetes/kubernetes,rust-lang/rust
+        with:
+          script: |
+            const fs = require('fs')
+            const {spawnSync} = require('child_process')
+            const repositories = (process.env.SAMPLE_REPOSITORIES || '')
+              .split(',').map(value => value.trim()).filter(Boolean)
+            const inspected = []
+            const matches = []
+
+            function pullRef(full, number) {
+              const result = spawnSync('git', [
+                'ls-remote',
+                `https://github.com/${full}.git`,
+                `refs/pull/${number}/head`
+              ], {encoding: 'utf8', timeout: 20000})
+              const output = result.status === 0 ? result.stdout.trim() : ''
+              const sha = /^([0-9a-f]{40}|[0-9a-f]{64})\s/.exec(output)?.[1] || null
+              return {exit: result.status === null ? -1 : result.status, sha}
+            }
+
+            for (const full of repositories) {
+              const [owner, repo] = full.split('/')
+              if (!owner || !repo) continue
+              let seen = 0
+              let found = 0
+              for (let page = 1; page <= 20 && matches.length < 40; page += 1) {
+                let response
+                try {
+                  response = await github.rest.pulls.list({
+                    owner,
+                    repo,
+                    state: 'all',
+                    sort: 'updated',
+                    direction: 'desc',
+                    per_page: 100,
+                    page
+                  })
+                } catch (_) {
+                  inspected.push({repository: full, error: 'pull_list_unavailable'})
+                  break
+                }
+                const pulls = response.data || []
+                seen += pulls.length
+                for (const pr of pulls) {
+                  if (pr?.head?.repo !== null) continue
+                  const retained = pullRef(full, pr.number)
+                  matches.push({
+                    repository: full,
+                    number: pr.number,
+                    state: pr.state,
+                    draft: Boolean(pr.draft),
+                    merged_at: pr.merged_at,
+                    created_at: pr.created_at,
+                    updated_at: pr.updated_at,
+                    closed_at: pr.closed_at,
+                    author_login: pr.user?.login || null,
+                    author_deleted: Boolean(pr.user?.deleted),
+                    head_label: pr.head?.label || null,
+                    head_ref: pr.head?.ref || null,
+                    head_sha: pr.head?.sha || null,
+                    head_repository_is_null: true,
+                    pull_ref_exit: retained.exit,
+                    pull_ref_sha: retained.sha,
+                    pull_ref_matches_head_sha: Boolean(retained.sha && retained.sha === pr.head?.sha)
+                  })
+                  found += 1
+                  if (matches.length >= 40) break
+                }
+                if (pulls.length < 100) break
+              }
+              inspected.push({repository: full, pulls_seen: seen, null_head_repositories_found: found})
+              if (matches.length >= 40) break
+            }
+
+            const openRetained = matches.find(item =>
+              item.state === 'open' && item.pull_ref_matches_head_sha && item.author_login
+            ) || null
+            const result = {inspected, matches}
+            fs.writeFileSync('public-deleted-fork-pr-samples.json', JSON.stringify(result, null, 2) + '\n')
+
+            const lines = [
+              '<!-- ghbb-public-deleted-fork-pr-sampler -->',
+              `GHBB deleted-fork PR sampling for run ${context.runId}:`,
+              `- repositories_inspected: \`${inspected.length}\``,
+              `- null_head_repository_prs_found: \`${matches.length}\``,
+              `- open_pr_with_retained_exact_pull_ref_found: \`${Boolean(openRetained)}\``
+            ]
+            if (openRetained) {
+              for (const [key, value] of Object.entries(openRetained)) {
+                lines.push(`- representative_${key}: \`${value}\``)
+              }
+            }
+            lines.push('- only public PR and Git ref metadata was queried')
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: lines.join('\n')
+            })
+
+      - name: Upload sanitized deleted-fork samples
+        uses: actions/upload-artifact@v7
+        with:
+          name: ghbb-public-deleted-fork-pr-samples-${{ github.run_id }}
+          path: public-deleted-fork-pr-samples.json
+          retention-days: 1
+          if-no-files-found: error
