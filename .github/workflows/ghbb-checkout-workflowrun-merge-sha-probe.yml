@@ -1,0 +1,193 @@
+name: GHBB checkout workflow_run merge SHA guard probe
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch released checkout implementation
+        uses: actions/checkout@v7
+        with:
+          repository: actions/checkout
+          ref: v7.0.1
+          path: checkout-action
+          persist-credentials: false
+
+      - name: Exercise workflow_run head and merge SHAs
+        id: probe
+        shell: bash
+        env:
+          GHBB_TOKEN: ${{ github.token }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PAYLOAD_PATH: ghbb-workflowrun-merge-payload.sh
+          EXPECTED_PAYLOAD_MARKER: GHBB-WORKFLOWRUN-MERGE-PAYLOAD-20260726
+          GHBB_DUMMY_SECRET: GHBB-BASE-ONLY-SECRET-CANARY-20260726
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p simulated-workspace
+          fake_event="$RUNNER_TEMP/ghbb-fake-workflow-run.json"
+          jq -n \
+            --arg head_sha "$PR_HEAD_SHA" \
+            '{
+              repository: {id: 1152881403, private: false},
+              workflow_run: {
+                event: "pull_request",
+                head_sha: $head_sha,
+                head_commit: {id: $head_sha},
+                head_repository: {id: 4242424242, full_name: "attacker-controlled/fork"}
+              }
+            }' > "$fake_event"
+
+          run_checkout() {
+            local label="$1" ref="$2" target="$3"
+            rm -rf "simulated-workspace/$target"
+            mkdir -p "simulated-workspace/$target"
+            set +e
+            env \
+              GITHUB_EVENT_NAME=workflow_run \
+              GITHUB_EVENT_PATH="$fake_event" \
+              GITHUB_WORKSPACE="$GITHUB_WORKSPACE/simulated-workspace" \
+              INPUT_REPOSITORY="jackson-kuja/Council" \
+              INPUT_REF="$ref" \
+              INPUT_PATH="$target" \
+              INPUT_TOKEN="$GHBB_TOKEN" \
+              'INPUT_PERSIST-CREDENTIALS=false' \
+              'INPUT_CLEAN=true' \
+              'INPUT_FETCH-DEPTH=1' \
+              'INPUT_ALLOW-UNSAFE-PR-CHECKOUT=false' \
+              node "$GITHUB_WORKSPACE/checkout-action/dist/index.js" \
+              > "$RUNNER_TEMP/${label}.stdout" 2> "$RUNNER_TEMP/${label}.stderr"
+            local rc=$?
+            set -e
+
+            refusal=false
+            if grep -q 'Refusing to check out fork pull request code' "$RUNNER_TEMP/${label}.stdout" "$RUNNER_TEMP/${label}.stderr"; then
+              refusal=true
+            fi
+            payload_present=false
+            if [[ -f "simulated-workspace/$target/$PAYLOAD_PATH" ]] && grep -q "$EXPECTED_PAYLOAD_MARKER" "simulated-workspace/$target/$PAYLOAD_PATH"; then
+              payload_present=true
+              sha256sum "simulated-workspace/$target/$PAYLOAD_PATH"
+            fi
+            checked_out_sha='<none>'
+            if git -C "simulated-workspace/$target" rev-parse HEAD >/dev/null 2>&1; then
+              checked_out_sha="$(git -C "simulated-workspace/$target" rev-parse HEAD)"
+            fi
+            printf '%s_exit=%s\n' "$label" "$rc"
+            printf '%s_refused=%s\n' "$label" "$refusal"
+            printf '%s_payload_present=%s\n' "$label" "$payload_present"
+            printf '%s_checked_out_sha=%s\n' "$label" "$checked_out_sha"
+          }
+
+          run_checkout head_sha_control "$PR_HEAD_SHA" head-control | tee head-control.result
+          run_checkout merge_sha_candidate "$PR_MERGE_SHA" merge-candidate | tee merge-candidate.result
+
+          read_value() { sed -n "s/^$1=//p" "$2" | tail -1; }
+          head_refused="$(read_value head_sha_control_refused head-control.result)"
+          head_payload="$(read_value head_sha_control_payload_present head-control.result)"
+          merge_exit="$(read_value merge_sha_candidate_exit merge-candidate.result)"
+          merge_refused="$(read_value merge_sha_candidate_refused merge-candidate.result)"
+          merge_payload="$(read_value merge_sha_candidate_payload_present merge-candidate.result)"
+          merge_checked_out_sha="$(read_value merge_sha_candidate_checked_out_sha merge-candidate.result)"
+
+          control_valid=false
+          [[ "$head_refused" == true && "$head_payload" == false ]] && control_valid=true
+          merge_sha_bypass=false
+          [[ "$merge_exit" == 0 && "$merge_refused" == false && "$merge_payload" == true && "$merge_checked_out_sha" == "$PR_MERGE_SHA" ]] && merge_sha_bypass=true
+
+          payload_executed=false
+          secret_canary_hash='<none>'
+          expected_secret_hash="$(printf '%s' "$GHBB_DUMMY_SECRET" | sha256sum | cut -d' ' -f1)"
+          if [[ "$merge_sha_bypass" == true ]]; then
+            (
+              cd simulated-workspace/merge-candidate
+              GHBB_DUMMY_SECRET="$GHBB_DUMMY_SECRET" bash "$PAYLOAD_PATH"
+            )
+            if [[ -f simulated-workspace/merge-candidate/ghbb-workflowrun-merge-proof.txt ]]; then
+              actual_marker="$(sed -n 's/^marker=//p' simulated-workspace/merge-candidate/ghbb-workflowrun-merge-proof.txt | head -1)"
+              secret_canary_hash="$(sed -n 's/^secret_sha256=//p' simulated-workspace/merge-candidate/ghbb-workflowrun-merge-proof.txt | head -1)"
+              [[ "$actual_marker" == "$EXPECTED_PAYLOAD_MARKER" && "$secret_canary_hash" == "$expected_secret_hash" ]] && payload_executed=true
+            fi
+          fi
+
+          {
+            printf 'control_valid=%s\n' "$control_valid"
+            printf 'head_sha_refused=%s\n' "$head_refused"
+            printf 'head_sha_payload_present=%s\n' "$head_payload"
+            printf 'merge_sha_exit=%s\n' "$merge_exit"
+            printf 'merge_sha_refused=%s\n' "$merge_refused"
+            printf 'merge_sha_payload_present=%s\n' "$merge_payload"
+            printf 'merge_sha_checked_out_exact=%s\n' "$([[ "$merge_checked_out_sha" == "$PR_MERGE_SHA" ]] && printf true || printf false)"
+            printf 'merge_sha_bypass=%s\n' "$merge_sha_bypass"
+            printf 'pr_payload_executed=%s\n' "$payload_executed"
+            printf 'dummy_secret_sha256_match=%s\n' "$([[ "$secret_canary_hash" == "$expected_secret_hash" ]] && printf true || printf false)"
+            printf 'dummy_secret_raw_exposed=false\n'
+          } | tee probe-result.txt
+
+          printf 'control_valid=%s\n' "$control_valid" >> "$GITHUB_OUTPUT"
+          printf 'bypass=%s\n' "$merge_sha_bypass" >> "$GITHUB_OUTPUT"
+          printf 'payload_executed=%s\n' "$payload_executed" >> "$GITHUB_OUTPUT"
+
+      - name: Post sanitized workflow_run merge SHA result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const result = {}
+            try {
+              for (const line of fs.readFileSync('probe-result.txt', 'utf8').trim().split(/\r?\n/)) {
+                const index = line.indexOf('=')
+                if (index > 0) result[line.slice(0, index)] = line.slice(index + 1)
+              }
+            } catch (_) {}
+            const body = [
+              '<!-- ghbb-checkout-workflowrun-merge-result -->',
+              `GHBB checkout workflow_run merge-SHA result for run ${context.runId}:`,
+              ...Object.entries(result).map(([name, value]) => `- ${name}: \`${value}\``),
+              '- only an inert PR payload and a dummy secret canary were used'
+            ].join('\n')
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            })
+
+      - name: Upload sanitized workflow_run merge SHA result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ghbb-checkout-workflowrun-merge-result-${{ github.run_id }}
+          path: probe-result.txt
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Fail closed on confirmed merge SHA bypass
+        if: always()
+        shell: bash
+        env:
+          CONTROL_VALID: ${{ steps.probe.outputs.control_valid }}
+          BYPASS: ${{ steps.probe.outputs.bypass }}
+          PAYLOAD_EXECUTED: ${{ steps.probe.outputs.payload_executed }}
+        run: |
+          set -euo pipefail
+          test "$CONTROL_VALID" = true
+          if [[ "$BYPASS" == true && "$PAYLOAD_EXECUTED" == true ]]; then
+            printf 'CONFIRMED_ACTIONS_CHECKOUT_WORKFLOW_RUN_MERGE_SHA_GUARD_BYPASS\n' >&2
+            exit 1
+          fi
+          printf 'RESULT=WORKFLOW_RUN_MERGE_SHA_GUARD_ENFORCED_OR_UNRESOLVED\n'
