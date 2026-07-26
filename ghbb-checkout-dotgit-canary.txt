@@ -1,0 +1,2 @@
+GHBB-CHECKOUT-DOTGIT-CANARY-20260726
+Controlled inert marker. No executable content. No secrets.
