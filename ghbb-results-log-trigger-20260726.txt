@@ -1,0 +1,2 @@
+Controlled synchronization marker for Results receiver job-log authorization testing.
+No executable content. No secrets.
