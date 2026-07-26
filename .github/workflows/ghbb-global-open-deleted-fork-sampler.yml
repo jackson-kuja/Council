@@ -68,8 +68,8 @@ jobs:
             }
 
             const queryDocument = `
-              query($query: String!, $cursor: String) {
-                search(query: $query, type: ISSUE, first: 100, after: $cursor) {
+              query($searchText: String!, $cursor: String) {
+                search(query: $searchText, type: ISSUE, first: 100, after: $cursor) {
                   issueCount
                   pageInfo { hasNextPage endCursor }
                   nodes {
@@ -92,11 +92,11 @@ jobs:
               }
             `
 
-            for (const searchQuery of queries) {
+            for (const searchText of queries) {
               let cursor = null
               let pages = 0
               do {
-                const data = await github.graphql(queryDocument, {query: searchQuery, cursor})
+                const data = await github.graphql(queryDocument, {searchText, cursor})
                 const search = data.search
                 for (const node of search.nodes || []) await inspectNode(node)
                 cursor = search.pageInfo.hasNextPage ? search.pageInfo.endCursor : null
