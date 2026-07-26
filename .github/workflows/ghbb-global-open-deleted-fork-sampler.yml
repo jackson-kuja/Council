@@ -28,6 +28,7 @@ jobs:
             ]
             const inspected = []
             const matches = []
+            const errors = []
             const seen = new Set()
 
             function retainedRef(fullName, number) {
@@ -68,10 +69,9 @@ jobs:
             }
 
             const queryDocument = `
-              query($searchText: String!, $cursor: String) {
-                search(query: $searchText, type: ISSUE, first: 100, after: $cursor) {
+              query($searchText: String!) {
+                search(query: $searchText, type: ISSUE, first: 100) {
                   issueCount
-                  pageInfo { hasNextPage endCursor }
                   nodes {
                     __typename
                     ... on PullRequest {
@@ -93,20 +93,17 @@ jobs:
             `
 
             for (const searchText of queries) {
-              let cursor = null
-              let pages = 0
-              do {
-                const data = await github.graphql(queryDocument, {searchText, cursor})
-                const search = data.search
-                for (const node of search.nodes || []) await inspectNode(node)
-                cursor = search.pageInfo.hasNextPage ? search.pageInfo.endCursor : null
-                pages += 1
-              } while (cursor && pages < 10 && matches.length < 50)
-              if (matches.length >= 50) break
+              try {
+                const data = await github.graphql(queryDocument, {searchText})
+                for (const node of data.search.nodes || []) await inspectNode(node)
+              } catch (error) {
+                errors.push({query: searchText, status: error?.status || 0, message: String(error?.message || 'other').slice(0, 160)})
+              }
+              await new Promise(resolve => setTimeout(resolve, 2500))
             }
 
             const exact = matches.filter(item => item.pull_ref_matches_head_oid)
-            const result = {inspected_count: inspected.length, matches}
+            const result = {inspected_count: inspected.length, matches, errors}
             fs.writeFileSync('global-open-deleted-fork-samples.json', JSON.stringify(result, null, 2) + '\n')
 
             const representative = exact[0] || matches[0] || null
@@ -115,7 +112,8 @@ jobs:
               `GHBB global open deleted-fork sampling for run ${context.runId}:`,
               `- unique_open_prs_inspected: \`${inspected.length}\``,
               `- open_prs_with_null_head_repository: \`${matches.length}\``,
-              `- open_prs_with_exact_retained_pull_ref: \`${exact.length}\``
+              `- open_prs_with_exact_retained_pull_ref: \`${exact.length}\``,
+              `- query_errors: \`${errors.length}\``
             ]
             if (representative) {
               for (const [key, value] of Object.entries(representative)) {
@@ -131,6 +129,7 @@ jobs:
             })
 
       - name: Upload sanitized global open PR samples
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: ghbb-global-open-deleted-fork-samples-${{ github.run_id }}
