@@ -8,6 +8,7 @@ on:
 permissions:
   actions: read
   contents: read
+  pull-requests: write
 
 jobs:
   consume:
@@ -107,6 +108,30 @@ jobs:
           path: ghbb-win-normalization-result.txt
           retention-days: 1
           if-no-files-found: warn
+
+      - name: Post sanitized result to triggering pull request
+        if: always() && github.event.workflow_run.pull_requests[0].number
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            let lines = ['result_file_missing=true']
+            try {
+              lines = fs.readFileSync('ghbb-win-normalization-result.txt', 'utf8')
+                .trim().split(/\r?\n/).filter(Boolean)
+            } catch (_) {}
+            const body = [
+              '<!-- ghbb-download-artifact-win-normalization-result -->',
+              `GHBB download-artifact Windows normalization result for run ${context.runId}:`,
+              ...lines.map(line => `- ${line.replace('=', ': `')}\``),
+              '- only an owned dummy-secret digest and inert script canary were used'
+            ].join('\n')
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.workflow_run.pull_requests[0].number,
+              body
+            })
 
       - name: Fail closed on confirmed path-normalization escape
         if: always()
