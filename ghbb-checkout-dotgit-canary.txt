@@ -8,3 +8,4 @@ Raw run identity sampling revision.
 Deleted-fork PR metadata sampling revision.
 Global open deleted-fork sampling revision.
 Corrected global sampling retry.
+Rate-limited global sampling revision.
