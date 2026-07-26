@@ -1,2 +1,3 @@
 Controlled synchronization marker for Results receiver job-log authorization testing.
 No executable content. No secrets.
+Trigger: checkout repository .git alias guard validation.
