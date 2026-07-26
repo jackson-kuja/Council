@@ -1,0 +1,162 @@
+name: GHBB checkout repository alias guard probe
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch current checkout action implementation
+        uses: actions/checkout@v7
+        with:
+          repository: actions/checkout
+          ref: main
+          path: checkout-action
+          persist-credentials: false
+
+      - name: Exercise exact-name control and .git alias
+        id: probe
+        shell: bash
+        env:
+          GHBB_TOKEN: ${{ github.token }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p simulated-workspace
+          fake_event="$RUNNER_TEMP/ghbb-fake-pull-request-target.json"
+          jq -n \
+            --arg head_sha "$PR_HEAD_SHA" \
+            --arg merge_sha "$PR_MERGE_SHA" \
+            --arg head_ref "$PR_HEAD_REF" \
+            --argjson head_repo_id "$GITHUB_REPOSITORY_ID" \
+            '{
+              repository: {id: 4242424242, private: false},
+              pull_request: {
+                number: ($ENV.PR_NUMBER | tonumber),
+                head: {
+                  sha: $head_sha,
+                  ref: $head_ref,
+                  repo: {id: $head_repo_id, full_name: "jackson-kuja/Council"}
+                },
+                merge_commit_sha: $merge_sha,
+                base: {sha: "1111111111111111111111111111111111111111"}
+              }
+            }' > "$fake_event"
+
+          run_checkout() {
+            local label="$1" repository="$2" ref="$3" target="$4"
+            rm -rf "simulated-workspace/$target"
+            mkdir -p "simulated-workspace/$target"
+            set +e
+            env \
+              GITHUB_EVENT_NAME=pull_request_target \
+              GITHUB_EVENT_PATH="$fake_event" \
+              GITHUB_WORKSPACE="$GITHUB_WORKSPACE/simulated-workspace" \
+              INPUT_REPOSITORY="$repository" \
+              INPUT_REF="$ref" \
+              INPUT_PATH="$target" \
+              INPUT_TOKEN="$GHBB_TOKEN" \
+              'INPUT_PERSIST-CREDENTIALS=false' \
+              'INPUT_CLEAN=true' \
+              'INPUT_FETCH-DEPTH=1' \
+              'INPUT_ALLOW-UNSAFE-PR-CHECKOUT=false' \
+              node "$GITHUB_WORKSPACE/checkout-action/dist/index.js" \
+              > "$RUNNER_TEMP/${label}.stdout" 2> "$RUNNER_TEMP/${label}.stderr"
+            local rc=$?
+            set -e
+            printf '%s_rc=%s\n' "$label" "$rc"
+            if grep -q 'Refusing to check out fork pull request code' "$RUNNER_TEMP/${label}.stdout" "$RUNNER_TEMP/${label}.stderr"; then
+              printf '%s_guard_refusal=true\n' "$label"
+            else
+              printf '%s_guard_refusal=false\n' "$label"
+            fi
+            if [[ -f "simulated-workspace/$target/ghbb-results-log-trigger-20260726.txt" ]]; then
+              printf '%s_exact_pr_marker=true\n' "$label"
+              sha256sum "simulated-workspace/$target/ghbb-results-log-trigger-20260726.txt"
+            else
+              printf '%s_exact_pr_marker=false\n' "$label"
+            fi
+            return 0
+          }
+
+          run_checkout exact_name jackson-kuja/Council "refs/heads/$PR_HEAD_REF" exact-control | tee exact.result
+          run_checkout dot_git_alias jackson-kuja/Council.git "refs/heads/$PR_HEAD_REF" alias-target | tee alias.result
+
+          exact_refusal="$(sed -n 's/^exact_name_guard_refusal=//p' exact.result | tail -1)"
+          exact_marker="$(sed -n 's/^exact_name_exact_pr_marker=//p' exact.result | tail -1)"
+          alias_refusal="$(sed -n 's/^dot_git_alias_guard_refusal=//p' alias.result | tail -1)"
+          alias_marker="$(sed -n 's/^dot_git_alias_exact_pr_marker=//p' alias.result | tail -1)"
+          alias_rc="$(sed -n 's/^dot_git_alias_rc=//p' alias.result | tail -1)"
+
+          control_valid=false
+          [[ "$exact_refusal" == true && "$exact_marker" == false ]] && control_valid=true
+          alias_bypass=false
+          [[ "$alias_refusal" == false && "$alias_marker" == true && "$alias_rc" == 0 ]] && alias_bypass=true
+
+          {
+            printf 'control_valid=%s\n' "$control_valid"
+            printf 'exact_name_refused=%s\n' "$exact_refusal"
+            printf 'exact_name_marker=%s\n' "$exact_marker"
+            printf 'dot_git_alias_refused=%s\n' "$alias_refusal"
+            printf 'dot_git_alias_marker=%s\n' "$alias_marker"
+            printf 'dot_git_alias_exit=%s\n' "$alias_rc"
+            printf 'alias_bypass=%s\n' "$alias_bypass"
+          } | tee probe-result.txt
+
+          printf 'control_valid=%s\n' "$control_valid" >> "$GITHUB_OUTPUT"
+          printf 'alias_bypass=%s\n' "$alias_bypass" >> "$GITHUB_OUTPUT"
+
+      - name: Post sanitized checkout guard result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const result = {}
+            try {
+              for (const line of fs.readFileSync('probe-result.txt', 'utf8').trim().split(/\r?\n/)) {
+                const index = line.indexOf('=')
+                if (index > 0) result[line.slice(0, index)] = line.slice(index + 1)
+              }
+            } catch (_) {}
+            const body = [
+              '<!-- ghbb-checkout-alias-guard-result -->',
+              `GHBB checkout alias-guard result for run ${context.runId}:`,
+              ...Object.entries(result).map(([name, value]) => `- ${name}: \`${value}\``),
+              '- token_or_repository_content_exposed: `false`',
+              '- only an inert marker file was verified'
+            ].join('\n')
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            })
+
+      - name: Fail closed on confirmed alias bypass
+        if: always()
+        shell: bash
+        env:
+          CONTROL_VALID: ${{ steps.probe.outputs.control_valid }}
+          ALIAS_BYPASS: ${{ steps.probe.outputs.alias_bypass }}
+        run: |
+          set -euo pipefail
+          test "$CONTROL_VALID" = true
+          if [[ "$ALIAS_BYPASS" == true ]]; then
+            printf 'CONFIRMED_ACTIONS_CHECKOUT_DOT_GIT_ALIAS_GUARD_BYPASS\n' >&2
+            exit 1
+          fi
+          printf 'RESULT=CHECKOUT_ALIAS_GUARD_ENFORCED_OR_ALIAS_UNRESOLVED\n'
