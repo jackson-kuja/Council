@@ -1,0 +1,212 @@
+name: GHBB checkout missing head repository guard probe
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch current checkout action implementation
+        uses: actions/checkout@v7
+        with:
+          repository: actions/checkout
+          ref: main
+          path: checkout-action
+          persist-credentials: false
+
+      - name: Exercise present and missing fork repository identities
+        id: probe
+        shell: bash
+        env:
+          GHBB_TOKEN: ${{ github.token }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          MARKER_PATH: ghbb-checkout-dotgit-canary.txt
+          EXPECTED_MARKER: GHBB-CHECKOUT-DOTGIT-CANARY-20260726
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p simulated-workspace
+
+          target_present="$RUNNER_TEMP/ghbb-target-present.json"
+          target_missing="$RUNNER_TEMP/ghbb-target-missing.json"
+          workflow_present="$RUNNER_TEMP/ghbb-workflow-present.json"
+          workflow_missing="$RUNNER_TEMP/ghbb-workflow-missing.json"
+
+          jq -n --arg head_sha "$PR_HEAD_SHA" --arg merge_sha "$PR_MERGE_SHA" --argjson head_repo_id "$GITHUB_REPOSITORY_ID" '{
+            repository: {id: 4242424242, private: false},
+            pull_request: {
+              number: ($ENV.PR_NUMBER | tonumber),
+              head: {sha: $head_sha, repo: {id: $head_repo_id, full_name: "jackson-kuja/Council"}},
+              merge_commit_sha: $merge_sha
+            }
+          }' > "$target_present"
+
+          jq -n --arg head_sha "$PR_HEAD_SHA" --arg merge_sha "$PR_MERGE_SHA" '{
+            repository: {id: 4242424242, private: false},
+            pull_request: {
+              number: ($ENV.PR_NUMBER | tonumber),
+              head: {sha: $head_sha, repo: null},
+              merge_commit_sha: $merge_sha
+            }
+          }' > "$target_missing"
+
+          jq -n --arg head_sha "$PR_HEAD_SHA" --argjson head_repo_id "$GITHUB_REPOSITORY_ID" '{
+            repository: {id: 4242424242, private: false},
+            workflow_run: {
+              event: "pull_request",
+              head_sha: $head_sha,
+              head_commit: {id: $head_sha},
+              head_repository: {id: $head_repo_id, full_name: "jackson-kuja/Council"}
+            }
+          }' > "$workflow_present"
+
+          jq -n --arg head_sha "$PR_HEAD_SHA" '{
+            repository: {id: 4242424242, private: false},
+            workflow_run: {
+              event: "pull_request",
+              head_sha: $head_sha,
+              head_commit: {id: $head_sha},
+              head_repository: null
+            }
+          }' > "$workflow_missing"
+
+          run_checkout() {
+            local label="$1" event_name="$2" event_path="$3" ref="$4" target="$5"
+            rm -rf "simulated-workspace/$target"
+            mkdir -p "simulated-workspace/$target"
+            set +e
+            env \
+              GITHUB_EVENT_NAME="$event_name" \
+              GITHUB_EVENT_PATH="$event_path" \
+              GITHUB_WORKSPACE="$GITHUB_WORKSPACE/simulated-workspace" \
+              INPUT_REPOSITORY="jackson-kuja/Council" \
+              INPUT_REF="$ref" \
+              INPUT_PATH="$target" \
+              INPUT_TOKEN="$GHBB_TOKEN" \
+              'INPUT_PERSIST-CREDENTIALS=false' \
+              'INPUT_CLEAN=true' \
+              'INPUT_FETCH-DEPTH=1' \
+              'INPUT_ALLOW-UNSAFE-PR-CHECKOUT=false' \
+              node "$GITHUB_WORKSPACE/checkout-action/dist/index.js" \
+              > "$RUNNER_TEMP/${label}.stdout" 2> "$RUNNER_TEMP/${label}.stderr"
+            local rc=$?
+            set -e
+            refusal=false
+            if grep -q 'Refusing to check out fork pull request code' "$RUNNER_TEMP/${label}.stdout" "$RUNNER_TEMP/${label}.stderr"; then refusal=true; fi
+            marker=false
+            if [[ -f "simulated-workspace/$target/$MARKER_PATH" ]] && grep -qx "$EXPECTED_MARKER" "simulated-workspace/$target/$MARKER_PATH"; then
+              marker=true
+              sha256sum "simulated-workspace/$target/$MARKER_PATH"
+            fi
+            printf '%s_exit=%s\n' "$label" "$rc"
+            printf '%s_refused=%s\n' "$label" "$refusal"
+            printf '%s_exact_marker=%s\n' "$label" "$marker"
+          }
+
+          run_checkout target_present pull_request_target "$target_present" "refs/pull/$PR_NUMBER/head" target-present | tee target-present.result
+          run_checkout target_missing pull_request_target "$target_missing" "refs/pull/$PR_NUMBER/head" target-missing | tee target-missing.result
+          run_checkout workflow_present workflow_run "$workflow_present" "$PR_HEAD_SHA" workflow-present | tee workflow-present.result
+          run_checkout workflow_missing workflow_run "$workflow_missing" "$PR_HEAD_SHA" workflow-missing | tee workflow-missing.result
+
+          read_value() { sed -n "s/^$1=//p" "$2" | tail -1; }
+          target_present_refused="$(read_value target_present_refused target-present.result)"
+          target_present_marker="$(read_value target_present_exact_marker target-present.result)"
+          target_missing_exit="$(read_value target_missing_exit target-missing.result)"
+          target_missing_refused="$(read_value target_missing_refused target-missing.result)"
+          target_missing_marker="$(read_value target_missing_exact_marker target-missing.result)"
+          workflow_present_refused="$(read_value workflow_present_refused workflow-present.result)"
+          workflow_present_marker="$(read_value workflow_present_exact_marker workflow-present.result)"
+          workflow_missing_exit="$(read_value workflow_missing_exit workflow-missing.result)"
+          workflow_missing_refused="$(read_value workflow_missing_refused workflow-missing.result)"
+          workflow_missing_marker="$(read_value workflow_missing_exact_marker workflow-missing.result)"
+
+          target_control_valid=false
+          [[ "$target_present_refused" == true && "$target_present_marker" == false ]] && target_control_valid=true
+          target_missing_repo_bypass=false
+          [[ "$target_missing_exit" == 0 && "$target_missing_refused" == false && "$target_missing_marker" == true ]] && target_missing_repo_bypass=true
+
+          workflow_control_valid=false
+          [[ "$workflow_present_refused" == true && "$workflow_present_marker" == false ]] && workflow_control_valid=true
+          workflow_missing_repo_bypass=false
+          [[ "$workflow_missing_exit" == 0 && "$workflow_missing_refused" == false && "$workflow_missing_marker" == true ]] && workflow_missing_repo_bypass=true
+
+          {
+            printf 'target_control_valid=%s\n' "$target_control_valid"
+            printf 'target_present_refused=%s\n' "$target_present_refused"
+            printf 'target_missing_repo_exit=%s\n' "$target_missing_exit"
+            printf 'target_missing_repo_refused=%s\n' "$target_missing_refused"
+            printf 'target_missing_repo_exact_marker=%s\n' "$target_missing_marker"
+            printf 'target_missing_repo_bypass=%s\n' "$target_missing_repo_bypass"
+            printf 'workflow_control_valid=%s\n' "$workflow_control_valid"
+            printf 'workflow_present_refused=%s\n' "$workflow_present_refused"
+            printf 'workflow_missing_repo_exit=%s\n' "$workflow_missing_exit"
+            printf 'workflow_missing_repo_refused=%s\n' "$workflow_missing_refused"
+            printf 'workflow_missing_repo_exact_marker=%s\n' "$workflow_missing_marker"
+            printf 'workflow_missing_repo_bypass=%s\n' "$workflow_missing_repo_bypass"
+          } | tee probe-result.txt
+
+          printf 'target_control_valid=%s\n' "$target_control_valid" >> "$GITHUB_OUTPUT"
+          printf 'target_bypass=%s\n' "$target_missing_repo_bypass" >> "$GITHUB_OUTPUT"
+          printf 'workflow_control_valid=%s\n' "$workflow_control_valid" >> "$GITHUB_OUTPUT"
+          printf 'workflow_bypass=%s\n' "$workflow_missing_repo_bypass" >> "$GITHUB_OUTPUT"
+
+      - name: Post sanitized missing-repository result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const result = {}
+            try {
+              for (const line of fs.readFileSync('probe-result.txt', 'utf8').trim().split(/\r?\n/)) {
+                const index = line.indexOf('=')
+                if (index > 0) result[line.slice(0, index)] = line.slice(index + 1)
+              }
+            } catch (_) {}
+            const body = [
+              '<!-- ghbb-checkout-missing-headrepo-result -->',
+              `GHBB checkout missing-head-repository result for run ${context.runId}:`,
+              ...Object.entries(result).map(([name, value]) => `- ${name}: \`${value}\``),
+              '- token_or_repository_content_exposed: `false`',
+              '- only an inert marker file was verified'
+            ].join('\n')
+            await github.rest.issues.createComment({owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body})
+
+      - name: Upload sanitized missing-repository result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ghbb-checkout-missing-headrepo-result-${{ github.run_id }}
+          path: probe-result.txt
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Fail closed on confirmed missing-repository bypass
+        if: always()
+        shell: bash
+        env:
+          TARGET_CONTROL_VALID: ${{ steps.probe.outputs.target_control_valid }}
+          TARGET_BYPASS: ${{ steps.probe.outputs.target_bypass }}
+          WORKFLOW_CONTROL_VALID: ${{ steps.probe.outputs.workflow_control_valid }}
+          WORKFLOW_BYPASS: ${{ steps.probe.outputs.workflow_bypass }}
+        run: |
+          set -euo pipefail
+          test "$TARGET_CONTROL_VALID" = true
+          test "$WORKFLOW_CONTROL_VALID" = true
+          if [[ "$TARGET_BYPASS" == true || "$WORKFLOW_BYPASS" == true ]]; then
+            printf 'CONFIRMED_ACTIONS_CHECKOUT_MISSING_HEAD_REPOSITORY_GUARD_BYPASS\n' >&2
+            exit 1
+          fi
+          printf 'RESULT=MISSING_HEAD_REPOSITORY_GUARD_ENFORCED\n'
