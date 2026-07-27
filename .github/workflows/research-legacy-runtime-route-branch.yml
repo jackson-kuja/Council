@@ -13,7 +13,7 @@ permissions:
 jobs:
   discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - name: Discover authenticated own-plan routes without exposing identifiers
         uses: actions/github-script@v7
@@ -28,11 +28,18 @@ jobs:
             const planId = String(claims.plan_id || '')
             if (!/^[0-9a-f-]{36}$/i.test(planId)) throw new Error('plan_id unavailable')
 
-            const base = runtimeUrl.endsWith('/') ? runtimeUrl : `${runtimeUrl}/`
-            const origin = new URL(runtimeUrl).origin + '/'
+            const runtimeBase = runtimeUrl.endsWith('/') ? runtimeUrl : `${runtimeUrl}/`
+            const originBase = new URL(runtimeUrl).origin + '/'
             const attempts = []
+            const hash = value => crypto.createHash('sha256').update(String(value)).digest('hex')
+            const redact = text => String(text || '')
+              .replaceAll(planId, '<plan-id>')
+              .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<guid>')
+              .replace(/[A-Za-z0-9_-]{32,}/g, '<opaque>')
+              .replace(/\b\d{6,}\b/g, '<number>')
+              .slice(0, 300)
 
-            async function request(label, url) {
+            async function fetchResult(url) {
               try {
                 const response = await fetch(url, {
                   method: 'GET',
@@ -42,55 +49,99 @@ jobs:
                 const text = await response.text()
                 let json = null
                 try { json = text ? JSON.parse(text) : null } catch (_) {}
-                attempts.push({
-                  label,
-                  status: response.status,
-                  content_type: response.headers.get('content-type') || '',
-                  body_length: text.length,
-                  body_plan_match: text.toLowerCase().includes(planId.toLowerCase()),
-                  json_keys: json && typeof json === 'object' && !Array.isArray(json) ? Object.keys(json).sort().slice(0, 30) : []
-                })
+                return {response, text, json}
               } catch (error) {
-                attempts.push({label, status: 0, error: String(error?.name || 'error')})
+                return {error}
               }
             }
 
-            await request('connection-data-context', `${base}_apis/connectionData?connectOptions=1&lastChangeId=-1&lastChangeId64=-1`)
-            await request('connection-data-origin', `${origin}_apis/connectionData?connectOptions=1&lastChangeId=-1&lastChangeId64=-1`)
-            await request('old-plan-context-v1', `${base}_apis/distributedtask/plans/${encodeURIComponent(planId)}?api-version=1.0`)
-            await request('old-plan-context-v51', `${base}_apis/distributedtask/plans/${encodeURIComponent(planId)}?api-version=5.1-preview.1`)
-            await request('old-timelines-context-v1', `${base}_apis/distributedtask/plans/${encodeURIComponent(planId)}/timelines?api-version=1.0`)
+            async function record(label, baseLabel, url) {
+              const result = await fetchResult(url)
+              if (result.error) {
+                attempts.push({label, base: baseLabel, status: 0, error: String(result.error?.name || 'error')})
+                return result
+              }
+              const {response, text, json} = result
+              attempts.push({
+                label,
+                base: baseLabel,
+                status: response.status,
+                content_type: response.headers.get('content-type') || '',
+                body_length: text.length,
+                body_plan_match: text.toLowerCase().includes(planId.toLowerCase()),
+                body_preview: response.status >= 200 && response.status < 300 ? '' : redact(text),
+                json_keys: json && typeof json === 'object' && !Array.isArray(json) ? Object.keys(json).sort().slice(0, 30) : []
+              })
+              return result
+            }
 
-            const fixedScopes = new Map()
-            fixedScopes.set('zero', '00000000-0000-0000-0000-000000000000')
+            const connection = await record(
+              'connection-data',
+              'origin',
+              `${originBase}_apis/connectionData?connectOptions=1&lastChangeId=-1&lastChangeId64=-1`
+            )
+
+            const bases = new Map()
+            function addBase(label, value) {
+              try {
+                const url = new URL(value)
+                if (!/^https:$/.test(url.protocol)) return
+                const normalized = url.toString().endsWith('/') ? url.toString() : `${url.toString()}/`
+                if (![...bases.values()].includes(normalized)) bases.set(label, normalized)
+              } catch (_) {}
+            }
+            addBase('runtime', runtimeBase)
+            addBase('origin', originBase)
+
+            const locationData = connection?.json?.locationServiceData || {}
+            for (const mapping of locationData.accessMappings || []) {
+              addBase(`mapping-${mapping.moniker || mapping.displayName || bases.size}`, mapping.accessPoint || mapping.AccessPoint || '')
+            }
+            for (const definition of locationData.serviceDefinitions || []) {
+              for (const mapping of definition.locationMappings || definition.LocationMappings || []) {
+                addBase(`service-${definition.identifier || definition.Identifier || bases.size}`, mapping.location || mapping.Location || '')
+              }
+            }
+
+            const scopes = new Map()
+            scopes.set('zero', '00000000-0000-0000-0000-000000000000')
             for (const name of ['nameid', 'plan_id', 'job_id']) {
               const value = String(claims[name] || '')
-              if (value) fixedScopes.set(name, value)
+              if (value) scopes.set(name, value)
             }
             const audienceMatch = /([0-9a-f]{8}-[0-9a-f-]{27})/i.exec(String(claims.aud || ''))
-            if (audienceMatch) fixedScopes.set('audience-guid', audienceMatch[1])
+            if (audienceMatch) scopes.set('audience-guid', audienceMatch[1])
+            for (const name of ['instanceId', 'deploymentId']) {
+              const value = String(connection?.json?.[name] || '')
+              if (/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(value)) scopes.set(`connection-${name}`, value)
+            }
             try {
               for (const entry of JSON.parse(String(claims.ac || '[]'))) {
-                const scope = String(entry?.Scope || '')
-                for (const segment of scope.split('/').filter(Boolean)) {
-                  if (/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(segment)) fixedScopes.set('ac-guid', segment)
+                for (const segment of String(entry?.Scope || '').split('/').filter(Boolean)) {
+                  if (/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(segment)) scopes.set('ac-guid', segment)
                 }
               }
             } catch (_) {}
 
-            for (const [scopeName, scope] of fixedScopes) {
-              for (const hub of ['build', 'rm', 'actions', 'checks']) {
-                await request(
-                  `scoped-plan-${scopeName}-${hub}-v51`,
-                  `${base}${encodeURIComponent(scope)}/_apis/distributedtask/hubs/${hub}/plans/${encodeURIComponent(planId)}?api-version=5.1-preview.2`
+            const selectedBases = [...bases.entries()].slice(0, 8)
+            for (const [baseLabel, baseUrl] of selectedBases) {
+              await record(
+                'old-plan-v1',
+                baseLabel,
+                `${baseUrl}_apis/distributedtask/plans/${encodeURIComponent(planId)}?api-version=1.0`
+              )
+              await record(
+                'old-plan-v51',
+                baseLabel,
+                `${baseUrl}_apis/distributedtask/plans/${encodeURIComponent(planId)}?api-version=5.1-preview.1`
+              )
+              for (const [scopeName, scope] of scopes) {
+                await record(
+                  `scoped-plan-${scopeName}-build-v51`,
+                  baseLabel,
+                  `${baseUrl}${encodeURIComponent(scope)}/_apis/distributedtask/hubs/build/plans/${encodeURIComponent(planId)}?api-version=5.1-preview.2`
                 )
               }
-            }
-            for (const hub of ['build', 'rm', 'actions', 'checks']) {
-              await request(
-                `unscoped-hub-plan-${hub}-v51`,
-                `${base}_apis/distributedtask/hubs/${hub}/plans/${encodeURIComponent(planId)}?api-version=5.1-preview.2`
-              )
             }
 
             const positives = attempts.filter(item => item.status >= 200 && item.status < 300)
@@ -98,7 +149,14 @@ jobs:
               workflow_run_id: context.runId,
               runtime_origin: new URL(runtimeUrl).origin,
               runtime_path_segment_lengths: new URL(runtimeUrl).pathname.split('/').filter(Boolean).map(item => item.length),
-              plan_id_sha256: crypto.createHash('sha256').update(planId).digest('hex'),
+              plan_id_sha256: hash(planId),
+              discovered_bases: selectedBases.map(([label, value]) => ({
+                label,
+                origin: new URL(value).origin,
+                path_segment_lengths: new URL(value).pathname.split('/').filter(Boolean).map(item => item.length),
+                value_sha256: hash(value)
+              })),
+              scope_labels: [...scopes.keys()],
               positive_count: positives.length,
               positives,
               attempts
@@ -118,9 +176,10 @@ jobs:
               repo: context.repo.repo,
               path,
               branch,
-              message: `Persist expanded legacy route discovery from ${context.runId}`,
+              message: `Persist access-mapping route discovery from ${context.runId}`,
               content: Buffer.from(text).toString('base64'),
               ...(sha ? {sha} : {})
             })
+            console.log(`base_count=${selectedBases.length}`)
             console.log(`positive_count=${positives.length}`)
-            for (const item of positives) console.log(`positive=${item.label}/${item.status}`)
+            for (const item of positives) console.log(`positive=${item.base}/${item.label}/${item.status}`)
