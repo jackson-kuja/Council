@@ -1,0 +1,153 @@
+name: Research own Actions plan route proof
+
+on:
+  push:
+    branches: [research-sandbox-artifact-name-normalization]
+    paths:
+      - .github/workflows/research-own-plan-route-proof.yml
+
+permissions:
+  contents: write
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Resolve own job scope from runner metadata and prove authenticated plan route
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const path = require('path')
+            const crypto = require('crypto')
+            const token = process.env.ACTIONS_RUNTIME_TOKEN || ''
+            const runtimeUrl = process.env.ACTIONS_RUNTIME_URL || ''
+            const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'))
+            const claimPlan = String(claims.plan_id || '')
+            const guidPattern = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
+
+            const candidates = []
+            function walk(root, depth = 0) {
+              if (!root || depth > 7) return
+              let entries = []
+              try { entries = fs.readdirSync(root, {withFileTypes: true}) } catch (_) { return }
+              for (const entry of entries) {
+                const full = path.join(root, entry.name)
+                if (entry.isDirectory()) {
+                  if (/(_diag|runner|actions|work|temp)/i.test(full) || depth < 3) walk(full, depth + 1)
+                } else if (entry.isFile() && /^Worker_.*\.log$/i.test(entry.name)) {
+                  try {
+                    const stat = fs.statSync(full)
+                    if (stat.size > 0 && stat.size < 30 * 1024 * 1024) candidates.push({full, mtime: stat.mtimeMs})
+                  } catch (_) {}
+                }
+              }
+            }
+            walk('/home/runner')
+            candidates.sort((a,b) => b.mtime - a.mtime)
+
+            let sourceText = ''
+            let sourceFile = ''
+            for (const candidate of candidates) {
+              let text = ''
+              try { text = fs.readFileSync(candidate.full, 'utf8') } catch (_) { continue }
+              if (text.includes('"scopeIdentifier"') && text.includes('"planId"')) {
+                sourceText = text
+                sourceFile = candidate.full
+                break
+              }
+            }
+            if (!sourceText) throw new Error('Runner job metadata not located')
+
+            const scopeMatch = new RegExp(`"scopeIdentifier"\\s*:\\s*"(${guidPattern})"`, 'i').exec(sourceText)
+            const planMatches = [...sourceText.matchAll(new RegExp(`"planId"\\s*:\\s*"(${guidPattern})"`, 'ig'))]
+            const planMatch = planMatches.find(item => item[1].toLowerCase() === claimPlan.toLowerCase()) || planMatches[0]
+            const planTypeMatch = /"planType"\s*:\s*"([A-Za-z0-9_.-]+)"/i.exec(sourceText)
+            const timelineMatches = [...sourceText.matchAll(new RegExp(`"timelineId"\\s*:\\s*"(${guidPattern})"`, 'ig'))]
+            const scope = scopeMatch?.[1] || ''
+            const plan = planMatch?.[1] || claimPlan
+            const planType = planTypeMatch?.[1] || 'build'
+            if (!scope || !plan) throw new Error('Scope or plan unavailable')
+
+            const hash = value => crypto.createHash('sha256').update(String(value)).digest('hex')
+            const runtimeBase = runtimeUrl.endsWith('/') ? runtimeUrl : `${runtimeUrl}/`
+            const originBase = new URL(runtimeUrl).origin + '/'
+
+            async function call(label, url) {
+              try {
+                const response = await fetch(url, {
+                  method: 'GET',
+                  headers: {authorization: `Bearer ${token}`, accept: 'application/json'},
+                  signal: AbortSignal.timeout(15000)
+                })
+                const text = await response.text()
+                let json = null
+                try { json = text ? JSON.parse(text) : null } catch (_) {}
+                return {
+                  label,
+                  status: response.status,
+                  content_type: response.headers.get('content-type') || '',
+                  body_length: text.length,
+                  exact_plan_present: text.toLowerCase().includes(plan.toLowerCase()),
+                  json_keys: json && typeof json === 'object' && !Array.isArray(json) ? Object.keys(json).sort().slice(0, 30) : [],
+                  error_preview: response.status >= 200 && response.status < 300 ? '' : text
+                    .replace(/[0-9a-f]{8}-[0-9a-f-]{27}/gi, '<guid>')
+                    .replace(/[A-Za-z0-9_-]{40,}/g, '<opaque>')
+                    .slice(0, 250)
+                }
+              } catch (error) {
+                return {label, status: 0, error: String(error?.name || 'error')}
+              }
+            }
+
+            const attempts = []
+            for (const [baseLabel, base] of [['runtime', runtimeBase], ['origin', originBase]]) {
+              for (const hub of [...new Set([planType, 'build', 'checks'])]) {
+                attempts.push(await call(
+                  `${baseLabel}-${hub}-plan-v51`,
+                  `${base}${encodeURIComponent(scope)}/_apis/distributedtask/hubs/${encodeURIComponent(hub)}/plans/${encodeURIComponent(plan)}?api-version=5.1-preview.2`
+                ))
+                attempts.push(await call(
+                  `${baseLabel}-${hub}-plan-v60`,
+                  `${base}${encodeURIComponent(scope)}/_apis/distributedtask/hubs/${encodeURIComponent(hub)}/plans/${encodeURIComponent(plan)}?api-version=6.0-preview.2`
+                ))
+              }
+            }
+
+            const positives = attempts.filter(item => item.status === 200 && item.exact_plan_present)
+            const payload = {
+              workflow_run_id: context.runId,
+              source_file_name: path.basename(sourceFile),
+              source_file_path_sha256: hash(sourceFile),
+              scope_sha256: hash(scope),
+              plan_sha256: hash(plan),
+              claim_plan_match: plan.toLowerCase() === claimPlan.toLowerCase(),
+              plan_type: planType,
+              timeline_id_count: timelineMatches.length,
+              timeline_id_hashes: [...new Set(timelineMatches.map(item => hash(item[1])))],
+              positive_count: positives.length,
+              positives,
+              attempts
+            }
+            const text = JSON.stringify(payload, null, 2) + '\n'
+            const resultPath = 'own-plan-route-proof.json'
+            const branch = 'research-results-runtime-context'
+            let sha
+            try {
+              const current = await github.rest.repos.getContent({owner: context.repo.owner, repo: context.repo.repo, path: resultPath, ref: branch})
+              if (!Array.isArray(current.data)) sha = current.data.sha
+            } catch (error) {
+              if (error.status !== 404) throw error
+            }
+            await github.rest.repos.createOrUpdateFileContents({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: resultPath,
+              branch,
+              message: `Persist own plan route proof from ${context.runId}`,
+              content: Buffer.from(text).toString('base64'),
+              ...(sha ? {sha} : {})
+            })
+            console.log(`claim_plan_match=${payload.claim_plan_match}`)
+            console.log(`positive_count=${positives.length}`)
