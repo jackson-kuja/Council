@@ -35,7 +35,11 @@ jobs:
               'Research own Actions plan route proof',
               'Research runner job metadata shape',
               'Research own Actions timeline route proof',
-              'Research own timeline through SystemVssConnection'
+              'Research own timeline through SystemVssConnection',
+              'Research SystemVssConnection metadata shape',
+              'Research runner job endpoint inventory',
+              'Research exact SystemVssConnection timeline proof',
+              'Research shipped SDK own timeline proof'
             ])
             const response = await github.rest.actions.listWorkflowRunsForRepo({
               owner: context.repo.owner,
@@ -44,7 +48,7 @@ jobs:
             })
             const matches = (response.data.workflow_runs || [])
               .filter(run => trackedNames.has(run.name))
-              .slice(0, 70)
+              .slice(0, 80)
               .map(run => ({
                 id: run.id,
                 name: run.name,
@@ -92,7 +96,7 @@ jobs:
               `GHBB controlled run index from ${context.runId}:`,
               `- matches: \`${matches.length}\``
             ]
-            for (const run of matches.slice(0, 20)) {
+            for (const run of matches.slice(0, 25)) {
               lines.push(`- name=\`${run.name}\` run=\`${run.id}\` status=\`${run.status}\` conclusion=\`${run.conclusion}\` event=\`${run.event}\` head_sha=\`${run.head_sha}\` created=\`${run.created_at}\``)
             }
             await github.rest.issues.createComment({
