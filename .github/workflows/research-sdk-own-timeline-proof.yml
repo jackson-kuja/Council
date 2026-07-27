@@ -20,7 +20,6 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           import json
-          import os
           from pathlib import Path
 
           def extract_json(text: str):
@@ -87,7 +86,7 @@ jobs:
           if endpoint is None:
               raise SystemExit('SystemVssConnection unavailable')
 
-          context = {
+          route = {
               'endpoint': endpoint['url'],
               'scope': job['plan']['scopeIdentifier'],
               'hub': job['plan']['planType'],
@@ -95,26 +94,31 @@ jobs:
               'timeline': job['timeline']['id'],
               'source_file': str(source),
           }
-          Path('route-context.json').write_text(json.dumps(context), encoding='utf-8')
+          Path('route-context.json').write_text(json.dumps(route), encoding='utf-8')
           print('route_context_valid=true')
-          print(f"hub={context['hub']}")
-          print(f"plan_timeline_same={str(context['plan'].lower() == context['timeline'].lower()).lower()}")
+          print(f"hub={route['hub']}")
+          print(f"plan_timeline_same={str(route['plan'].lower() == route['timeline'].lower()).lower()}")
           PY
 
-      - name: Build a minimal client against the runner's shipped SDK assemblies
+      - name: Build and run a minimal client against the shipped runner SDK
+        id: sdk
         shell: bash
+        continue-on-error: true
         run: |
           set -euo pipefail
           RUNNER_BIN="$(dirname "$(find /home/runner/actions-runner -type f -name 'GitHub.Runner.Worker.dll' -print -quit)")"
           test -n "$RUNNER_BIN"
-          for name in GitHub.Services.Common.dll GitHub.Services.WebApi.dll GitHub.DistributedTask.WebApi.dll; do
+          printf '%s' "$RUNNER_BIN" > runner-bin-path.txt
+
+          required=(GitHub.Services.Common.dll GitHub.Services.WebApi.dll GitHub.DistributedTask.WebApi.dll)
+          for name in "${required[@]}"; do
             test -f "$RUNNER_BIN/$name"
           done
-          printf 'runner_bin_sha256=%s\n' "$(printf '%s' "$RUNNER_BIN" | sha256sum | cut -d' ' -f1)"
           printf 'runner_sdk_assemblies_present=true\n'
 
           mkdir -p sdkprobe
-          cat > sdkprobe/SdkProbe.csproj <<EOF
+          {
+            cat <<EOF
           <Project Sdk="Microsoft.NET.Sdk">
             <PropertyGroup>
               <OutputType>Exe</OutputType>
@@ -123,41 +127,48 @@ jobs:
               <Nullable>enable</Nullable>
             </PropertyGroup>
             <ItemGroup>
-              <Reference Include="GitHub.Services.Common"><HintPath>$RUNNER_BIN/GitHub.Services.Common.dll</HintPath></Reference>
-              <Reference Include="GitHub.Services.WebApi"><HintPath>$RUNNER_BIN/GitHub.Services.WebApi.dll</HintPath></Reference>
-              <Reference Include="GitHub.DistributedTask.WebApi"><HintPath>$RUNNER_BIN/GitHub.DistributedTask.WebApi.dll</HintPath></Reference>
+          EOF
+            for dll in \
+              "$RUNNER_BIN/GitHub.Services.Common.dll" \
+              "$RUNNER_BIN/GitHub.Services.WebApi.dll" \
+              "$RUNNER_BIN/GitHub.DistributedTask.WebApi.dll" \
+              "$RUNNER_BIN/GitHub.Services.OAuth.dll" \
+              "$RUNNER_BIN/Newtonsoft.Json.dll"; do
+              if [[ -f "$dll" ]]; then
+                name="$(basename "$dll" .dll)"
+                printf '      <Reference Include="%s"><HintPath>%s</HintPath><Private>true</Private></Reference>\n' "$name" "$dll"
+              fi
+            done
+            cat <<'EOF'
             </ItemGroup>
           </Project>
           EOF
+          } > sdkprobe/SdkProbe.csproj
 
           cat > sdkprobe/Program.cs <<'CS'
           using System.Text.Json;
           using GitHub.DistributedTask.WebApi;
           using GitHub.Services.Common;
-          using GitHub.Services.WebApi;
-
-          record RouteContext(string endpoint, string scope, string hub, string plan, string timeline, string source_file);
 
           static string Clean(string? value)
           {
               if (string.IsNullOrEmpty(value)) return string.Empty;
-              return System.Text.RegularExpressions.Regex.Replace(
-                  value,
-                  @"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
-                  "<guid>"
-              ).Length > 500 ? System.Text.RegularExpressions.Regex.Replace(
-                  value,
-                  @"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
-                  "<guid>"
-              )[..500] : System.Text.RegularExpressions.Regex.Replace(
+              var clean = System.Text.RegularExpressions.Regex.Replace(
                   value,
                   @"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
                   "<guid>"
               );
+              clean = System.Text.RegularExpressions.Regex.Replace(clean, @"[A-Za-z0-9_-]{80,}", "<opaque>");
+              return clean.Length > 500 ? clean[..500] : clean;
           }
 
-          var context = JsonSerializer.Deserialize<RouteContext>(await File.ReadAllTextAsync("route-context.json"))
-              ?? throw new InvalidOperationException("route context invalid");
+          using var document = JsonDocument.Parse(await File.ReadAllTextAsync("route-context.json"));
+          var root = document.RootElement;
+          var endpoint = root.GetProperty("endpoint").GetString() ?? throw new InvalidOperationException("endpoint missing");
+          var scope = root.GetProperty("scope").GetString() ?? throw new InvalidOperationException("scope missing");
+          var hub = root.GetProperty("hub").GetString() ?? throw new InvalidOperationException("hub missing");
+          var plan = root.GetProperty("plan").GetString() ?? throw new InvalidOperationException("plan missing");
+          var timelineId = root.GetProperty("timeline").GetString() ?? throw new InvalidOperationException("timeline missing");
           var token = Environment.GetEnvironmentVariable("ACTIONS_RUNTIME_TOKEN")
               ?? throw new InvalidOperationException("runtime token unavailable");
 
@@ -168,13 +179,12 @@ jobs:
                   new VssOAuthAccessTokenCredential(token),
                   CredentialPromptType.DoNotPrompt
               );
-              var connection = new VssConnection(new Uri(context.endpoint), credentials);
-              var client = connection.GetClient<TaskHttpClient>();
+              using var client = new TaskHttpClient(new Uri(endpoint), credentials);
               var timeline = await client.GetTimelineAsync(
-                  Guid.Parse(context.scope),
-                  context.hub,
-                  Guid.Parse(context.plan),
-                  Guid.Parse(context.timeline),
+                  Guid.Parse(scope),
+                  hub,
+                  Guid.Parse(plan),
+                  Guid.Parse(timelineId),
                   changeId: null,
                   includeRecords: true
               );
@@ -182,7 +192,7 @@ jobs:
               result = new
               {
                   success = true,
-                  timeline_id_match = timeline?.Id == Guid.Parse(context.timeline),
+                  timeline_id_match = timeline?.Id == Guid.Parse(timelineId),
                   record_count = records.Length,
                   log_reference_count = records.Count(record => record.Log?.Id != null),
                   record_types = records.Select(record => record.RecordType).Where(value => value != null).Distinct().OrderBy(value => value).ToArray(),
@@ -208,10 +218,41 @@ jobs:
           );
           CS
 
-          dotnet build sdkprobe/SdkProbe.csproj --configuration Release --nologo
-          OUT=sdkprobe/bin/Release/net8.0
-          cp -n "$RUNNER_BIN"/*.dll "$OUT"/ || true
-          dotnet "$OUT/SdkProbe.dll"
+          set +e
+          dotnet build sdkprobe/SdkProbe.csproj --configuration Release --nologo > sdk-build.log 2>&1
+          build_exit=$?
+          set -e
+          printf 'build_exit=%s\n' "$build_exit" > sdk-build-status.txt
+          if [[ "$build_exit" -eq 0 ]]; then
+            OUT=sdkprobe/bin/Release/net8.0
+            cp -n "$RUNNER_BIN"/*.dll "$OUT"/ || true
+            set +e
+            dotnet "$OUT/SdkProbe.dll" > sdk-run.log 2>&1
+            run_exit=$?
+            set -e
+            printf 'run_exit=%s\n' "$run_exit" >> sdk-build-status.txt
+          else
+            printf 'run_exit=-1\n' >> sdk-build-status.txt
+          fi
+
+          if [[ ! -f sdk-result.json ]]; then
+            python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+          build = Path('sdk-build.log').read_text(errors='replace') if Path('sdk-build.log').exists() else ''
+          run = Path('sdk-run.log').read_text(errors='replace') if Path('sdk-run.log').exists() else ''
+          text = (build + '\n' + run)
+          text = re.sub(r'[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,}', '<guid>', text)
+          text = re.sub(r'[A-Za-z0-9_-]{80,}', '<opaque>', text)
+          Path('sdk-result.json').write_text(json.dumps({
+              'success': False,
+              'harness_error': True,
+              'diagnostic_tail': text[-2000:],
+          }, indent=2) + '\n')
+          PY
+          fi
+          cat sdk-build-status.txt
           cat sdk-result.json
 
       - name: Persist sanitized SDK result
@@ -223,20 +264,23 @@ jobs:
             const crypto = require('crypto')
             let sdk = {success: false, result_file_missing: true}
             try { sdk = JSON.parse(fs.readFileSync('sdk-result.json', 'utf8')) } catch (_) {}
-            let context = {}
-            try { context = JSON.parse(fs.readFileSync('route-context.json', 'utf8')) } catch (_) {}
+            let routeContext = {}
+            try { routeContext = JSON.parse(fs.readFileSync('route-context.json', 'utf8')) } catch (_) {}
+            let buildStatus = ''
+            try { buildStatus = fs.readFileSync('sdk-build-status.txt', 'utf8').trim() } catch (_) {}
             const hash = value => crypto.createHash('sha256').update(String(value ?? '')).digest('hex')
-            const endpoint = (() => { try { return new URL(context.endpoint) } catch (_) { return null } })()
+            const endpoint = (() => { try { return new URL(routeContext.endpoint) } catch (_) { return null } })()
             const payload = {
               workflow_run_id: context.runId,
               endpoint_origin: endpoint?.origin || '',
               endpoint_path_segment_lengths: endpoint ? endpoint.pathname.split('/').filter(Boolean).map(item => item.length) : [],
-              endpoint_sha256: hash(context.endpoint),
-              scope_sha256: hash(context.scope),
-              plan_sha256: hash(context.plan),
-              timeline_sha256: hash(context.timeline),
-              plan_timeline_same: String(context.plan || '').toLowerCase() === String(context.timeline || '').toLowerCase(),
-              hub: context.hub || '',
+              endpoint_sha256: hash(routeContext.endpoint),
+              scope_sha256: hash(routeContext.scope),
+              plan_sha256: hash(routeContext.plan),
+              timeline_sha256: hash(routeContext.timeline),
+              plan_timeline_same: String(routeContext.plan || '').toLowerCase() === String(routeContext.timeline || '').toLowerCase(),
+              hub: routeContext.hub || '',
+              build_status: buildStatus,
               sdk
             }
             const text = JSON.stringify(payload, null, 2) + '\n'
@@ -254,7 +298,7 @@ jobs:
               repo: context.repo.repo,
               path: resultPath,
               branch,
-              message: `Persist runner SDK timeline result from ${context.runId}`,
+              message: `Persist fixed runner SDK result from ${context.runId}`,
               content: Buffer.from(text).toString('base64'),
               ...(sha ? {sha} : {})
             })
