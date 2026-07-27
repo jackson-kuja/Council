@@ -1,0 +1,26 @@
+name: GHBB unprivileged fork upstream
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  complete:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Complete without consuming untrusted repository code
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'event_name=%s\n' '${{ github.event_name }}'
+          printf 'fork_head_repository=%s\n' \
+            '${{ github.event.pull_request.head.repo.full_name }}'
+          printf 'fork_head_sha=%s\n' \
+            '${{ github.event.pull_request.head.sha }}'
+
+
