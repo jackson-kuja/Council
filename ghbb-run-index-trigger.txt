@@ -1,0 +1,2 @@
+Trigger controlled workflow-run index for download-artifact Windows normalization probe.
+Revision: 2026-07-27T00:06Z
