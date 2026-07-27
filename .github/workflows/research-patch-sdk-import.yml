@@ -1,0 +1,48 @@
+name: Research apply SDK namespace harness correction
+
+on:
+  push:
+    branches: [research-sandbox-artifact-name-normalization]
+    paths:
+      - .github/workflows/research-patch-sdk-import.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add the runner OAuth namespace import to the owned harness
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = 'research-sandbox-artifact-name-normalization'
+            const path = '.github/workflows/research-sdk-own-timeline-proof-v2.yml'
+            const current = await github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path,
+              ref: branch
+            })
+            if (Array.isArray(current.data)) throw new Error('Expected a file')
+            const original = Buffer.from(current.data.content, 'base64').toString('utf8')
+            const needle = 'using GitHub.Services.Common;\n'
+            const replacement = 'using GitHub.Services.Common;\n          using GitHub.Services.OAuth;\n'
+            if (!original.includes(needle)) throw new Error('Import anchor unavailable')
+            const updated = original.includes('using GitHub.Services.OAuth;')
+              ? original
+              : original.replace(needle, replacement)
+            if (updated === original) {
+              core.notice('Harness already contains the OAuth import')
+              return
+            }
+            await github.rest.repos.createOrUpdateFileContents({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path,
+              branch,
+              message: 'Import runner OAuth credential namespace',
+              content: Buffer.from(updated).toString('base64'),
+              sha: current.data.sha
+            })
