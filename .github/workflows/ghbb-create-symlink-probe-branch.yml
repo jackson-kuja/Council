@@ -1,0 +1,37 @@
+name: GHBB create symlink probe branch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/ghbb-create-symlink-probe-branch.yml
+      - ghbb-create-symlink-probe-trigger.txt
+
+permissions:
+  contents: write
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout trusted main branch
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Create branch containing one inert symbolic link
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch='ghbb-upload-artifact-symlink-20260727'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -C "$branch"
+          rm -f leak-dummy-secret ghbb-upload-artifact-symlink-canary.txt
+          ln -s /home/runner/work/_temp/ghbb-owned-dummy-secret.txt leak-dummy-secret
+          printf 'GHBB-UPLOAD-ARTIFACT-SYMLINK-CANARY-20260727\nNo executable content. No secrets.\n' > ghbb-upload-artifact-symlink-canary.txt
+          git add leak-dummy-secret ghbb-upload-artifact-symlink-canary.txt
+          git commit -m 'Add inert symlink for upload-artifact containment probe'
+          git push --force origin "HEAD:refs/heads/${branch}"
