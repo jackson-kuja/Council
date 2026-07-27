@@ -1,0 +1,163 @@
+name: GHBB download artifact parent-name consumer
+
+on:
+  workflow_run:
+    workflows: ["GHBB artifact name parent-path producer"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  consume:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GHBB_DUMMY_SECRET: GHBB-OWNED-DUMMY-SECRET-ARTIFACT-PARENT-NAME-20260727
+    steps:
+      - name: Prepare trusted parent destination and baseline script
+        id: baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p sandbox/drop sandbox/victim
+          cat > sandbox/victim/trusted-consumer.sh <<'BASH'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          {
+            printf 'marker=TRUSTED-BASELINE-SCRIPT\n'
+            printf 'source=trusted-consumer\n'
+          } > "${RUNNER_TEMP}/ghbb-artifact-name-parent-proof.txt"
+          BASH
+          chmod 700 sandbox/victim/trusted-consumer.sh
+          baseline_hash="$(sha256sum sandbox/victim/trusted-consumer.sh | cut -d' ' -f1)"
+          printf 'baseline_hash=%s\n' "$baseline_hash"
+          printf 'hash=%s\n' "$baseline_hash" >> "$GITHUB_OUTPUT"
+
+      - name: Download all untrusted upstream artifacts with released action
+        id: download
+        uses: actions/download-artifact@v8
+        with:
+          path: sandbox/drop
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Evaluate parent-directory overwrite and execute resulting trusted-path script
+        id: evaluate
+        shell: bash
+        env:
+          BASELINE_HASH: ${{ steps.baseline.outputs.hash }}
+          UPSTREAM_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          outside='sandbox/victim/trusted-consumer.sh'
+          safe_control="sandbox/drop/ghbb-safe-${UPSTREAM_RUN_ID}/safe/control.txt"
+
+          outside_exists=false
+          outside_hash='<missing>'
+          outside_changed=false
+          payload_marker_present=false
+          if [[ -f "$outside" ]]; then
+            outside_exists=true
+            outside_hash="$(sha256sum "$outside" | cut -d' ' -f1)"
+            [[ "$outside_hash" != "$BASELINE_HASH" ]] && outside_changed=true
+            grep -q 'GHBB-DOWNLOAD-ARTIFACT-PARENT-NAME-20260727' "$outside" && payload_marker_present=true
+          fi
+
+          safe_control_present=false
+          [[ -f "$safe_control" ]] && safe_control_present=true
+
+          rm -f "${RUNNER_TEMP}/ghbb-artifact-name-parent-proof.txt"
+          if [[ -f "$outside" ]]; then
+            bash "$outside"
+          fi
+
+          proof="${RUNNER_TEMP}/ghbb-artifact-name-parent-proof.txt"
+          payload_executed=false
+          dummy_secret_sha256_match=false
+          expected_secret_hash="$(printf '%s' "$GHBB_DUMMY_SECRET" | sha256sum | cut -d' ' -f1)"
+          if [[ -f "$proof" ]]; then
+            grep -q 'marker=GHBB-DOWNLOAD-ARTIFACT-PARENT-NAME-20260727' "$proof" && payload_executed=true
+            grep -q "dummy_secret_sha256=${expected_secret_hash}" "$proof" && dummy_secret_sha256_match=true
+          fi
+
+          authorization_boundary_failure=false
+          if [[ "$outside_changed" == true && "$payload_marker_present" == true && "$payload_executed" == true && "$dummy_secret_sha256_match" == true && "$safe_control_present" == true ]]; then
+            authorization_boundary_failure=true
+          fi
+
+          {
+            printf 'upstream_run_id=%s\n' "$UPSTREAM_RUN_ID"
+            printf 'download_outcome=%s\n' '${{ steps.download.outcome }}'
+            printf 'baseline_hash=%s\n' "$BASELINE_HASH"
+            printf 'outside_exists=%s\n' "$outside_exists"
+            printf 'outside_hash=%s\n' "$outside_hash"
+            printf 'outside_changed=%s\n' "$outside_changed"
+            printf 'safe_control_present=%s\n' "$safe_control_present"
+            printf 'payload_marker_present=%s\n' "$payload_marker_present"
+            printf 'payload_executed=%s\n' "$payload_executed"
+            printf 'dummy_secret_sha256_match=%s\n' "$dummy_secret_sha256_match"
+            printf 'dummy_secret_raw_exposed=false\n'
+            printf 'authorization_boundary_failure=%s\n' "$authorization_boundary_failure"
+          } | tee ghbb-artifact-name-parent-result.txt
+
+          printf 'boundary_failure=%s\n' "$authorization_boundary_failure" >> "$GITHUB_OUTPUT"
+
+      - name: Upload sanitized result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ghbb-artifact-name-parent-result-${{ github.run_id }}
+          path: ghbb-artifact-name-parent-result.txt
+          retention-days: 1
+          if-no-files-found: warn
+
+      - name: Persist sanitized result to owned results branch
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            let text = 'result_file_missing=true\n'
+            try { text = fs.readFileSync('ghbb-artifact-name-parent-result.txt', 'utf8') } catch (_) {}
+            const path = 'latest-result.txt'
+            const branch = 'ghbb-artifact-name-parent-results'
+            let sha
+            try {
+              const current = await github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path,
+                ref: branch
+              })
+              if (!Array.isArray(current.data)) sha = current.data.sha
+            } catch (error) {
+              if (error.status !== 404) throw error
+            }
+            await github.rest.repos.createOrUpdateFileContents({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path,
+              branch,
+              message: `Persist parent artifact-name result from ${context.runId}`,
+              content: Buffer.from(text).toString('base64'),
+              ...(sha ? {sha} : {})
+            })
+
+      - name: Fail closed on confirmed parent artifact-name escape
+        if: always()
+        shell: bash
+        env:
+          BOUNDARY_FAILURE: ${{ steps.evaluate.outputs.boundary_failure }}
+        run: |
+          set -euo pipefail
+          if [[ "$BOUNDARY_FAILURE" == true ]]; then
+            printf 'CONFIRMED_DOWNLOAD_ARTIFACT_PARENT_NAME_PATH_ESCAPE\n' >&2
+            exit 1
+          fi
+          printf 'RESULT=NO_CONFIRMED_PARENT_ARTIFACT_NAME_ESCAPE\n'
