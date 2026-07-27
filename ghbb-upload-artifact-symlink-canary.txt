@@ -1,2 +1,3 @@
 GHBB-UPLOAD-ARTIFACT-SYMLINK-CANARY-20260727
 No executable content. No secrets.
+Independent confirmation revision.
