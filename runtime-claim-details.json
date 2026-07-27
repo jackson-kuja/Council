@@ -1,0 +1,73 @@
+{
+  "workflow_run_id": 30228580962,
+  "ac": {
+    "type": "array",
+    "length": 2,
+    "items": [
+      {
+        "type": "object",
+        "entries": {
+          "Scope": {
+            "type": "string",
+            "length": 55,
+            "pattern": "aaaa/aaaaa/aaaaaaaa-aaaaaaa-aaaaaaaa-aaaa-aaaaaaaaaaaaa",
+            "sha256": "1cc53b7c197ee18ce69a8f7a6ca8ef4642c5b7e988064fd04fc171fcd4ace57c"
+          },
+          "Permission": {
+            "type": "number",
+            "length": 1,
+            "pattern": "9",
+            "sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce"
+          }
+        }
+      },
+      {
+        "type": "object",
+        "entries": {
+          "Scope": {
+            "type": "string",
+            "length": 15,
+            "pattern": "aaaa/aaaaa/aaaa",
+            "sha256": "f921bd05e68b03740c450e565e0e6173e546193170b2dd404ddb6f153e9b5bf3"
+          },
+          "Permission": {
+            "type": "number",
+            "length": 1,
+            "pattern": "9",
+            "sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
+          }
+        }
+      }
+    ]
+  },
+  "orch_id": {
+    "type": "string",
+    "length": 54,
+    "pattern": "99aa9aa9-9a9a-99a9-a99a-999a9aa9aa99.aaaaaaa.__aaaaaaa",
+    "sha256": "b66b277ef7534dd946a4b0d5d7b4f14193ae893ed77323a510dfd61eaadda2e3"
+  },
+  "audience": {
+    "type": "string",
+    "length": 40,
+    "pattern": "aaa:99999a9a-9a99-99a9-a9aa-9a9a99999a99",
+    "sha256": "ec37370fa567265b85bfc9133533af8268e06ac99b38edf0e5da203d547a9880"
+  },
+  "identity": {
+    "type": "string",
+    "length": 36,
+    "pattern": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "sha256": "198ba0408801de5aece6f6af3a5dc911540bc19c3b180ec50d4fa83fa100d4dd"
+  },
+  "plan_id": {
+    "type": "string",
+    "length": 36,
+    "pattern": "99aa9aa9-9a9a-99a9-a99a-999a9aa9aa99",
+    "sha256": "02b56aed208fa81731a3ee1385cae85b4bd72b8a1e026a795c44822fa3418432"
+  },
+  "job_id": {
+    "type": "string",
+    "length": 36,
+    "pattern": "9a9999a9-a999-9aaa-99a9-99a99999a9aa",
+    "sha256": "58bbb34e97d505ee5c517a8c7f1ec1ae5fba8d9d112ae88fa7edfd2350bf83ac"
+  }
+}
