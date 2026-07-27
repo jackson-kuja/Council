@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Discover the own-plan Actions.Runner route without exposing identifiers
+      - name: Discover authenticated own-plan routes without exposing identifiers
         uses: actions/github-script@v7
         with:
           script: |
@@ -28,25 +28,11 @@ jobs:
             const planId = String(claims.plan_id || '')
             if (!/^[0-9a-f-]{36}$/i.test(planId)) throw new Error('plan_id unavailable')
 
-            const guid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-            const claimCandidates = []
-            for (const [name, value] of Object.entries(claims)) {
-              if (typeof value === 'string' && guid.test(value)) claimCandidates.push({name, value})
-            }
-            for (const entry of String(claims.scp || '').split(/\s+/).filter(Boolean)) {
-              const pieces = entry.split(':')
-              for (let i = 1; i < pieces.length; i++) {
-                if (guid.test(pieces[i])) claimCandidates.push({name: `scp:${pieces[0]}:${i}`, value: pieces[i]})
-              }
-            }
-
-            const dedup = new Map()
-            for (const item of claimCandidates) dedup.set(`${item.name}:${item.value}`, item)
-            const hubs = ['build', 'actions', 'github', 'checks']
             const base = runtimeUrl.endsWith('/') ? runtimeUrl : `${runtimeUrl}/`
+            const origin = new URL(runtimeUrl).origin + '/'
             const attempts = []
 
-            async function request(url) {
+            async function request(label, url) {
               try {
                 const response = await fetch(url, {
                   method: 'GET',
@@ -56,36 +42,63 @@ jobs:
                 const text = await response.text()
                 let json = null
                 try { json = text ? JSON.parse(text) : null } catch (_) {}
-                return {
+                attempts.push({
+                  label,
                   status: response.status,
                   content_type: response.headers.get('content-type') || '',
                   body_length: text.length,
                   body_plan_match: text.toLowerCase().includes(planId.toLowerCase()),
-                  json_keys: json && typeof json === 'object' && !Array.isArray(json) ? Object.keys(json).sort().slice(0, 20) : []
-                }
-              } catch (error) {
-                return {status: 0, error: String(error?.name || 'error')}
-              }
-            }
-
-            for (const item of dedup.values()) {
-              for (const hub of hubs) {
-                const url = `${base}${encodeURIComponent(item.value)}/_apis/distributedtask/hubs/${hub}/plans/${encodeURIComponent(planId)}?api-version=5.1-preview.2`
-                attempts.push({
-                  claim: item.name,
-                  claim_sha256: crypto.createHash('sha256').update(item.value).digest('hex'),
-                  hub,
-                  ...(await request(url))
+                  json_keys: json && typeof json === 'object' && !Array.isArray(json) ? Object.keys(json).sort().slice(0, 30) : []
                 })
+              } catch (error) {
+                attempts.push({label, status: 0, error: String(error?.name || 'error')})
               }
             }
 
-            const positives = attempts.filter(item => item.status === 200)
+            await request('connection-data-context', `${base}_apis/connectionData?connectOptions=1&lastChangeId=-1&lastChangeId64=-1`)
+            await request('connection-data-origin', `${origin}_apis/connectionData?connectOptions=1&lastChangeId=-1&lastChangeId64=-1`)
+            await request('old-plan-context-v1', `${base}_apis/distributedtask/plans/${encodeURIComponent(planId)}?api-version=1.0`)
+            await request('old-plan-context-v51', `${base}_apis/distributedtask/plans/${encodeURIComponent(planId)}?api-version=5.1-preview.1`)
+            await request('old-timelines-context-v1', `${base}_apis/distributedtask/plans/${encodeURIComponent(planId)}/timelines?api-version=1.0`)
+
+            const fixedScopes = new Map()
+            fixedScopes.set('zero', '00000000-0000-0000-0000-000000000000')
+            for (const name of ['nameid', 'plan_id', 'job_id']) {
+              const value = String(claims[name] || '')
+              if (value) fixedScopes.set(name, value)
+            }
+            const audienceMatch = /([0-9a-f]{8}-[0-9a-f-]{27})/i.exec(String(claims.aud || ''))
+            if (audienceMatch) fixedScopes.set('audience-guid', audienceMatch[1])
+            try {
+              for (const entry of JSON.parse(String(claims.ac || '[]'))) {
+                const scope = String(entry?.Scope || '')
+                for (const segment of scope.split('/').filter(Boolean)) {
+                  if (/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(segment)) fixedScopes.set('ac-guid', segment)
+                }
+              }
+            } catch (_) {}
+
+            for (const [scopeName, scope] of fixedScopes) {
+              for (const hub of ['build', 'rm', 'actions', 'checks']) {
+                await request(
+                  `scoped-plan-${scopeName}-${hub}-v51`,
+                  `${base}${encodeURIComponent(scope)}/_apis/distributedtask/hubs/${hub}/plans/${encodeURIComponent(planId)}?api-version=5.1-preview.2`
+                )
+              }
+            }
+            for (const hub of ['build', 'rm', 'actions', 'checks']) {
+              await request(
+                `unscoped-hub-plan-${hub}-v51`,
+                `${base}_apis/distributedtask/hubs/${hub}/plans/${encodeURIComponent(planId)}?api-version=5.1-preview.2`
+              )
+            }
+
+            const positives = attempts.filter(item => item.status >= 200 && item.status < 300)
             const payload = {
               workflow_run_id: context.runId,
               runtime_origin: new URL(runtimeUrl).origin,
+              runtime_path_segment_lengths: new URL(runtimeUrl).pathname.split('/').filter(Boolean).map(item => item.length),
               plan_id_sha256: crypto.createHash('sha256').update(planId).digest('hex'),
-              candidate_count: dedup.size,
               positive_count: positives.length,
               positives,
               attempts
@@ -105,9 +118,9 @@ jobs:
               repo: context.repo.repo,
               path,
               branch,
-              message: `Persist legacy route discovery from ${context.runId}`,
+              message: `Persist expanded legacy route discovery from ${context.runId}`,
               content: Buffer.from(text).toString('base64'),
               ...(sha ? {sha} : {})
             })
             console.log(`positive_count=${positives.length}`)
-            for (const item of positives) console.log(`positive=${item.claim}/${item.hub}`)
+            for (const item of positives) console.log(`positive=${item.label}/${item.status}`)
