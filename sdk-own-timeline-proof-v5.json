@@ -1,0 +1,22 @@
+{
+  "workflow_run_id": 30229923722,
+  "endpoint_origin": "https://run-actions-1-azure-eastus.actions.githubusercontent.com",
+  "endpoint_path_segment_lengths": [
+    2
+  ],
+  "endpoint_sha256": "bc2975bbe3142dbc3d89de706f8312e3840cbc765935256e885d83836cca3e8c",
+  "scope_sha256": "12b9377cbe7e5c94e8a70d9d23929523d14afa954793130f8a3959c7b849aca8",
+  "plan_sha256": "b6e4c377b470ffe2941d6e8f0fe34a4f64fc0d51e647b07e9db551c9defecdcf",
+  "timeline_sha256": "b6e4c377b470ffe2941d6e8f0fe34a4f64fc0d51e647b07e9db551c9defecdcf",
+  "plan_timeline_same": true,
+  "hub": "actions",
+  "status": "build_exit=0\nrun_exit=0\ntoken_file_deleted=true",
+  "sdk": {
+    "success": false,
+    "exception_type": "GitHub.Services.WebApi.VssServiceResponseException",
+    "message": "Bad Request",
+    "inner_type": null,
+    "inner_message": "",
+    "stack": "GitHub.Services.WebApi.VssServiceResponseException: Bad Request\n   at GitHub.Services.WebApi.VssHttpClientBase.HandleResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)\n   at GitHub.Services.WebApi.VssHttpClientBase.SendAsync(HttpRequestMessage message, HttpCompletionOption completionOption, Object userState, CancellationToken cancellationToken)\n   at GitHub.Services.WebApi.VssHttpClientBase.SendAsync[T](HttpRequestMessage message, Object userState, CancellationToken cancellationToken)\n   at GitHub.Services.Location.Client.LocationHttpClient.GetConnectionDataAsync(ConnectOptions connectOptions, Int64 lastChangeId, CancellationToken cancellationToken, Object userState)\n   at GitHub.Services.WebApi.Location.VssServerDataProvider.GetConnectionDataAsync(ConnectOptions connectOptions, Int32 lastChangeId, CancellationToken cancellationToken)\n   at GitHub.Services.WebApi.Location.VssServerDataProvider.ConnectAsync(ConnectOptions connectOptions, CancellationToken cancellationToken)\n   at Program.<Main>$(String[] args) in /home/runner/work/Council/Council/probe/Program.cs:line 48"
+  }
+}
