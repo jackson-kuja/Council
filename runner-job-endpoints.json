@@ -1,0 +1,114 @@
+{
+  "workflow_run_id": 30229131584,
+  "source_file_name": "Worker_20260727-010925-utc.log",
+  "source_file_path_sha256": "9941c12fb0e36af935fdd64551109eeeb2daa432d798e7c7e359587375021662",
+  "top_level_keys": [
+    "billingOwnerId",
+    "contextData",
+    "fileTable",
+    "jobDisplayName",
+    "jobId",
+    "jobName",
+    "lockedUntil",
+    "mask",
+    "messageType",
+    "plan",
+    "requestId",
+    "resources",
+    "steps",
+    "timeline",
+    "variables"
+  ],
+  "resources_keys": [
+    "endpoints"
+  ],
+  "endpoint_count": 1,
+  "endpoints": [
+    {
+      "index": 0,
+      "name": "SystemVssConnection",
+      "url": {
+        "origin": "https://run-actions-1-azure-eastus.actions.githubusercontent.com",
+        "pathname_segment_lengths": [
+          3
+        ],
+        "url_sha256": "fb250c5944d0edd95916fcc9814c154263684ec51be58faa3a65e7417f6a61e6"
+      },
+      "authorization": {
+        "scheme": "OAuth",
+        "parameter_keys": [
+          "AccessToken"
+        ],
+        "parameter_value_lengths": {
+          "AccessToken": 3
+        }
+      },
+      "data_keys": [
+        "CacheServerUrl",
+        "ConnectivityAndDNSChecks",
+        "ConnectivityChecks",
+        "FeedStreamUrl",
+        "GenerateIdTokenUrl",
+        "PipelinesServiceUrl",
+        "ResultsServiceUrl",
+        "ServerId",
+        "ServerName"
+      ],
+      "data_shapes": {
+        "ServerId": {
+          "type": "string",
+          "length": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ServerName": {
+          "type": "string",
+          "length": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "CacheServerUrl": {
+          "type": "string",
+          "length": 103,
+          "sha256": "3599d4ed397110c868bc80337f8b96169ebfb73422ad66099d5588ccfbbf4e87"
+        },
+        "FeedStreamUrl": {
+          "type": "string",
+          "length": 68,
+          "sha256": "735795a8f18471631aefe9ac45ffdf0567a9c1737e6b38149978d963068bdd6f"
+        },
+        "ResultsServiceUrl": {
+          "type": "string",
+          "length": 55,
+          "sha256": "ddf996e619ed252c10d4a46ee31b2ab9d92ec480d1e2167fd2e46c2098176349"
+        },
+        "PipelinesServiceUrl": {
+          "type": "string",
+          "length": 107,
+          "sha256": "06dc10d15fead1e6ecac3bf1bf27c008276da9315065fd69a84d3277a55f2112"
+        },
+        "GenerateIdTokenUrl": {
+          "type": "string",
+          "length": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ConnectivityChecks": {
+          "type": "string",
+          "length": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ConnectivityAndDNSChecks": {
+          "type": "string",
+          "length": 202,
+          "sha256": "4ba3a5b6523aacf9c50368ef1a7b13a08e15a432dd3bda348980ca164db30fdd"
+        }
+      }
+    }
+  ],
+  "plan": {
+    "scope_identifier_sha256": "12b9377cbe7e5c94e8a70d9d23929523d14afa954793130f8a3959c7b849aca8",
+    "plan_type": "actions",
+    "plan_id_sha256": "be34b4aac10520c1892be5690c1ab4ad7e1da447702a0ed6cd49a11d7541d8aa",
+    "timeline_id_sha256": "be34b4aac10520c1892be5690c1ab4ad7e1da447702a0ed6cd49a11d7541d8aa",
+    "plan_timeline_same": true,
+    "job_id_sha256": "19436e07d6574e9bf3c62bcedbbeab8d9d69a8a8a4134a257ebdc77792f7b06e"
+  }
+}
