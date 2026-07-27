@@ -1,0 +1,18 @@
+{
+  "workflow_run_id": 30229503765,
+  "endpoint_origin": "https://run-actions-3-azure-eastus.actions.githubusercontent.com",
+  "endpoint_path_segment_lengths": [
+    3
+  ],
+  "endpoint_sha256": "f34c89656da759b3f48243a0107704c4f8c334227a554a3fb731ecae55a9ce78",
+  "scope_sha256": "12b9377cbe7e5c94e8a70d9d23929523d14afa954793130f8a3959c7b849aca8",
+  "plan_sha256": "8c3db6cc4009d35aa8c342e8f788f3f28fbd4ff3870228e2d1c92f889660aee1",
+  "timeline_sha256": "8c3db6cc4009d35aa8c342e8f788f3f28fbd4ff3870228e2d1c92f889660aee1",
+  "plan_timeline_same": true,
+  "hub": "actions",
+  "build_status": "",
+  "sdk": {
+    "success": false,
+    "result_file_missing": true
+  }
+}
