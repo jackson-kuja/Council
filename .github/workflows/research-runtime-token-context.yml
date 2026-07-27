@@ -1,0 +1,83 @@
+name: Research Actions runtime context sampler
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - research-runtime-context-trigger.txt
+
+permissions:
+  contents: write
+
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Persist sanitized Actions runtime context
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const crypto = require('crypto')
+            const token = process.env.ACTIONS_RUNTIME_TOKEN || ''
+            if (!token) throw new Error('ACTIONS_RUNTIME_TOKEN unavailable')
+            const parts = token.split('.')
+            const claims = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'))
+            const sanitize = value => String(value || '')
+              .replace(/[0-9a-f]{8}-[0-9a-f-]{27,}/gi, '<guid>')
+              .replace(/\b\d{6,}\b/g, '<number>')
+            const origin = value => {
+              try { return new URL(value).origin } catch (_) { return '' }
+            }
+            const scopeEntries = String(claims.scp || '').split(/\s+/).filter(Boolean).map(entry => {
+              const pieces = entry.split(':')
+              return {
+                name: pieces[0],
+                parts: pieces.length,
+                sanitized: sanitize(entry)
+              }
+            })
+            const payload = {
+              repository: process.env.GITHUB_REPOSITORY,
+              repository_id: process.env.GITHUB_REPOSITORY_ID,
+              workflow_run_id: context.runId,
+              claim_keys: Object.keys(claims).sort(),
+              issuer: sanitize(claims.iss),
+              audience: sanitize(claims.aud),
+              subject: sanitize(claims.sub),
+              scope_entries: scopeEntries,
+              actions_runtime_origin: origin(process.env.ACTIONS_RUNTIME_URL),
+              actions_results_origin: origin(process.env.ACTIONS_RESULTS_URL),
+              actions_cache_origin: origin(process.env.ACTIONS_CACHE_URL),
+              id_token_request_origin: origin(process.env.ACTIONS_ID_TOKEN_REQUEST_URL),
+              environment_names: Object.keys(process.env)
+                .filter(name => /^(ACTIONS_|SYSTEM_|RUNNER_|GITHUB_)/.test(name))
+                .sort()
+            }
+            const text = JSON.stringify(payload, null, 2) + '\n'
+            const path = 'latest-context.json'
+            const branch = 'research-results-runtime-context'
+            let sha
+            try {
+              const current = await github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path,
+                ref: branch
+              })
+              if (!Array.isArray(current.data)) sha = current.data.sha
+            } catch (error) {
+              if (error.status !== 404) throw error
+            }
+            await github.rest.repos.createOrUpdateFileContents({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path,
+              branch,
+              message: `Persist sanitized runtime context from ${context.runId}`,
+              content: Buffer.from(text).toString('base64'),
+              ...(sha ? {sha} : {})
+            })
+            console.log(`scope_count=${scopeEntries.length}`)
+            console.log(`scope_names=${scopeEntries.map(item => item.name).join(',')}`)
