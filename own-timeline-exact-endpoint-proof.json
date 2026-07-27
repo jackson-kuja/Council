@@ -1,0 +1,47 @@
+{
+  "workflow_run_id": 30229172278,
+  "source_file_name": "Worker_20260727-011020-utc.log",
+  "source_file_path_sha256": "b78bf59b4c6b465df3d343f25f4fc028c3c3e17fb87a79aca317439ecd6172ac",
+  "endpoint_origin": "https://run-actions-2-azure-eastus.actions.githubusercontent.com",
+  "endpoint_path_segment_lengths": [
+    3
+  ],
+  "endpoint_sha256": "8534c9ed3821b30070a55f27e9652f1347fb94162ea2bf6b4ef090cb15be0d8c",
+  "scope_sha256": "12b9377cbe7e5c94e8a70d9d23929523d14afa954793130f8a3959c7b849aca8",
+  "plan_sha256": "3fd75bd8ac28be5884b4df10f9ca3e6d1ffe26afb67472f22326ebb9ee00b548",
+  "timeline_sha256": "3fd75bd8ac28be5884b4df10f9ca3e6d1ffe26afb67472f22326ebb9ee00b548",
+  "plan_timeline_same": true,
+  "hub": "actions",
+  "positive_count": 0,
+  "positives": [],
+  "attempts": [
+    {
+      "version": "5.1-preview.1",
+      "status": 400,
+      "content_type": "text/plain; charset=utf-8",
+      "body_length": 24,
+      "timeline_id_match": false,
+      "record_count": 0,
+      "log_reference_count": 0,
+      "record_types": [],
+      "record_names": [],
+      "log_ids": [],
+      "json_keys": [],
+      "error_preview": "request hmac is missing\n"
+    },
+    {
+      "version": "6.0-preview.1",
+      "status": 400,
+      "content_type": "text/plain; charset=utf-8",
+      "body_length": 24,
+      "timeline_id_match": false,
+      "record_count": 0,
+      "log_reference_count": 0,
+      "record_types": [],
+      "record_names": [],
+      "log_ids": [],
+      "json_keys": [],
+      "error_preview": "request hmac is missing\n"
+    }
+  ]
+}
