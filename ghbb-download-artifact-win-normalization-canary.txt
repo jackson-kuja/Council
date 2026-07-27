@@ -1,0 +1,3 @@
+GHBB-DOWNLOAD-ARTIFACT-WINDOWS-NORMALIZATION-CANARY-20260726
+Controlled inert trigger. No executable content. No secrets.
+Exact artifact ZIP revision.
