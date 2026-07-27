@@ -1,0 +1,21 @@
+{
+  "workflow_run_id": 30229763142,
+  "endpoint_origin": "https://run-actions-3-azure-eastus.actions.githubusercontent.com",
+  "endpoint_path_segment_lengths": [
+    3
+  ],
+  "endpoint_sha256": "946277b09f8daad959b4ef358de169851d15c0236ba10db49e8a68dd40a25498",
+  "scope_sha256": "12b9377cbe7e5c94e8a70d9d23929523d14afa954793130f8a3959c7b849aca8",
+  "plan_sha256": "3053d6945d8779f15d6e487c811e05653fc0fc859b2ec8c2bcbc9600c8588b1e",
+  "timeline_sha256": "3053d6945d8779f15d6e487c811e05653fc0fc859b2ec8c2bcbc9600c8588b1e",
+  "plan_timeline_same": true,
+  "hub": "actions",
+  "status": "build_exit=0\nrun_exit=0",
+  "sdk": {
+    "success": false,
+    "exception_type": "System.ArgumentNullException",
+    "message": "Value cannot be null. (Parameter 'value')",
+    "inner_type": null,
+    "inner_message": ""
+  }
+}
