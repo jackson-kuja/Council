@@ -105,12 +105,12 @@ jobs:
             for (const [baseLabel, base] of [['runtime', runtimeBase], ['origin', originBase]]) {
               for (const hub of [...new Set([planType, 'build', 'checks'])]) {
                 attempts.push(await call(
-                  `${baseLabel}-${hub}-plan-v51`,
-                  `${base}${encodeURIComponent(scope)}/_apis/distributedtask/hubs/${encodeURIComponent(hub)}/plans/${encodeURIComponent(plan)}?api-version=5.1-preview.2`
+                  `${baseLabel}-${hub}-plan-v51p1`,
+                  `${base}${encodeURIComponent(scope)}/_apis/distributedtask/hubs/${encodeURIComponent(hub)}/plans/${encodeURIComponent(plan)}?api-version=5.1-preview.1`
                 ))
                 attempts.push(await call(
-                  `${baseLabel}-${hub}-plan-v60`,
-                  `${base}${encodeURIComponent(scope)}/_apis/distributedtask/hubs/${encodeURIComponent(hub)}/plans/${encodeURIComponent(plan)}?api-version=6.0-preview.2`
+                  `${baseLabel}-${hub}-plan-v60p1`,
+                  `${base}${encodeURIComponent(scope)}/_apis/distributedtask/hubs/${encodeURIComponent(hub)}/plans/${encodeURIComponent(plan)}?api-version=6.0-preview.1`
                 ))
               }
             }
@@ -145,7 +145,7 @@ jobs:
               repo: context.repo.repo,
               path: resultPath,
               branch,
-              message: `Persist own plan route proof from ${context.runId}`,
+              message: `Persist exact-version own plan proof from ${context.runId}`,
               content: Buffer.from(text).toString('base64'),
               ...(sha ? {sha} : {})
             })
