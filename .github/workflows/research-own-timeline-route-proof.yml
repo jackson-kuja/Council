@@ -1,0 +1,136 @@
+name: Research own Actions timeline route proof
+
+on:
+  push:
+    branches: [research-sandbox-artifact-name-normalization]
+    paths:
+      - .github/workflows/research-own-timeline-route-proof.yml
+
+permissions:
+  contents: write
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Resolve own plan metadata and read own timeline through the runner API
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const path = require('path')
+            const crypto = require('crypto')
+            const token = process.env.ACTIONS_RUNTIME_TOKEN || ''
+            const runtimeUrl = process.env.ACTIONS_RUNTIME_URL || ''
+            const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'))
+            const plan = String(claims.plan_id || '')
+            const guid = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
+
+            const files = []
+            function walk(root, depth = 0) {
+              if (depth > 7) return
+              let entries = []
+              try { entries = fs.readdirSync(root, {withFileTypes: true}) } catch (_) { return }
+              for (const entry of entries) {
+                const full = path.join(root, entry.name)
+                if (entry.isDirectory()) {
+                  if (/(_diag|runner|work|temp)/i.test(full) || depth < 3) walk(full, depth + 1)
+                } else if (entry.isFile() && /^Worker_.*\.log$/i.test(entry.name)) {
+                  try { files.push({full, mtime: fs.statSync(full).mtimeMs}) } catch (_) {}
+                }
+              }
+            }
+            walk('/home/runner')
+            files.sort((a,b) => b.mtime - a.mtime)
+
+            let text = ''
+            let source = ''
+            for (const file of files) {
+              let candidate = ''
+              try { candidate = fs.readFileSync(file.full, 'utf8') } catch (_) { continue }
+              if (candidate.includes('"scopeIdentifier"') && candidate.toLowerCase().includes(plan.toLowerCase())) {
+                text = candidate
+                source = file.full
+                break
+              }
+            }
+            if (!text) throw new Error('Current runner metadata unavailable')
+
+            const scope = new RegExp(`"scopeIdentifier"\\s*:\\s*"(${guid})"`, 'i').exec(text)?.[1] || ''
+            const planType = /"planType"\s*:\s*"([A-Za-z0-9_.-]+)"/i.exec(text)?.[1] || 'actions'
+            const timelineBlock = new RegExp(`"timeline"\\s*:\\s*\\{[\\s\\S]{0,500}?"id"\\s*:\\s*"(${guid})"`, 'i').exec(text)
+            const timeline = timelineBlock?.[1] || plan
+            if (!scope || !plan || !timeline) throw new Error('Scope, plan, or timeline unavailable')
+
+            async function call(version) {
+              const base = runtimeUrl.endsWith('/') ? runtimeUrl : `${runtimeUrl}/`
+              const url = `${base}${encodeURIComponent(scope)}/_apis/distributedtask/hubs/${encodeURIComponent(planType)}/plans/${encodeURIComponent(plan)}/timelines/${encodeURIComponent(timeline)}?api-version=${encodeURIComponent(version)}&includeRecords=true`
+              try {
+                const response = await fetch(url, {
+                  method: 'GET',
+                  headers: {authorization: `Bearer ${token}`, accept: 'application/json'},
+                  signal: AbortSignal.timeout(15000)
+                })
+                const body = await response.text()
+                let json = null
+                try { json = body ? JSON.parse(body) : null } catch (_) {}
+                const records = Array.isArray(json?.records) ? json.records : []
+                return {
+                  version,
+                  status: response.status,
+                  content_type: response.headers.get('content-type') || '',
+                  body_length: body.length,
+                  timeline_id_match: String(json?.id || '').toLowerCase() === timeline.toLowerCase(),
+                  record_count: records.length,
+                  log_reference_count: records.filter(record => record?.log?.id != null).length,
+                  record_types: [...new Set(records.map(record => String(record?.type || '')).filter(Boolean))].sort(),
+                  record_names: records.map(record => String(record?.name || '')).filter(Boolean).slice(0, 20),
+                  json_keys: json && typeof json === 'object' && !Array.isArray(json) ? Object.keys(json).sort() : [],
+                  error_preview: response.status >= 200 && response.status < 300 ? '' : body
+                    .replace(/[0-9a-f]{8}-[0-9a-f-]{27}/gi, '<guid>')
+                    .replace(/[A-Za-z0-9_-]{40,}/g, '<opaque>')
+                    .slice(0, 300)
+                }
+              } catch (error) {
+                return {version, status: 0, error: String(error?.name || 'error')}
+              }
+            }
+
+            const attempts = []
+            for (const version of ['5.1-preview.1', '6.0-preview.1', '6.0-preview.2']) attempts.push(await call(version))
+            const positives = attempts.filter(item => item.status === 200 && item.timeline_id_match && item.record_count > 0)
+            const hash = value => crypto.createHash('sha256').update(String(value)).digest('hex')
+            const payload = {
+              workflow_run_id: context.runId,
+              source_file_name: path.basename(source),
+              source_file_path_sha256: hash(source),
+              scope_sha256: hash(scope),
+              plan_sha256: hash(plan),
+              timeline_sha256: hash(timeline),
+              plan_timeline_same: plan.toLowerCase() === timeline.toLowerCase(),
+              plan_type: planType,
+              positive_count: positives.length,
+              positives,
+              attempts
+            }
+            const output = JSON.stringify(payload, null, 2) + '\n'
+            const resultPath = 'own-timeline-route-proof.json'
+            const branch = 'research-results-runtime-context'
+            let sha
+            try {
+              const current = await github.rest.repos.getContent({owner: context.repo.owner, repo: context.repo.repo, path: resultPath, ref: branch})
+              if (!Array.isArray(current.data)) sha = current.data.sha
+            } catch (error) {
+              if (error.status !== 404) throw error
+            }
+            await github.rest.repos.createOrUpdateFileContents({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: resultPath,
+              branch,
+              message: `Persist own timeline route proof from ${context.runId}`,
+              content: Buffer.from(output).toString('base64'),
+              ...(sha ? {sha} : {})
+            })
+            console.log(`positive_count=${positives.length}`)
