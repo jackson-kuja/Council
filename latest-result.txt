@@ -1,0 +1,13 @@
+upstream_run_id=30228114610
+download_outcome=success
+baseline_hash=bba7dac028daf6d07d15b0d4279cccf29ccb053ed5d430bfe52817d2296077a0
+outside_exists=true
+outside_hash=bba7dac028daf6d07d15b0d4279cccf29ccb053ed5d430bfe52817d2296077a0
+outside_changed=false
+safe_control_present=true
+payload_marker_present=false
+payload_executed=false
+dummy_secret_sha256_match=false
+dummy_secret_raw_exposed=false
+drop_children_json=[". .",".. ",".. ","..　","..  ",".. .","...","... ","..%20","%2e%2e","research-artifact-name-matrix-30228114610","research-safe-30228114610"]
+artifact_name_containment_failure=false
