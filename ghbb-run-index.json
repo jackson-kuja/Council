@@ -1,7 +1,55 @@
 {
-  "generated_by_run": 30229311649,
-  "generated_at": "2026-07-27T01:13:53.303Z",
+  "generated_by_run": 30229343983,
+  "generated_at": "2026-07-27T01:14:37.025Z",
   "matches": [
+    {
+      "id": 30229285023,
+      "name": "Research shipped SDK own timeline proof",
+      "status": "completed",
+      "conclusion": "failure",
+      "event": "push",
+      "head_sha": "f0e3a29ab3a26b35825947fc666f3698f5a0b0fa",
+      "head_branch": "research-sandbox-artifact-name-normalization",
+      "created_at": "2026-07-27T01:13:02Z",
+      "updated_at": "2026-07-27T01:13:13Z",
+      "html_url": "https://github.com/jackson-kuja/Council/actions/runs/30229285023"
+    },
+    {
+      "id": 30229172278,
+      "name": "Research exact SystemVssConnection timeline proof",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push",
+      "head_sha": "5e500839244fd0244dc779b946e8c55117b56d79",
+      "head_branch": "research-sandbox-artifact-name-normalization",
+      "created_at": "2026-07-27T01:10:17Z",
+      "updated_at": "2026-07-27T01:10:23Z",
+      "html_url": "https://github.com/jackson-kuja/Council/actions/runs/30229172278"
+    },
+    {
+      "id": 30229131584,
+      "name": "Research runner job endpoint inventory",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push",
+      "head_sha": "7540a88857395cc35d006459a7fc4b6a4c356f1c",
+      "head_branch": "research-sandbox-artifact-name-normalization",
+      "created_at": "2026-07-27T01:09:21Z",
+      "updated_at": "2026-07-27T01:09:31Z",
+      "html_url": "https://github.com/jackson-kuja/Council/actions/runs/30229131584"
+    },
+    {
+      "id": 30229093440,
+      "name": "Research SystemVssConnection metadata shape",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push",
+      "head_sha": "4e0b11f9b75c8f1f291ba681ba833876d558ca05",
+      "head_branch": "research-sandbox-artifact-name-normalization",
+      "created_at": "2026-07-27T01:08:28Z",
+      "updated_at": "2026-07-27T01:08:38Z",
+      "html_url": "https://github.com/jackson-kuja/Council/actions/runs/30229093440"
+    },
     {
       "id": 30228977839,
       "name": "Research own timeline through SystemVssConnection",
