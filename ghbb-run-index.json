@@ -1,6 +1,6 @@
 {
-  "generated_by_run": 30229023226,
-  "generated_at": "2026-07-27T01:06:57.617Z",
+  "generated_by_run": 30229311649,
+  "generated_at": "2026-07-27T01:13:53.303Z",
   "matches": [
     {
       "id": 30228977839,
@@ -361,30 +361,6 @@
       "created_at": "2026-07-27T00:28:42Z",
       "updated_at": "2026-07-27T00:28:43Z",
       "html_url": "https://github.com/jackson-kuja/Council/actions/runs/30227524431"
-    },
-    {
-      "id": 30227518652,
-      "name": "GHBB artifact name parent-path producer",
-      "status": "completed",
-      "conclusion": "failure",
-      "event": "pull_request",
-      "head_sha": "bee85fd0f4e435a7f8e0719c0974926cbf3c7780",
-      "head_branch": "ghbb-native-workflowrun-merge-20260726",
-      "created_at": "2026-07-27T00:28:32Z",
-      "updated_at": "2026-07-27T00:28:40Z",
-      "html_url": "https://github.com/jackson-kuja/Council/actions/runs/30227518652"
-    },
-    {
-      "id": 30227518625,
-      "name": "GHBB upload artifact symlink containment probe",
-      "status": "completed",
-      "conclusion": "failure",
-      "event": "pull_request_target",
-      "head_sha": "bee85fd0f4e435a7f8e0719c0974926cbf3c7780",
-      "head_branch": "ghbb-native-workflowrun-merge-20260726",
-      "created_at": "2026-07-27T00:28:32Z",
-      "updated_at": "2026-07-27T00:28:44Z",
-      "html_url": "https://github.com/jackson-kuja/Council/actions/runs/30227518625"
     }
   ]
 }
