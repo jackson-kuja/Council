@@ -1,0 +1,1562 @@
+{
+  "workflow_run_id": 30229093440,
+  "source_file_name": "Worker_20260727-010832-utc.log",
+  "source_file_path_sha256": "b81b9c1276eaf6ac5aa67c1d964a7f15dd22a738589f612a4e15f28dcd607e2b",
+  "marker_line_number": 129,
+  "start_offset": -128,
+  "end_offset": 260,
+  "window": [
+    {
+      "offset": -128,
+      "text": "[2026-07-27 01:08:32Z INFO HostContext] No proxy settings were found based on environmental variables (http_proxy/https_proxy/HTTP_PROXY/HTTPS_PROXY)"
+    },
+    {
+      "offset": -127,
+      "text": "[2026-07-27 01:08:32Z INFO HostContext] Well known directory 'Bin': '/home/runner/actions-runner/cached/2.335.1/bin'"
+    },
+    {
+      "offset": -126,
+      "text": "[2026-07-27 01:08:32Z INFO HostContext] Well known directory 'Root': '/home/runner/actions-runner/cached/2.335.1'"
+    },
+    {
+      "offset": -125,
+      "text": "[2026-07-27 01:08:32Z INFO HostContext] Well known config file 'Credentials': '/home/runner/actions-runner/cached/2.335.1/.credentials'"
+    },
+    {
+      "offset": -124,
+      "text": "[2026-07-27 01:08:32Z INFO HostContext] Pull OrchestrationId <plan-id>.inspect.__default from runner JWT claims"
+    },
+    {
+      "offset": -123,
+      "text": "[2026-07-27 01:08:32Z INFO HostContext] Well known directory 'Bin': '/home/runner/actions-runner/cached/2.335.1/bin'"
+    },
+    {
+      "offset": -122,
+      "text": "[2026-07-27 01:08:32Z INFO HostContext] Well known directory 'Root': '/home/runner/actions-runner/cached/2.335.1'"
+    },
+    {
+      "offset": -121,
+      "text": "[2026-07-27 01:08:32Z INFO HostContext] Well known config file 'Runner': '/home/runner/actions-runner/cached/2.335.1/.runner'"
+    },
+    {
+      "offset": -120,
+      "text": "[2026-07-27 01:08:32Z INFO Worker] Version: 2.335.1"
+    },
+    {
+      "offset": -119,
+      "text": "[2026-07-27 01:08:32Z INFO Worker] Commit: 7d737449ef346f6524f75688d0c9c95fa10ba10a"
+    },
+    {
+      "offset": -118,
+      "text": "[2026-07-27 01:08:32Z INFO Worker] Culture: "
+    },
+    {
+      "offset": -117,
+      "text": "[2026-07-27 01:08:32Z INFO Worker] UI Culture: "
+    },
+    {
+      "offset": -116,
+      "text": "[2026-07-27 01:08:32Z INFO Worker] Waiting to receive the job message from the channel."
+    },
+    {
+      "offset": -115,
+      "text": "[2026-07-27 01:08:32Z INFO ProcessChannel] Receiving message of length 26218, with hash '3471f3cba1f51ddf05376f963389552c45cd144bef65b906f5f5f0312d83a3b8'"
+    },
+    {
+      "offset": -114,
+      "text": "[2026-07-27 01:08:32Z INFO Worker] Message received."
+    },
+    {
+      "offset": -113,
+      "text": "[2026-07-27 01:08:32Z INFO Worker] Job message:"
+    },
+    {
+      "offset": -112,
+      "text": " {"
+    },
+    {
+      "offset": -111,
+      "text": "  \"fileTable\": ["
+    },
+    {
+      "offset": -110,
+      "text": "    \".github/workflows/research-system-endpoint-shape.yml\""
+    },
+    {
+      "offset": -109,
+      "text": "  ],"
+    },
+    {
+      "offset": -108,
+      "text": "  \"mask\": ["
+    },
+    {
+      "offset": -107,
+      "text": "    {"
+    },
+    {
+      "offset": -106,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -105,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -104,
+      "text": "    },"
+    },
+    {
+      "offset": -103,
+      "text": "    {"
+    },
+    {
+      "offset": -102,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -101,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -100,
+      "text": "    },"
+    },
+    {
+      "offset": -99,
+      "text": "    {"
+    },
+    {
+      "offset": -98,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -97,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -96,
+      "text": "    },"
+    },
+    {
+      "offset": -95,
+      "text": "    {"
+    },
+    {
+      "offset": -94,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -93,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -92,
+      "text": "    },"
+    },
+    {
+      "offset": -91,
+      "text": "    {"
+    },
+    {
+      "offset": -90,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -89,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -88,
+      "text": "    },"
+    },
+    {
+      "offset": -87,
+      "text": "    {"
+    },
+    {
+      "offset": -86,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -85,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -84,
+      "text": "    },"
+    },
+    {
+      "offset": -83,
+      "text": "    {"
+    },
+    {
+      "offset": -82,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -81,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -80,
+      "text": "    },"
+    },
+    {
+      "offset": -79,
+      "text": "    {"
+    },
+    {
+      "offset": -78,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -77,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -76,
+      "text": "    },"
+    },
+    {
+      "offset": -75,
+      "text": "    {"
+    },
+    {
+      "offset": -74,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -73,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -72,
+      "text": "    },"
+    },
+    {
+      "offset": -71,
+      "text": "    {"
+    },
+    {
+      "offset": -70,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -69,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -68,
+      "text": "    },"
+    },
+    {
+      "offset": -67,
+      "text": "    {"
+    },
+    {
+      "offset": -66,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -65,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -64,
+      "text": "    },"
+    },
+    {
+      "offset": -63,
+      "text": "    {"
+    },
+    {
+      "offset": -62,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -61,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -60,
+      "text": "    },"
+    },
+    {
+      "offset": -59,
+      "text": "    {"
+    },
+    {
+      "offset": -58,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -57,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -56,
+      "text": "    },"
+    },
+    {
+      "offset": -55,
+      "text": "    {"
+    },
+    {
+      "offset": -54,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -53,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -52,
+      "text": "    },"
+    },
+    {
+      "offset": -51,
+      "text": "    {"
+    },
+    {
+      "offset": -50,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -49,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -48,
+      "text": "    },"
+    },
+    {
+      "offset": -47,
+      "text": "    {"
+    },
+    {
+      "offset": -46,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -45,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -44,
+      "text": "    },"
+    },
+    {
+      "offset": -43,
+      "text": "    {"
+    },
+    {
+      "offset": -42,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -41,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -40,
+      "text": "    },"
+    },
+    {
+      "offset": -39,
+      "text": "    {"
+    },
+    {
+      "offset": -38,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -37,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -36,
+      "text": "    },"
+    },
+    {
+      "offset": -35,
+      "text": "    {"
+    },
+    {
+      "offset": -34,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -33,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -32,
+      "text": "    },"
+    },
+    {
+      "offset": -31,
+      "text": "    {"
+    },
+    {
+      "offset": -30,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -29,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -28,
+      "text": "    },"
+    },
+    {
+      "offset": -27,
+      "text": "    {"
+    },
+    {
+      "offset": -26,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -25,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -24,
+      "text": "    },"
+    },
+    {
+      "offset": -23,
+      "text": "    {"
+    },
+    {
+      "offset": -22,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -21,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -20,
+      "text": "    },"
+    },
+    {
+      "offset": -19,
+      "text": "    {"
+    },
+    {
+      "offset": -18,
+      "text": "      \"type\": \"regex\","
+    },
+    {
+      "offset": -17,
+      "text": "      \"value\": \"***\""
+    },
+    {
+      "offset": -16,
+      "text": "    }"
+    },
+    {
+      "offset": -15,
+      "text": "  ],"
+    },
+    {
+      "offset": -14,
+      "text": "  \"steps\": ["
+    },
+    {
+      "offset": -13,
+      "text": "    {"
+    },
+    {
+      "offset": -12,
+      "text": "      \"type\": \"action\","
+    },
+    {
+      "offset": -11,
+      "text": "      \"reference\": {"
+    },
+    {
+      "offset": -10,
+      "text": "        \"type\": \"repository\","
+    },
+    {
+      "offset": -9,
+      "text": "        \"name\": \"actions/github-script\","
+    },
+    {
+      "offset": -8,
+      "text": "        \"ref\": \"v7\","
+    },
+    {
+      "offset": -7,
+      "text": "        \"repositoryType\": \"GitHub\""
+    },
+    {
+      "offset": -6,
+      "text": "      },"
+    },
+    {
+      "offset": -5,
+      "text": "      \"displayNameToken\": {"
+    },
+    {
+      "offset": -4,
+      "text": "        \"type\": 0,"
+    },
+    {
+      "offset": -3,
+      "text": "        \"file\": 1,"
+    },
+    {
+      "offset": -2,
+      "text": "        \"line\": 17,"
+    },
+    {
+      "offset": -1,
+      "text": "        \"col\": 15,"
+    },
+    {
+      "offset": 0,
+      "text": "        \"lit\": \"Persist redacted metadata window around SystemVssConnection\""
+    },
+    {
+      "offset": 1,
+      "text": "      },"
+    },
+    {
+      "offset": 2,
+      "text": "      \"contextName\": \"__actions_github-script\","
+    },
+    {
+      "offset": 3,
+      "text": "      \"inputs\": {"
+    },
+    {
+      "offset": 4,
+      "text": "        \"type\": 2,"
+    },
+    {
+      "offset": 5,
+      "text": "        \"file\": 1,"
+    },
+    {
+      "offset": 6,
+      "text": "        \"line\": 20,"
+    },
+    {
+      "offset": 7,
+      "text": "        \"col\": 11,"
+    },
+    {
+      "offset": 8,
+      "text": "        \"map\": ["
+    },
+    {
+      "offset": 9,
+      "text": "          {"
+    },
+    {
+      "offset": 10,
+      "text": "            \"key\": {"
+    },
+    {
+      "offset": 11,
+      "text": "              \"type\": 0,"
+    },
+    {
+      "offset": 12,
+      "text": "              \"file\": 1,"
+    },
+    {
+      "offset": 13,
+      "text": "              \"line\": 20,"
+    },
+    {
+      "offset": 14,
+      "text": "              \"col\": 11,"
+    },
+    {
+      "offset": 15,
+      "text": "              \"lit\": \"script\""
+    },
+    {
+      "offset": 16,
+      "text": "            },"
+    },
+    {
+      "offset": 17,
+      "text": "            \"value\": {"
+    },
+    {
+      "offset": 18,
+      "text": "              \"type\": 0,"
+    },
+    {
+      "offset": 19,
+      "text": "              \"file\": 1,"
+    },
+    {
+      "offset": 20,
+      "text": "              \"line\": 20,"
+    },
+    {
+      "offset": 21,
+      "text": "              \"col\": 19,"
+    },
+    {
+      "offset": 22,
+      "text": "              \"lit\": \"const fs = require('fs')\\nconst path = require('path')\\nconst crypto = require('crypto')\\nconst token = process.env.ACTIONS_RUNTIME_TOKEN || ''\\nconst claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'))\\nconst known = new Map([\\n  [String(claims.plan_id || '').toLowerCase(), '<plan-id>'],\\n  [String(claims.job_id || '').toLowerCase(), '<job-id>'],\\n  [String(claims.nameid || '').toLowerCase(), '<identity-id>']\\n])\\nconst runtimePath = new URL(process.env.ACTIONS_RUNTIME_URL).pathname.split('/').filter(Boolean)[0] || ''\\nif (runtimePath) known.set(runtimePath.toLowerCase(), '<runtime-path>')\\n\\nconst files = []\\nfunction walk(root, depth = 0) {\\n  if (depth > 7) return\\n  let entries = []\\n  try { entries = fs.readdirSync(root, {withFileTypes: true}) } catch (_) { return }\\n  for (const entry of entries) {\\n    const full = path.join(root, entry.name)\\n    if (entry.isDirectory()) {\\n      if (/(_diag|runner|work|temp)/i.test(full) || depth < 3) walk(full, depth + 1)\\n    } else if (entry.isFile() && /^Worker_.*\\\\.log$/i.test(entry.name)) {\\n      try {\\n        const stat = fs.statSync(full)\\n        if (stat.size > 0 && stat.size < 40 * 1024 * 1024) files.push({full, mtime: stat.mtimeMs})\\n      } catch (_) {}\\n    }\\n  }\\n}\\nwalk('/home/runner')\\nfiles.sort((a,b) => b.mtime - a.mtime)\\n\\nlet allLines = []\\nlet source = ''\\nlet markerIndex = -1\\nfor (const file of files) {\\n  let text = ''\\n  try { text = fs.readFileSync(file.full, 'utf8') } catch (_) { continue }\\n  const lines = text.split(/\\\\r?\\\\n/)\\n  const index = "
+    },
+    {
+      "offset": 23,
+      "text": "            }"
+    },
+    {
+      "offset": 24,
+      "text": "          }"
+    },
+    {
+      "offset": 25,
+      "text": "        ]"
+    },
+    {
+      "offset": 26,
+      "text": "      },"
+    },
+    {
+      "offset": 27,
+      "text": "      \"condition\": \"success()\","
+    },
+    {
+      "offset": 28,
+      "text": "      \"id\": \"<guid-1>\","
+    },
+    {
+      "offset": 29,
+      "text": "      \"name\": \"__actions_github-script\""
+    },
+    {
+      "offset": 30,
+      "text": "    }"
+    },
+    {
+      "offset": 31,
+      "text": "  ],"
+    },
+    {
+      "offset": 32,
+      "text": "  \"variables\": {"
+    },
+    {
+      "offset": 33,
+      "text": "    \"Actions.EnableHttpRedirects\": {"
+    },
+    {
+      "offset": 34,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 35,
+      "text": "    },"
+    },
+    {
+      "offset": 36,
+      "text": "    \"DistributedTask.AddWarningToNode12Action\": {"
+    },
+    {
+      "offset": 37,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 38,
+      "text": "    },"
+    },
+    {
+      "offset": 39,
+      "text": "    \"DistributedTask.AddWarningToNode16Action\": {"
+    },
+    {
+      "offset": 40,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 41,
+      "text": "    },"
+    },
+    {
+      "offset": 42,
+      "text": "    \"DistributedTask.AllowRunnerContainerHooks\": {"
+    },
+    {
+      "offset": 43,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 44,
+      "text": "    },"
+    },
+    {
+      "offset": 45,
+      "text": "    \"DistributedTask.DeprecateStepOutputCommands\": {"
+    },
+    {
+      "offset": 46,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 47,
+      "text": "    },"
+    },
+    {
+      "offset": 48,
+      "text": "    \"DistributedTask.DetailUntarFailure\": {"
+    },
+    {
+      "offset": 49,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 50,
+      "text": "    },"
+    },
+    {
+      "offset": 51,
+      "text": "    \"DistributedTask.EnableCompositeActions\": {"
+    },
+    {
+      "offset": 52,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 53,
+      "text": "    },"
+    },
+    {
+      "offset": 54,
+      "text": "    \"DistributedTask.EnableJobServerQueueTelemetry\": {"
+    },
+    {
+      "offset": 55,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 56,
+      "text": "    },"
+    },
+    {
+      "offset": 57,
+      "text": "    \"DistributedTask.EnhancedAnnotations\": {"
+    },
+    {
+      "offset": 58,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 59,
+      "text": "    },"
+    },
+    {
+      "offset": 60,
+      "text": "    \"DistributedTask.ForceGithubJavascriptActionsToNode16\": {"
+    },
+    {
+      "offset": 61,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 62,
+      "text": "    },"
+    },
+    {
+      "offset": 63,
+      "text": "    \"DistributedTask.ForceGithubJavascriptActionsToNode20\": {"
+    },
+    {
+      "offset": 64,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 65,
+      "text": "    },"
+    },
+    {
+      "offset": 66,
+      "text": "    \"DistributedTask.LogTemplateErrorsAsDebugMessages\": {"
+    },
+    {
+      "offset": 67,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 68,
+      "text": "    },"
+    },
+    {
+      "offset": 69,
+      "text": "    \"DistributedTask.MarkJobAsFailedOnWorkerCrash\": {"
+    },
+    {
+      "offset": 70,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 71,
+      "text": "    },"
+    },
+    {
+      "offset": 72,
+      "text": "    \"DistributedTask.NewActionMetadata\": {"
+    },
+    {
+      "offset": 73,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 74,
+      "text": "    },"
+    },
+    {
+      "offset": 75,
+      "text": "    \"DistributedTask.UploadStepSummary\": {"
+    },
+    {
+      "offset": 76,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 77,
+      "text": "    },"
+    },
+    {
+      "offset": 78,
+      "text": "    \"DistributedTask.UseActionArchiveCache\": {"
+    },
+    {
+      "offset": 79,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 80,
+      "text": "    },"
+    },
+    {
+      "offset": 81,
+      "text": "    \"DistributedTask.UseWhich2\": {"
+    },
+    {
+      "offset": 82,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 83,
+      "text": "    },"
+    },
+    {
+      "offset": 84,
+      "text": "    \"RunService.FixEmbeddedIssues\": {"
+    },
+    {
+      "offset": 85,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 86,
+      "text": "    },"
+    },
+    {
+      "offset": 87,
+      "text": "    \"actions.runner.requirenode24\": {"
+    },
+    {
+      "offset": 88,
+      "text": "      \"value\": \"false\""
+    },
+    {
+      "offset": 89,
+      "text": "    },"
+    },
+    {
+      "offset": 90,
+      "text": "    \"actions.runner.usenode24bydefault\": {"
+    },
+    {
+      "offset": 91,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 92,
+      "text": "    },"
+    },
+    {
+      "offset": 93,
+      "text": "    \"actions.runner.warnonnode20\": {"
+    },
+    {
+      "offset": 94,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 95,
+      "text": "    },"
+    },
+    {
+      "offset": 96,
+      "text": "    \"actions_add_check_run_id_to_job_context\": {"
+    },
+    {
+      "offset": 97,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 98,
+      "text": "    },"
+    },
+    {
+      "offset": 99,
+      "text": "    \"actions_batch_action_resolution\": {"
+    },
+    {
+      "offset": 100,
+      "text": "      \"value\": \"false\""
+    },
+    {
+      "offset": 101,
+      "text": "    },"
+    },
+    {
+      "offset": 102,
+      "text": "    \"actions_container_action_runner_temp\": {"
+    },
+    {
+      "offset": 103,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 104,
+      "text": "    },"
+    },
+    {
+      "offset": 105,
+      "text": "    \"actions_display_helpful_actions_download_errors\": {"
+    },
+    {
+      "offset": 106,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 107,
+      "text": "    },"
+    },
+    {
+      "offset": 108,
+      "text": "    \"actions_runner_allow_artifacts_file\": {"
+    },
+    {
+      "offset": 109,
+      "text": "      \"value\": \"false\""
+    },
+    {
+      "offset": 110,
+      "text": "    },"
+    },
+    {
+      "offset": 111,
+      "text": "    \"actions_runner_compare_workflow_parser\": {"
+    },
+    {
+      "offset": 112,
+      "text": "      \"value\": \"false\""
+    },
+    {
+      "offset": 113,
+      "text": "    },"
+    },
+    {
+      "offset": 114,
+      "text": "    \"actions_runner_deprecate_linux_arm32\": {"
+    },
+    {
+      "offset": 115,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 116,
+      "text": "    },"
+    },
+    {
+      "offset": 117,
+      "text": "    \"actions_runner_emit_composite_markers\": {"
+    },
+    {
+      "offset": 118,
+      "text": "      \"value\": \"false\""
+    },
+    {
+      "offset": 119,
+      "text": "    },"
+    },
+    {
+      "offset": 120,
+      "text": "    \"actions_runner_kill_linux_arm32\": {"
+    },
+    {
+      "offset": 121,
+      "text": "      \"value\": \"false\""
+    },
+    {
+      "offset": 122,
+      "text": "    },"
+    },
+    {
+      "offset": 123,
+      "text": "    \"actions_runner_node20_removal_date\": {"
+    },
+    {
+      "offset": 124,
+      "text": "      \"value\": \"\""
+    },
+    {
+      "offset": 125,
+      "text": "    },"
+    },
+    {
+      "offset": 126,
+      "text": "    \"actions_runner_node24_default_date\": {"
+    },
+    {
+      "offset": 127,
+      "text": "      \"value\": \"June 16th, 2026\""
+    },
+    {
+      "offset": 128,
+      "text": "    },"
+    },
+    {
+      "offset": 129,
+      "text": "    \"actions_self_repository\": {"
+    },
+    {
+      "offset": 130,
+      "text": "      \"value\": \"false\""
+    },
+    {
+      "offset": 131,
+      "text": "    },"
+    },
+    {
+      "offset": 132,
+      "text": "    \"actions_service_container_command\": {"
+    },
+    {
+      "offset": 133,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 134,
+      "text": "    },"
+    },
+    {
+      "offset": 135,
+      "text": "    \"actions_set_orchestration_id_env_for_actions\": {"
+    },
+    {
+      "offset": 136,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 137,
+      "text": "    },"
+    },
+    {
+      "offset": 138,
+      "text": "    \"actions_skip_retry_complete_job_upon_known_errors\": {"
+    },
+    {
+      "offset": 139,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 140,
+      "text": "    },"
+    },
+    {
+      "offset": 141,
+      "text": "    \"actions_snapshot_preflight_hosted_runner_check\": {"
+    },
+    {
+      "offset": 142,
+      "text": "      \"value\": \"false\""
+    },
+    {
+      "offset": 143,
+      "text": "    },"
+    },
+    {
+      "offset": 144,
+      "text": "    \"actions_snapshot_preflight_image_gen_pool_check\": {"
+    },
+    {
+      "offset": 145,
+      "text": "      \"value\": \"false\""
+    },
+    {
+      "offset": 146,
+      "text": "    },"
+    },
+    {
+      "offset": 147,
+      "text": "    \"actions_use_bearer_token_for_codeload\": {"
+    },
+    {
+      "offset": 148,
+      "text": "      \"value\": \"false\""
+    },
+    {
+      "offset": 149,
+      "text": "    },"
+    },
+    {
+      "offset": 150,
+      "text": "    \"actions_uses_cache_service_v2\": {"
+    },
+    {
+      "offset": 151,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 152,
+      "text": "    },"
+    },
+    {
+      "offset": 153,
+      "text": "    \"github_token\": {"
+    },
+    {
+      "offset": 154,
+      "text": "      \"value\": \"***\","
+    },
+    {
+      "offset": 155,
+      "text": "      \"isSecret\": true"
+    },
+    {
+      "offset": 156,
+      "text": "    },"
+    },
+    {
+      "offset": 157,
+      "text": "    \"system.from_run_service\": {"
+    },
+    {
+      "offset": 158,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 159,
+      "text": "    },"
+    },
+    {
+      "offset": 160,
+      "text": "    \"system.github.job\": {"
+    },
+    {
+      "offset": 161,
+      "text": "      \"value\": \"inspect\""
+    },
+    {
+      "offset": 162,
+      "text": "    },"
+    },
+    {
+      "offset": 163,
+      "text": "    \"system.github.launch_endpoint\": {"
+    },
+    {
+      "offset": 164,
+      "text": "      \"value\": \"https://launch.actions.githubusercontent.com\""
+    },
+    {
+      "offset": 165,
+      "text": "    },"
+    },
+    {
+      "offset": 166,
+      "text": "    \"system.github.results_endpoint\": {"
+    },
+    {
+      "offset": 167,
+      "text": "      \"value\": \"https://results-receiver.actions.githubusercontent.com/\""
+    },
+    {
+      "offset": 168,
+      "text": "    },"
+    },
+    {
+      "offset": 169,
+      "text": "    \"system.github.results_upload_with_sdk\": {"
+    },
+    {
+      "offset": 170,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": 171,
+      "text": "    },"
+    },
+    {
+      "offset": 172,
+      "text": "    \"system.github.token\": {"
+    },
+    {
+      "offset": 173,
+      "text": "      \"value\": \"***\","
+    },
+    {
+      "offset": 174,
+      "text": "      \"isSecret\": true"
+    },
+    {
+      "offset": 175,
+      "text": "    },"
+    },
+    {
+      "offset": 176,
+      "text": "    \"system.github.token.permissions\": {"
+    },
+    {
+      "offset": 177,
+      "text": "      \"value\": \"{\\\"Contents\\\":\\\"write\\\",\\\"Metadata\\\":\\\"read\\\"}\""
+    },
+    {
+      "offset": 178,
+      "text": "    },"
+    },
+    {
+      "offset": 179,
+      "text": "    \"system.orchestrationId\": {"
+    },
+    {
+      "offset": 180,
+      "text": "      \"value\": \"<plan-id>.inspect.__default\""
+    },
+    {
+      "offset": 181,
+      "text": "    },"
+    },
+    {
+      "offset": 182,
+      "text": "    \"system.phaseDisplayName\": {"
+    },
+    {
+      "offset": 183,
+      "text": "      \"value\": \"inspect\""
+    },
+    {
+      "offset": 184,
+      "text": "    },"
+    },
+    {
+      "offset": 185,
+      "text": "    \"system.runner.lowdiskspacethreshold\": {"
+    },
+    {
+      "offset": 186,
+      "text": "      \"value\": \"100\""
+    },
+    {
+      "offset": 187,
+      "text": "    },"
+    },
+    {
+      "offset": 188,
+      "text": "    \"system.runnerEnvironment\": {"
+    },
+    {
+      "offset": 189,
+      "text": "      \"value\": \"github-hosted\""
+    },
+    {
+      "offset": 190,
+      "text": "    },"
+    },
+    {
+      "offset": 191,
+      "text": "    \"system.runnerGroupName\": {"
+    },
+    {
+      "offset": 192,
+      "text": "      \"value\": \"GitHub Actions\""
+    },
+    {
+      "offset": 193,
+      "text": "    }"
+    },
+    {
+      "offset": 194,
+      "text": "  },"
+    },
+    {
+      "offset": 195,
+      "text": "  \"messageType\": \"RunnerJobRequest\","
+    },
+    {
+      "offset": 196,
+      "text": "  \"plan\": {"
+    },
+    {
+      "offset": 197,
+      "text": "    \"scopeIdentifier\": \"<guid-2>\","
+    },
+    {
+      "offset": 198,
+      "text": "    \"planType\": \"actions\","
+    },
+    {
+      "offset": 199,
+      "text": "    \"version\": 0,"
+    },
+    {
+      "offset": 200,
+      "text": "    \"planId\": \"<plan-id>\","
+    },
+    {
+      "offset": 201,
+      "text": "    \"planGroup\": null,"
+    },
+    {
+      "offset": 202,
+      "text": "    \"artifactUri\": null,"
+    },
+    {
+      "offset": 203,
+      "text": "    \"artifactLocation\": null,"
+    },
+    {
+      "offset": 204,
+      "text": "    \"definition\": null,"
+    },
+    {
+      "offset": 205,
+      "text": "    \"owner\": null"
+    },
+    {
+      "offset": 206,
+      "text": "  },"
+    },
+    {
+      "offset": 207,
+      "text": "  \"timeline\": {"
+    },
+    {
+      "offset": 208,
+      "text": "    \"id\": \"<plan-id>\","
+    },
+    {
+      "offset": 209,
+      "text": "    \"changeId\": 0,"
+    },
+    {
+      "offset": 210,
+      "text": "    \"location\": null"
+    },
+    {
+      "offset": 211,
+      "text": "  },"
+    },
+    {
+      "offset": 212,
+      "text": "  \"jobId\": \"<job-id>\","
+    },
+    {
+      "offset": 213,
+      "text": "  \"jobDisplayName\": \"inspect\","
+    },
+    {
+      "offset": 214,
+      "text": "  \"jobName\": \"__default\","
+    },
+    {
+      "offset": 215,
+      "text": "  \"requestId\": 0,"
+    },
+    {
+      "offset": 216,
+      "text": "  \"lockedUntil\": \"0001-01-01T00:00:00\","
+    },
+    {
+      "offset": 217,
+      "text": "  \"resources\": {"
+    },
+    {
+      "offset": 218,
+      "text": "    \"endpoints\": ["
+    },
+    {
+      "offset": 219,
+      "text": "      {"
+    },
+    {
+      "offset": 220,
+      "text": "        \"data\": {"
+    },
+    {
+      "offset": 221,
+      "text": "          \"ServerId\": \"\","
+    },
+    {
+      "offset": 222,
+      "text": "          \"ServerName\": \"\","
+    },
+    {
+      "offset": 223,
+      "text": "          \"CacheServerUrl\": \"https://artifactcache.actions.githubusercontent.com/WwzKiM5c1sg5LS1IpmkAXcPE60yEllUdIXwe3oqj5STVnE8z7R/\","
+    },
+    {
+      "offset": 224,
+      "text": "          \"FeedStreamUrl\": \"wss://results-receiver.actions.githubusercontent.com/_ws/ingest.sock\","
+    },
+    {
+      "offset": 225,
+      "text": "          \"ResultsServiceUrl\": \"https://results-receiver.actions.githubusercontent.com/\","
+    },
+    {
+      "offset": 226,
+      "text": "          \"PipelinesServiceUrl\": \"https://pipelinesghubeus5.actions.githubusercontent.com/WwzKiM5c1sg5LS1IpmkAXcPE60yEllUdIXwe3oqj5STVnE8z7R/\","
+    },
+    {
+      "offset": 227,
+      "text": "          \"GenerateIdTokenUrl\": \"\","
+    },
+    {
+      "offset": 228,
+      "text": "          \"ConnectivityChecks\": \"\","
+    },
+    {
+      "offset": 229,
+      "text": "          \"ConnectivityAndDNSChecks\": \"[\\\"https://github.com/_dns\\\",\\\"https://api.github.com/_dns\\\",\\\"https://codeload.github.com/_dns\\\",\\\"https://pkg.github.com/_dns\\\",\\\"https://copilot-proxy.githubusercontent.com/_dns\\\",\\\"http://ssh.github.com/_dns\\\"]\""
+    },
+    {
+      "offset": 230,
+      "text": "        },"
+    },
+    {
+      "offset": 231,
+      "text": "        \"name\": \"SystemVssConnection\","
+    },
+    {
+      "offset": 232,
+      "text": "        \"url\": \"https://run-actions-2-azure-eastus.actions.githubusercontent.com/35/\","
+    },
+    {
+      "offset": 233,
+      "text": "        \"authorization\": {"
+    },
+    {
+      "offset": 234,
+      "text": "          \"parameters\": {"
+    },
+    {
+      "offset": 235,
+      "text": "            \"AccessToken\": \"<redacted>\""
+    },
+    {
+      "offset": 236,
+      "text": "          },"
+    },
+    {
+      "offset": 237,
+      "text": "          \"scheme\": \"OAuth\""
+    },
+    {
+      "offset": 238,
+      "text": "        },"
+    },
+    {
+      "offset": 239,
+      "text": "        \"isShared\": false,"
+    },
+    {
+      "offset": 240,
+      "text": "        \"isReady\": true"
+    },
+    {
+      "offset": 241,
+      "text": "      }"
+    },
+    {
+      "offset": 242,
+      "text": "    ]"
+    },
+    {
+      "offset": 243,
+      "text": "  },"
+    },
+    {
+      "offset": 244,
+      "text": "  \"contextData\": {"
+    },
+    {
+      "offset": 245,
+      "text": "    \"github\": {"
+    },
+    {
+      "offset": 246,
+      "text": "      \"t\": 2,"
+    },
+    {
+      "offset": 247,
+      "text": "      \"d\": ["
+    },
+    {
+      "offset": 248,
+      "text": "        {"
+    },
+    {
+      "offset": 249,
+      "text": "          \"k\": \"ref\","
+    },
+    {
+      "offset": 250,
+      "text": "          \"v\": \"refs/heads/research-sandbox-artifact-name-normalization\""
+    },
+    {
+      "offset": 251,
+      "text": "        },"
+    },
+    {
+      "offset": 252,
+      "text": "        {"
+    },
+    {
+      "offset": 253,
+      "text": "          \"k\": \"sha\","
+    },
+    {
+      "offset": 254,
+      "text": "          \"v\": \"4e0b11f9b75c8f1f291ba681ba833876d558ca05\""
+    },
+    {
+      "offset": 255,
+      "text": "        },"
+    },
+    {
+      "offset": 256,
+      "text": "        {"
+    },
+    {
+      "offset": 257,
+      "text": "          \"k\": \"repository\","
+    },
+    {
+      "offset": 258,
+      "text": "          \"v\": \"jackson-kuja/Council\""
+    },
+    {
+      "offset": 259,
+      "text": "        },"
+    }
+  ]
+}
