@@ -29,8 +29,13 @@ var hub = root.GetProperty("hub").GetString()
     ?? throw new InvalidOperationException("hub missing");
 var plan = Guid.Parse(root.GetProperty("plan").GetString()!);
 var timelineId = Guid.Parse(root.GetProperty("timeline").GetString()!);
-var token = Environment.GetEnvironmentVariable("ACTIONS_RUNTIME_TOKEN")
-    ?? throw new InvalidOperationException("runtime token unavailable");
+var tokenPath = Environment.GetEnvironmentVariable("RESEARCH_RUNTIME_TOKEN_FILE")
+    ?? "runtime-token.txt";
+var token = (await File.ReadAllTextAsync(tokenPath)).Trim();
+if (string.IsNullOrEmpty(token))
+{
+    throw new InvalidOperationException("runtime token file was empty");
+}
 
 object output;
 try
