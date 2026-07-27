@@ -80,7 +80,16 @@ jobs:
               {label: 'percent-dotdot', name: '%2e%2e'},
               {label: 'dotdot-percent20', name: '..%20'},
               {label: 'dotdot-nbsp', name: '..\u00a0'},
-              {label: 'dotdot-ideographic-space', name: '..\u3000'}
+              {label: 'dotdot-ideographic-space', name: '..\u3000'},
+              {label: 'dotdot-forward-slash', name: '../'},
+              {label: 'dotdot-forward-child', name: '../escape'},
+              {label: 'dotdot-backslash', name: '..\\'},
+              {label: 'dotdot-backslash-child', name: '..\\escape'},
+              {label: 'root-forward', name: '/escape'},
+              {label: 'root-backslash', name: '\\escape'},
+              {label: 'drive-relative', name: 'C:escape'},
+              {label: 'drive-absolute-backslash', name: 'C:\\escape'},
+              {label: 'drive-absolute-forward', name: 'C:/escape'}
             ]
 
             async function post(method, body) {
