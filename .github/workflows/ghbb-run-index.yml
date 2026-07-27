@@ -27,7 +27,15 @@ jobs:
               'GHBB create symlink probe branch',
               'GHBB upload artifact symlink containment probe',
               'GHBB artifact name parent-path producer',
-              'GHBB download artifact parent-name consumer'
+              'GHBB download artifact parent-name consumer',
+              'Research legacy Actions route discovery branch',
+              'Research runtime claim shapes',
+              'Research runtime claim details',
+              'Research runner diagnostic route patterns',
+              'Research own Actions plan route proof',
+              'Research runner job metadata shape',
+              'Research own Actions timeline route proof',
+              'Research own timeline through SystemVssConnection'
             ])
             const response = await github.rest.actions.listWorkflowRunsForRepo({
               owner: context.repo.owner,
@@ -36,7 +44,7 @@ jobs:
             })
             const matches = (response.data.workflow_runs || [])
               .filter(run => trackedNames.has(run.name))
-              .slice(0, 50)
+              .slice(0, 70)
               .map(run => ({
                 id: run.id,
                 name: run.name,
@@ -84,7 +92,7 @@ jobs:
               `GHBB controlled run index from ${context.runId}:`,
               `- matches: \`${matches.length}\``
             ]
-            for (const run of matches.slice(0, 15)) {
+            for (const run of matches.slice(0, 20)) {
               lines.push(`- name=\`${run.name}\` run=\`${run.id}\` status=\`${run.status}\` conclusion=\`${run.conclusion}\` event=\`${run.event}\` head_sha=\`${run.head_sha}\` created=\`${run.created_at}\``)
             }
             await github.rest.issues.createComment({
