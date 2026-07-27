@@ -1,0 +1,19 @@
+{
+  "workflow_run_id": 30229609826,
+  "endpoint_origin": "https://run-actions-1-azure-eastus.actions.githubusercontent.com",
+  "endpoint_path_segment_lengths": [
+    1
+  ],
+  "endpoint_sha256": "710e05e4c3b0b426387d1eeeba513592bfe0143e85131cd29b38bafa39432c51",
+  "scope_sha256": "12b9377cbe7e5c94e8a70d9d23929523d14afa954793130f8a3959c7b849aca8",
+  "plan_sha256": "317cba4239b48b1edcd98fd8f46565aa08b85656664f900daff587d7e0ca8c3e",
+  "timeline_sha256": "317cba4239b48b1edcd98fd8f46565aa08b85656664f900daff587d7e0ca8c3e",
+  "plan_timeline_same": true,
+  "hub": "actions",
+  "status": "build_exit=1\nrun_exit=-1",
+  "sdk": {
+    "success": false,
+    "harness_error": true,
+    "diagnostic_tail": "  Determining projects to restore...\n  Restored /home/runner/work/Council/Council/sdkprobe/SdkProbe.csproj (in 89 ms).\n/home/runner/work/Council/Council/sdkprobe/Program.cs(30,13): error CS0246: The type or namespace name 'VssOAuthAccessTokenCredential' could not be found (are you missing a using directive or an assembly reference?) [/home/runner/work/Council/Council/sdkprobe/SdkProbe.csproj]\n\nBuild FAILED.\n\n/home/runner/work/Council/Council/sdkprobe/Program.cs(30,13): error CS0246: The type or namespace name 'VssOAuthAccessTokenCredential' could not be found (are you missing a using directive or an assembly reference?) [/home/runner/work/Council/Council/sdkprobe/SdkProbe.csproj]\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:07.53\n\n"
+  }
+}
