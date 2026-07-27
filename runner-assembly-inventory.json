@@ -1,0 +1,99 @@
+{
+  "workflow_run_id": 30229552927,
+  "assembly_count": 13,
+  "names": [
+    "Newtonsoft.Json.Bson.dll",
+    "Newtonsoft.Json.dll",
+    "Runner.Common.dll",
+    "Runner.Listener.dll",
+    "Runner.PluginHost.dll",
+    "Runner.Plugins.dll",
+    "Runner.Sdk.dll",
+    "Runner.Worker.dll",
+    "System.Runtime.CompilerServices.Unsafe.dll",
+    "System.Runtime.CompilerServices.VisualC.dll",
+    "System.Runtime.InteropServices.dll",
+    "System.Runtime.InteropServices.JavaScript.dll",
+    "System.Runtime.InteropServices.RuntimeInformation.dll"
+  ],
+  "entries": [
+    {
+      "name": "Newtonsoft.Json.Bson.dll",
+      "parent_name": "bin",
+      "path_sha256": "dca3e74674caffe34a6d1a63a76c3d6f0170ec94e0b5d6a891c1ac21d195f074",
+      "size": 97720
+    },
+    {
+      "name": "Newtonsoft.Json.dll",
+      "parent_name": "bin",
+      "path_sha256": "d1646532e0059faf91789671a237e70da98a175a37f1bcc463a2c5ff6be1ca9b",
+      "size": 712464
+    },
+    {
+      "name": "Runner.Common.dll",
+      "parent_name": "bin",
+      "path_sha256": "aca96a27b08da3b78bd80e3311c3401be0f6bf39cf6ee81bfa561fcff51ba11d",
+      "size": 210432
+    },
+    {
+      "name": "Runner.Listener.dll",
+      "parent_name": "bin",
+      "path_sha256": "90c23901f58825dfa96e1e6f21bfd81f12656a4d2f25fdc59c64fa3859a884dd",
+      "size": 268800
+    },
+    {
+      "name": "Runner.PluginHost.dll",
+      "parent_name": "bin",
+      "path_sha256": "7c887e67da947953593bcfa0c416047444bd4629ff372a2095fa624be2e48a3d",
+      "size": 7168
+    },
+    {
+      "name": "Runner.Plugins.dll",
+      "parent_name": "bin",
+      "path_sha256": "c9c75c85b69a0a457725a892b6adedea6ac1c259ecf10c9fbb3b8b114bf3247f",
+      "size": 112128
+    },
+    {
+      "name": "Runner.Sdk.dll",
+      "parent_name": "bin",
+      "path_sha256": "0c6d9a9508586195ad05cbc92cc10ab134dca0d828d057ca2d899a223629a6a4",
+      "size": 53248
+    },
+    {
+      "name": "Runner.Worker.dll",
+      "parent_name": "bin",
+      "path_sha256": "af4b83134c68ae85b29f5b644b11f35d6aea5810c2798fcc6b5204b0e2ac42ef",
+      "size": 611328
+    },
+    {
+      "name": "System.Runtime.CompilerServices.Unsafe.dll",
+      "parent_name": "bin",
+      "path_sha256": "cf8ee8f60fb0ffba2d7dd4f0693a91d1ead6283fd8e4a780a71d70d95d30d330",
+      "size": 15184
+    },
+    {
+      "name": "System.Runtime.CompilerServices.VisualC.dll",
+      "parent_name": "bin",
+      "path_sha256": "8bddfeedcd18c8967641114536a20ef5ca58627fc7a9044c34b394ea580bdd55",
+      "size": 19240
+    },
+    {
+      "name": "System.Runtime.InteropServices.dll",
+      "parent_name": "bin",
+      "path_sha256": "9911103a8309447ab4f54d31cc08c2dffdf10ad1f4319604d43da285cdbcd374",
+      "size": 85800
+    },
+    {
+      "name": "System.Runtime.InteropServices.JavaScript.dll",
+      "parent_name": "bin",
+      "path_sha256": "77d7f6563fdc25ab578191f3046c9d555481d06aee835064c69c78ce2d3c8d79",
+      "size": 38696
+    },
+    {
+      "name": "System.Runtime.InteropServices.RuntimeInformation.dll",
+      "parent_name": "bin",
+      "path_sha256": "575823b42424c83aae7832735df64e5474e46f5d09e017a5ddb762341e5d50cf",
+      "size": 15144
+    }
+  ]
+}
