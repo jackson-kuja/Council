@@ -1,0 +1,69 @@
+{
+  "workflow_run_id": 30228937339,
+  "source_file_name": "Worker_20260727-010451-utc.log",
+  "source_file_path_sha256": "c81ab885e1bdfa7b8f2b56cea214c6af56991e5183c6034d1326c20eefd0bc00",
+  "scope_sha256": "12b9377cbe7e5c94e8a70d9d23929523d14afa954793130f8a3959c7b849aca8",
+  "plan_sha256": "0151f4bc9a971e79148529f8efa801317720aecd8a42c035924c31ac1bf2700c",
+  "timeline_sha256": "0151f4bc9a971e79148529f8efa801317720aecd8a42c035924c31ac1bf2700c",
+  "plan_timeline_same": true,
+  "plan_type": "actions",
+  "positive_count": 0,
+  "positives": [],
+  "attempts": [
+    {
+      "version": "5.1-preview.1",
+      "status": 404,
+      "content_type": "application/json; charset=utf-8",
+      "body_length": 366,
+      "timeline_id_match": false,
+      "record_count": 0,
+      "log_reference_count": 0,
+      "record_types": [],
+      "record_names": [],
+      "json_keys": [
+        "$id",
+        "errorCode",
+        "eventId",
+        "innerException",
+        "message",
+        "typeKey",
+        "typeName"
+      ],
+      "error_preview": "{\"$id\":\"1\",\"innerException\":null,\"message\":\"No timeline found for plan <guid> with identifier <guid>.\",\"typeName\":\"Microsoft.TeamFoundation.DistributedTask.WebApi.TimelineNotFoundException, Microsoft.TeamFoundation.DistributedTask.WebApi\",\"typeKey\":\"TimelineNotFoundException\",\"errorCode\":0,\"eventId\""
+    },
+    {
+      "version": "6.0-preview.1",
+      "status": 404,
+      "content_type": "application/json; charset=utf-8",
+      "body_length": 366,
+      "timeline_id_match": false,
+      "record_count": 0,
+      "log_reference_count": 0,
+      "record_types": [],
+      "record_names": [],
+      "json_keys": [
+        "$id",
+        "errorCode",
+        "eventId",
+        "innerException",
+        "message",
+        "typeKey",
+        "typeName"
+      ],
+      "error_preview": "{\"$id\":\"1\",\"innerException\":null,\"message\":\"No timeline found for plan <guid> with identifier <guid>.\",\"typeName\":\"Microsoft.TeamFoundation.DistributedTask.WebApi.TimelineNotFoundException, Microsoft.TeamFoundation.DistributedTask.WebApi\",\"typeKey\":\"TimelineNotFoundException\",\"errorCode\":0,\"eventId\""
+    },
+    {
+      "version": "6.0-preview.2",
+      "status": 404,
+      "content_type": "",
+      "body_length": 0,
+      "timeline_id_match": false,
+      "record_count": 0,
+      "log_reference_count": 0,
+      "record_types": [],
+      "record_names": [],
+      "json_keys": [],
+      "error_preview": ""
+    }
+  ]
+}
