@@ -1,0 +1,319 @@
+{
+  "workflow_run_id": 30228557445,
+  "runtime_path_segments": [
+    {
+      "length": 50,
+      "sha256": "32ee7c0d41f9ca1dea742a89c7b9234af8c4c1b8fc0036acdfdc2b39a3c1a2d2"
+    }
+  ],
+  "claims": {
+    "ac": {
+      "type": "string",
+      "length": 127,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        "\"",
+        ",",
+        "-",
+        "/",
+        ":",
+        "[",
+        "]",
+        "{",
+        "}"
+      ],
+      "sha256": "e1e1b56e6898445228ff296fb2af6848e64a1169a6566422c95cdc5c7dab068d"
+    },
+    "acsl": {
+      "type": "string",
+      "length": 2,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": true,
+      "separators": [],
+      "sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"
+    },
+    "aud": {
+      "type": "string",
+      "length": 40,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        "-",
+        ":"
+      ],
+      "sha256": "ec37370fa567265b85bfc9133533af8268e06ac99b38edf0e5da203d547a9880"
+    },
+    "billing_owner_id": {
+      "type": "string",
+      "length": 12,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        "_"
+      ],
+      "sha256": "d6443bed60014b4e98328812bd4c10ff674950cc2897132fb4b8019546a0f8e9"
+    },
+    "exp": {
+      "type": "number",
+      "length": 10,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": true,
+      "separators": [],
+      "sha256": "9b027ec8a40456a3e41bcd6c36aa2b85ed54e751588001d03633946012a173b4"
+    },
+    "http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid": {
+      "type": "string",
+      "length": 36,
+      "is_guid": true,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        "-"
+      ],
+      "sha256": "198ba0408801de5aece6f6af3a5dc911540bc19c3b180ec50d4fa83fa100d4dd"
+    },
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid": {
+      "type": "string",
+      "length": 36,
+      "is_guid": true,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        "-"
+      ],
+      "sha256": "198ba0408801de5aece6f6af3a5dc911540bc19c3b180ec50d4fa83fa100d4dd"
+    },
+    "iat": {
+      "type": "number",
+      "length": 10,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": true,
+      "separators": [],
+      "sha256": "08b02c585129f87b8596f3ebd66a4e0803eb3a7fa1e4d75961fa9521578d745c"
+    },
+    "IdentityTypeClaim": {
+      "type": "string",
+      "length": 22,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        ":"
+      ],
+      "sha256": "b1e0c3574384e0bb968682f01ec04a45829a39dee5d815d94f56efb2a3427315"
+    },
+    "iss": {
+      "type": "string",
+      "length": 43,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        ".",
+        "/",
+        ":"
+      ],
+      "sha256": "dd9c65dd99f49e3d0ff1d11acfec9a125a40b770dd7faf1617ec51dde77ffdc6"
+    },
+    "job_id": {
+      "type": "string",
+      "length": 36,
+      "is_guid": true,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        "-"
+      ],
+      "sha256": "3877c66c7ee4e8c6e1a5ae2efd3c06c3dfbb8b8ae39c0ee856cd6e23cddb4e98"
+    },
+    "job_workflow_ref": {
+      "type": "string",
+      "length": 128,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        "-",
+        ".",
+        "/",
+        "@"
+      ],
+      "sha256": "c67412b20b073dd5ed0eb240084dc6cde660acf8d697bda7d55c01f4d07aa776"
+    },
+    "job_workflow_sha": {
+      "type": "string",
+      "length": 40,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [],
+      "sha256": "86a907ae3763f1af35a2d76c283d0f1df485af83f6c20b89f60ff733898c1648"
+    },
+    "nameid": {
+      "type": "string",
+      "length": 36,
+      "is_guid": true,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        "-"
+      ],
+      "sha256": "198ba0408801de5aece6f6af3a5dc911540bc19c3b180ec50d4fa83fa100d4dd"
+    },
+    "nbf": {
+      "type": "number",
+      "length": 10,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": true,
+      "separators": [],
+      "sha256": "063d611c61c5703ae7d7ecf9849450670e62fafb35b6faec78e47e5aa27b66e4"
+    },
+    "orch_id": {
+      "type": "string",
+      "length": 54,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        "-",
+        ".",
+        "_"
+      ],
+      "sha256": "2078124ea09116aa909a1c9b11d28a80fa3fe6816c59d25ebc88f8e0aca7a7c1"
+    },
+    "owner_id": {
+      "type": "string",
+      "length": 12,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        "_"
+      ],
+      "sha256": "d6443bed60014b4e98328812bd4c10ff674950cc2897132fb4b8019546a0f8e9"
+    },
+    "plan_id": {
+      "type": "string",
+      "length": 36,
+      "is_guid": true,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        "-"
+      ],
+      "sha256": "0d097dc70225a785736cf24a894a58653f56decc26ed14a65477421ccc84dc5c"
+    },
+    "repository_id": {
+      "type": "string",
+      "length": 10,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": true,
+      "separators": [],
+      "sha256": "6841034f546311c51c30e3962f5457920b050f9bf96dee966f3a386d85ee42fe"
+    },
+    "repository_owner_id": {
+      "type": "string",
+      "length": 8,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": true,
+      "separators": [],
+      "sha256": "6b088c03803886ffe04dd0a6757cde101240d00267d895abb57c041e6c55939a"
+    },
+    "repository_visibility": {
+      "type": "string",
+      "length": 6,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [],
+      "sha256": "efa1f375d76194fa51a3556a97e641e61685f914d446979da50a551a4333ffd7"
+    },
+    "run_id": {
+      "type": "string",
+      "length": 11,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": true,
+      "separators": [],
+      "sha256": "bc8bf6ca0663fda16f38936eadf9faa3dcd17a9847e47b325e8308d6b37a38ab"
+    },
+    "run_number": {
+      "type": "string",
+      "length": 1,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": true,
+      "separators": [],
+      "sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
+    },
+    "run_type": {
+      "type": "string",
+      "length": 4,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [],
+      "sha256": "a18b869b2e81c0c529552a3c4fa5c92ed08b98a4e146aed778d71d27517f83ac"
+    },
+    "runner_id": {
+      "type": "string",
+      "length": 10,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": true,
+      "separators": [],
+      "sha256": "ba92e1047a6a4fcdfeafeb5a14591204b58c2b7a2c408adcf4af012bd87de7ac"
+    },
+    "runner_type": {
+      "type": "string",
+      "length": 6,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [],
+      "sha256": "4ca5c7e415d13fee35010a41755862ef78144eaa63244edba0dc67d39fa06643"
+    },
+    "scp": {
+      "type": "string",
+      "length": 333,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [
+        " ",
+        "-",
+        ".",
+        ":"
+      ],
+      "sha256": "47fcbc381835fb57f906cffc384b70a5f6708fec8d39523413c4079672343fba"
+    },
+    "sha": {
+      "type": "string",
+      "length": 40,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": false,
+      "separators": [],
+      "sha256": "86a907ae3763f1af35a2d76c283d0f1df485af83f6c20b89f60ff733898c1648"
+    },
+    "trust_tier": {
+      "type": "string",
+      "length": 1,
+      "is_guid": false,
+      "is_hex32": false,
+      "is_numeric": true,
+      "separators": [],
+      "sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35"
+    }
+  }
+}
