@@ -1,0 +1,50 @@
+{
+  "workflow_run_id": 30228777206,
+  "candidate_file_count": 2,
+  "inspected_file_count": 2,
+  "match_count": 7,
+  "matches": [
+    {
+      "file_name": "Worker_20260727-010056-utc.log",
+      "file_path_sha256": "e8d17208113b8eb20c016240c4ec1d9f4b0e3e655d98fb5c1f71c08aa1c26275",
+      "line_number": 151,
+      "redacted": "              \"lit\": \"const fs = require('fs')\\nconst path = require('path')\\nconst crypto = require('crypto')\\nconst token = process.env.ACTIONS_RUNTIME_TOKEN || ''\\nconst claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'))\\nconst known = new Map([\\n  [String(claims.plan_id || '').toLowerCase(), '<plan-id>'],\\n  [String(claims.job_id || '').toLowerCase(), '<job-id>'],\\n  [String(claims.nameid || '').toLowerCase(), '<identity-id>']\\n])\\nconst runtimePath = new URL(process.env.ACTIONS_RUNTIME_URL).pathname.split('/').filter(Boolean)[0] || ''\\nif (runtimePath) known.set(runtimePath.toLowerCase(), '<runtime-path>')\\n\\nfunction redact(line) {\\n  let out = String(line)\\n  for (const [value, replacement] of known) {\\n    if (value) out = out.replaceAll(value, replacement).replaceAll(value.toUpperCase(), replacement)\\n  }\\n  out = out\\n    .replace(/Bearer\\\\s+[A-Za-z0-9._~-]+/gi, '***')\\n    .replace(/[A-Za-z0-9_-]{80,}/g, '<opaque>')\\n    .replace(/[0-9a-f]{8}"
+    },
+    {
+      "file_name": "Worker_20260727-010056-utc.log",
+      "file_path_sha256": "e8d17208113b8eb20c016240c4ec1d9f4b0e3e655d98fb5c1f71c08aa1c26275",
+      "line_number": 216,
+      "redacted": "    \"actions.runner.requirenode24\": {"
+    },
+    {
+      "file_name": "Worker_20260727-010056-utc.log",
+      "file_path_sha256": "e8d17208113b8eb20c016240c4ec1d9f4b0e3e655d98fb5c1f71c08aa1c26275",
+      "line_number": 219,
+      "redacted": "    \"actions.runner.usenode24bydefault\": {"
+    },
+    {
+      "file_name": "Worker_20260727-010056-utc.log",
+      "file_path_sha256": "e8d17208113b8eb20c016240c4ec1d9f4b0e3e655d98fb5c1f71c08aa1c26275",
+      "line_number": 222,
+      "redacted": "    \"actions.runner.warnonnode20\": {"
+    },
+    {
+      "file_name": "Worker_20260727-010056-utc.log",
+      "file_path_sha256": "e8d17208113b8eb20c016240c4ec1d9f4b0e3e655d98fb5c1f71c08aa1c26275",
+      "line_number": 326,
+      "redacted": "    \"scopeIdentifier\": \"<guid>\","
+    },
+    {
+      "file_name": "Worker_20260727-010056-utc.log",
+      "file_path_sha256": "e8d17208113b8eb20c016240c4ec1d9f4b0e3e655d98fb5c1f71c08aa1c26275",
+      "line_number": 329,
+      "redacted": "    \"planId\": \"<plan-id>\","
+    },
+    {
+      "file_name": "Worker_20260727-010056-utc.log",
+      "file_path_sha256": "e8d17208113b8eb20c016240c4ec1d9f4b0e3e655d98fb5c1f71c08aa1c26275",
+      "line_number": 1400,
+      "redacted": "   at GitHub.Services.Results.Client.ResultsHttpClient.UpdateWorkflowStepsAsync(Guid planId, IEnumerable`1 records, CancellationToken cancellationToken)"
+    }
+  ]
+}
