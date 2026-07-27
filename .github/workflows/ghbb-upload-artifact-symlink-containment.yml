@@ -1,0 +1,159 @@
+name: GHBB upload artifact symlink containment probe
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Create owned dummy file outside the upload root
+        id: dummy
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          outside='/home/runner/work/_temp/ghbb-owned-dummy-secret.txt'
+          printf 'GHBB-OWNED-DUMMY-FILE-SECRET-20260727\n' > "$outside"
+          digest="$(sha256sum "$outside" | cut -d' ' -f1)"
+          printf 'outside_path=%s\n' "$outside"
+          printf 'digest=%s\n' "$digest"
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Materialize pull request head as non-executed data
+        shell: bash
+        env:
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GIT_LFS_SKIP_SMUDGE: '1'
+        run: |
+          set -euo pipefail
+          rm -rf pr-data
+          git init -q pr-data
+          git -C pr-data remote add origin "https://github.com/${PR_HEAD_REPO}.git"
+          git -C pr-data -c protocol.version=2 fetch --no-tags --depth=1 origin "$PR_HEAD_SHA"
+          git -C pr-data \
+            -c core.hooksPath=/dev/null \
+            -c filter.lfs.smudge= \
+            -c filter.lfs.required=false \
+            checkout -q --detach FETCH_HEAD
+          test -L pr-data/leak-dummy-secret
+          target="$(readlink pr-data/leak-dummy-secret)"
+          printf 'symlink_target=%s\n' "$target"
+          test "$target" = '/home/runner/work/_temp/ghbb-owned-dummy-secret.txt'
+          printf 'No pull-request file was executed.\n'
+
+      - name: Upload only the untrusted symbolic link
+        id: upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: ghbb-symlink-containment-${{ github.run_id }}
+          path: pr-data/leak-dummy-secret
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Download the resulting artifact for exact owned-canary verification
+        id: download
+        uses: actions/download-artifact@v8
+        with:
+          name: ghbb-symlink-containment-${{ github.run_id }}
+          path: verification
+
+      - name: Verify outside-root file disclosure
+        id: verify
+        shell: bash
+        env:
+          EXPECTED_DIGEST: ${{ steps.dummy.outputs.digest }}
+        run: |
+          set -euo pipefail
+          candidate='verification/leak-dummy-secret'
+          artifact_file_present=false
+          artifact_is_regular=false
+          digest_match=false
+          artifact_digest='<missing>'
+          if [[ -e "$candidate" ]]; then
+            artifact_file_present=true
+            [[ -f "$candidate" && ! -L "$candidate" ]] && artifact_is_regular=true
+            artifact_digest="$(sha256sum "$candidate" | cut -d' ' -f1)"
+            [[ "$artifact_digest" == "$EXPECTED_DIGEST" ]] && digest_match=true
+          fi
+          boundary_failure=false
+          if [[ "$artifact_file_present" == true && "$artifact_is_regular" == true && "$digest_match" == true ]]; then
+            boundary_failure=true
+          fi
+          {
+            printf 'pull_request_number=%s\n' '${{ github.event.pull_request.number }}'
+            printf 'pull_request_head_sha=%s\n' '${{ github.event.pull_request.head.sha }}'
+            printf 'upload_outcome=%s\n' '${{ steps.upload.outcome }}'
+            printf 'download_outcome=%s\n' '${{ steps.download.outcome }}'
+            printf 'artifact_file_present=%s\n' "$artifact_file_present"
+            printf 'artifact_is_regular=%s\n' "$artifact_is_regular"
+            printf 'expected_dummy_sha256=%s\n' "$EXPECTED_DIGEST"
+            printf 'artifact_sha256=%s\n' "$artifact_digest"
+            printf 'outside_root_dummy_exact_match=%s\n' "$digest_match"
+            printf 'pull_request_code_executed=false\n'
+            printf 'real_secret_exposed=false\n'
+            printf 'upload_root_containment_failure=%s\n' "$boundary_failure"
+          } | tee ghbb-upload-artifact-symlink-result.txt
+          printf 'boundary_failure=%s\n' "$boundary_failure" >> "$GITHUB_OUTPUT"
+
+      - name: Upload sanitized verification result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ghbb-upload-artifact-symlink-result-${{ github.run_id }}
+          path: ghbb-upload-artifact-symlink-result.txt
+          retention-days: 1
+          if-no-files-found: warn
+
+      - name: Persist sanitized result to owned results branch
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            let text = 'result_file_missing=true\n'
+            try { text = fs.readFileSync('ghbb-upload-artifact-symlink-result.txt', 'utf8') } catch (_) {}
+            const path = 'latest-result.txt'
+            const branch = 'ghbb-upload-artifact-symlink-results'
+            let sha
+            try {
+              const current = await github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path,
+                ref: branch
+              })
+              if (!Array.isArray(current.data)) sha = current.data.sha
+            } catch (error) {
+              if (error.status !== 404) throw error
+            }
+            await github.rest.repos.createOrUpdateFileContents({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path,
+              branch,
+              message: `Persist symlink containment result from ${context.runId}`,
+              content: Buffer.from(text).toString('base64'),
+              ...(sha ? {sha} : {})
+            })
+
+      - name: Fail closed on confirmed upload-root containment failure
+        if: always()
+        shell: bash
+        env:
+          BOUNDARY_FAILURE: ${{ steps.verify.outputs.boundary_failure }}
+        run: |
+          set -euo pipefail
+          if [[ "$BOUNDARY_FAILURE" == true ]]; then
+            printf 'CONFIRMED_UPLOAD_ARTIFACT_SYMLINK_ROOT_ESCAPE\n' >&2
+            exit 1
+          fi
+          printf 'RESULT=NO_CONFIRMED_UPLOAD_ARTIFACT_SYMLINK_ROOT_ESCAPE\n'
