@@ -1,0 +1,587 @@
+{
+  "workflow_run_id": 30228885181,
+  "source_file_name": "Worker_20260727-010336-utc.log",
+  "source_file_path_sha256": "d1249e4933e809ab06f44b47011f7278cf556020a8d00b330fb3791884c39dd5",
+  "window": [
+    {
+      "offset": -45,
+      "text": "    },"
+    },
+    {
+      "offset": -44,
+      "text": "    \"github_token\": {"
+    },
+    {
+      "offset": -43,
+      "text": "      \"value\": \"***\","
+    },
+    {
+      "offset": -42,
+      "text": "      \"isSecret\": true"
+    },
+    {
+      "offset": -41,
+      "text": "    },"
+    },
+    {
+      "offset": -40,
+      "text": "    \"system.from_run_service\": {"
+    },
+    {
+      "offset": -39,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": -38,
+      "text": "    },"
+    },
+    {
+      "offset": -37,
+      "text": "    \"system.github.job\": {"
+    },
+    {
+      "offset": -36,
+      "text": "      \"value\": \"inspect\""
+    },
+    {
+      "offset": -35,
+      "text": "    },"
+    },
+    {
+      "offset": -34,
+      "text": "    \"system.github.launch_endpoint\": {"
+    },
+    {
+      "offset": -33,
+      "text": "      \"value\": \"https://launch.actions.githubusercontent.com\""
+    },
+    {
+      "offset": -32,
+      "text": "    },"
+    },
+    {
+      "offset": -31,
+      "text": "    \"system.github.results_endpoint\": {"
+    },
+    {
+      "offset": -30,
+      "text": "      \"value\": \"https://results-receiver.actions.githubusercontent.com/\""
+    },
+    {
+      "offset": -29,
+      "text": "    },"
+    },
+    {
+      "offset": -28,
+      "text": "    \"system.github.results_upload_with_sdk\": {"
+    },
+    {
+      "offset": -27,
+      "text": "      \"value\": \"true\""
+    },
+    {
+      "offset": -26,
+      "text": "    },"
+    },
+    {
+      "offset": -25,
+      "text": "    \"system.github.token\": {"
+    },
+    {
+      "offset": -24,
+      "text": "      \"value\": \"***\","
+    },
+    {
+      "offset": -23,
+      "text": "      \"isSecret\": true"
+    },
+    {
+      "offset": -22,
+      "text": "    },"
+    },
+    {
+      "offset": -21,
+      "text": "    \"system.github.token.permissions\": {"
+    },
+    {
+      "offset": -20,
+      "text": "      \"value\": \"{\\\"Contents\\\":\\\"write\\\",\\\"Metadata\\\":\\\"read\\\"}\""
+    },
+    {
+      "offset": -19,
+      "text": "    },"
+    },
+    {
+      "offset": -18,
+      "text": "    \"system.orchestrationId\": {"
+    },
+    {
+      "offset": -17,
+      "text": "      \"value\": \"<plan-id>.inspect.__default\""
+    },
+    {
+      "offset": -16,
+      "text": "    },"
+    },
+    {
+      "offset": -15,
+      "text": "    \"system.phaseDisplayName\": {"
+    },
+    {
+      "offset": -14,
+      "text": "      \"value\": \"inspect\""
+    },
+    {
+      "offset": -13,
+      "text": "    },"
+    },
+    {
+      "offset": -12,
+      "text": "    \"system.runner.lowdiskspacethreshold\": {"
+    },
+    {
+      "offset": -11,
+      "text": "      \"value\": \"100\""
+    },
+    {
+      "offset": -10,
+      "text": "    },"
+    },
+    {
+      "offset": -9,
+      "text": "    \"system.runnerEnvironment\": {"
+    },
+    {
+      "offset": -8,
+      "text": "      \"value\": \"github-hosted\""
+    },
+    {
+      "offset": -7,
+      "text": "    },"
+    },
+    {
+      "offset": -6,
+      "text": "    \"system.runnerGroupName\": {"
+    },
+    {
+      "offset": -5,
+      "text": "      \"value\": \"GitHub Actions\""
+    },
+    {
+      "offset": -4,
+      "text": "    }"
+    },
+    {
+      "offset": -3,
+      "text": "  },"
+    },
+    {
+      "offset": -2,
+      "text": "  \"messageType\": \"RunnerJobRequest\","
+    },
+    {
+      "offset": -1,
+      "text": "  \"plan\": {"
+    },
+    {
+      "offset": 0,
+      "text": "    \"scopeIdentifier\": \"<guid-1>\","
+    },
+    {
+      "offset": 1,
+      "text": "    \"planType\": \"actions\","
+    },
+    {
+      "offset": 2,
+      "text": "    \"version\": 0,"
+    },
+    {
+      "offset": 3,
+      "text": "    \"planId\": \"<plan-id>\","
+    },
+    {
+      "offset": 4,
+      "text": "    \"planGroup\": null,"
+    },
+    {
+      "offset": 5,
+      "text": "    \"artifactUri\": null,"
+    },
+    {
+      "offset": 6,
+      "text": "    \"artifactLocation\": null,"
+    },
+    {
+      "offset": 7,
+      "text": "    \"definition\": null,"
+    },
+    {
+      "offset": 8,
+      "text": "    \"owner\": null"
+    },
+    {
+      "offset": 9,
+      "text": "  },"
+    },
+    {
+      "offset": 10,
+      "text": "  \"timeline\": {"
+    },
+    {
+      "offset": 11,
+      "text": "    \"id\": \"<plan-id>\","
+    },
+    {
+      "offset": 12,
+      "text": "    \"changeId\": 0,"
+    },
+    {
+      "offset": 13,
+      "text": "    \"location\": null"
+    },
+    {
+      "offset": 14,
+      "text": "  },"
+    },
+    {
+      "offset": 15,
+      "text": "  \"jobId\": \"<job-id>\","
+    },
+    {
+      "offset": 16,
+      "text": "  \"jobDisplayName\": \"inspect\","
+    },
+    {
+      "offset": 17,
+      "text": "  \"jobName\": \"__default\","
+    },
+    {
+      "offset": 18,
+      "text": "  \"requestId\": 0,"
+    },
+    {
+      "offset": 19,
+      "text": "  \"lockedUntil\": \"0001-01-01T00:00:00\","
+    },
+    {
+      "offset": 20,
+      "text": "  \"resources\": {"
+    },
+    {
+      "offset": 21,
+      "text": "    \"endpoints\": ["
+    },
+    {
+      "offset": 22,
+      "text": "      {"
+    },
+    {
+      "offset": 23,
+      "text": "        \"data\": {"
+    },
+    {
+      "offset": 24,
+      "text": "          \"ServerId\": \"\","
+    },
+    {
+      "offset": 25,
+      "text": "          \"ServerName\": \"\","
+    },
+    {
+      "offset": 26,
+      "text": "          \"CacheServerUrl\": \"https://artifactcache.actions.githubusercontent.com/WwzKiM5c1sg5LS1IpmkAXcPE60yEllUdIXwe3oqj5STVnE8z7R/\","
+    },
+    {
+      "offset": 27,
+      "text": "          \"FeedStreamUrl\": \"wss://results-receiver.actions.githubusercontent.com/_ws/ingest.sock\","
+    },
+    {
+      "offset": 28,
+      "text": "          \"ResultsServiceUrl\": \"https://results-receiver.actions.githubusercontent.com/\","
+    },
+    {
+      "offset": 29,
+      "text": "          \"PipelinesServiceUrl\": \"https://pipelinesghubeus5.actions.githubusercontent.com/WwzKiM5c1sg5LS1IpmkAXcPE60yEllUdIXwe3oqj5STVnE8z7R/\","
+    },
+    {
+      "offset": 30,
+      "text": "          \"GenerateIdTokenUrl\": \"\","
+    },
+    {
+      "offset": 31,
+      "text": "          \"ConnectivityChecks\": \"\","
+    },
+    {
+      "offset": 32,
+      "text": "          \"ConnectivityAndDNSChecks\": \"[\\\"https://github.com/_dns\\\",\\\"https://api.github.com/_dns\\\",\\\"https://codeload.github.com/_dns\\\",\\\"https://pkg.github.com/_dns\\\",\\\"https://copilot-proxy.githubusercontent.com/_dns\\\",\\\"http://ssh.github.com/_dns\\\"]\""
+    },
+    {
+      "offset": 33,
+      "text": "        },"
+    },
+    {
+      "offset": 34,
+      "text": "        \"name\": \"SystemVssConnection\","
+    },
+    {
+      "offset": 35,
+      "text": "        \"url\": \"https://run-actions-2-azure-eastus.actions.githubusercontent.com/121/\","
+    },
+    {
+      "offset": 36,
+      "text": "        \"authorization\": {"
+    },
+    {
+      "offset": 37,
+      "text": "          \"parameters\": {"
+    },
+    {
+      "offset": 38,
+      "text": "            \"AccessToken\": \"***\""
+    },
+    {
+      "offset": 39,
+      "text": "          },"
+    },
+    {
+      "offset": 40,
+      "text": "          \"scheme\": \"OAuth\""
+    },
+    {
+      "offset": 41,
+      "text": "        },"
+    },
+    {
+      "offset": 42,
+      "text": "        \"isShared\": false,"
+    },
+    {
+      "offset": 43,
+      "text": "        \"isReady\": true"
+    },
+    {
+      "offset": 44,
+      "text": "      }"
+    },
+    {
+      "offset": 45,
+      "text": "    ]"
+    },
+    {
+      "offset": 46,
+      "text": "  },"
+    },
+    {
+      "offset": 47,
+      "text": "  \"contextData\": {"
+    },
+    {
+      "offset": 48,
+      "text": "    \"github\": {"
+    },
+    {
+      "offset": 49,
+      "text": "      \"t\": 2,"
+    },
+    {
+      "offset": 50,
+      "text": "      \"d\": ["
+    },
+    {
+      "offset": 51,
+      "text": "        {"
+    },
+    {
+      "offset": 52,
+      "text": "          \"k\": \"ref\","
+    },
+    {
+      "offset": 53,
+      "text": "          \"v\": \"refs/heads/research-sandbox-artifact-name-normalization\""
+    },
+    {
+      "offset": 54,
+      "text": "        },"
+    },
+    {
+      "offset": 55,
+      "text": "        {"
+    },
+    {
+      "offset": 56,
+      "text": "          \"k\": \"sha\","
+    },
+    {
+      "offset": 57,
+      "text": "          \"v\": \"a737508e178837998f8a2a00cee38d70d5a883ab\""
+    },
+    {
+      "offset": 58,
+      "text": "        },"
+    },
+    {
+      "offset": 59,
+      "text": "        {"
+    },
+    {
+      "offset": 60,
+      "text": "          \"k\": \"repository\","
+    },
+    {
+      "offset": 61,
+      "text": "          \"v\": \"jackson-kuja/Council\""
+    },
+    {
+      "offset": 62,
+      "text": "        },"
+    },
+    {
+      "offset": 63,
+      "text": "        {"
+    },
+    {
+      "offset": 64,
+      "text": "          \"k\": \"repository_owner\","
+    },
+    {
+      "offset": 65,
+      "text": "          \"v\": \"jackson-kuja\""
+    },
+    {
+      "offset": 66,
+      "text": "        },"
+    },
+    {
+      "offset": 67,
+      "text": "        {"
+    },
+    {
+      "offset": 68,
+      "text": "          \"k\": \"repository_owner_id\","
+    },
+    {
+      "offset": 69,
+      "text": "          \"v\": \"24553783\""
+    },
+    {
+      "offset": 70,
+      "text": "        },"
+    },
+    {
+      "offset": 71,
+      "text": "        {"
+    },
+    {
+      "offset": 72,
+      "text": "          \"k\": \"repositoryUrl\","
+    },
+    {
+      "offset": 73,
+      "text": "          \"v\": \"git://github.com/jackson-kuja/Council.git\""
+    },
+    {
+      "offset": 74,
+      "text": "        },"
+    },
+    {
+      "offset": 75,
+      "text": "        {"
+    },
+    {
+      "offset": 76,
+      "text": "          \"k\": \"run_id\","
+    },
+    {
+      "offset": 77,
+      "text": "          \"v\": \"30228885181\""
+    },
+    {
+      "offset": 78,
+      "text": "        },"
+    },
+    {
+      "offset": 79,
+      "text": "        {"
+    },
+    {
+      "offset": 80,
+      "text": "          \"k\": \"run_number\","
+    },
+    {
+      "offset": 81,
+      "text": "          \"v\": \"1\""
+    },
+    {
+      "offset": 82,
+      "text": "        },"
+    },
+    {
+      "offset": 83,
+      "text": "        {"
+    },
+    {
+      "offset": 84,
+      "text": "          \"k\": \"retention_days\","
+    },
+    {
+      "offset": 85,
+      "text": "          \"v\": \"90\""
+    },
+    {
+      "offset": 86,
+      "text": "        },"
+    },
+    {
+      "offset": 87,
+      "text": "        {"
+    },
+    {
+      "offset": 88,
+      "text": "          \"k\": \"run_attempt\","
+    },
+    {
+      "offset": 89,
+      "text": "          \"v\": \"1\""
+    },
+    {
+      "offset": 90,
+      "text": "        },"
+    },
+    {
+      "offset": 91,
+      "text": "        {"
+    },
+    {
+      "offset": 92,
+      "text": "          \"k\": \"artifact_cache_size_limit\","
+    },
+    {
+      "offset": 93,
+      "text": "          \"v\": \"10\""
+    },
+    {
+      "offset": 94,
+      "text": "        },"
+    },
+    {
+      "offset": 95,
+      "text": "        {"
+    },
+    {
+      "offset": 96,
+      "text": "          \"k\": \"repository_visibility\","
+    },
+    {
+      "offset": 97,
+      "text": "          \"v\": \"public\""
+    },
+    {
+      "offset": 98,
+      "text": "        },"
+    },
+    {
+      "offset": 99,
+      "text": "        {"
+    }
+  ]
+}
