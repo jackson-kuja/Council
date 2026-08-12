@@ -1,0 +1,2 @@
+Isolated controlled target for cache repository-ID lookup and write semantics.
+No executable content. No secrets. No production code changes.
