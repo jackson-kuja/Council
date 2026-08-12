@@ -1,0 +1,2 @@
+GHBB-ARTIFACT-NAME-PARENT-CANARY-20260727
+Controlled inert trigger. No executable content. No secrets.
