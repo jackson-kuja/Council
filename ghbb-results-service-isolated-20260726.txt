@@ -1,0 +1,2 @@
+Isolated controlled target for GitHub Actions Results-service authorization testing.
+No executable content. No secrets. No production code changes.
