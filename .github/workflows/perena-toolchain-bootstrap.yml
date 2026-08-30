@@ -1,0 +1,40 @@
+name: Perena Toolchain Bootstrap
+
+on:
+  push:
+    branches:
+      - perena-research-bootstrap-20260830
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Download and verify official Agave 4.2.1 release
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://github.com/anza-xyz/agave/releases/download/v4.2.1/solana-release-x86_64-unknown-linux-gnu.tar.bz2'
+          expected='7f35f92c15861263bc540c001466678d2da228149a107b51d5b65ce497603074'
+          curl --fail --location --retry 5 --retry-all-errors "$url" -o agave-v4.2.1-linux.tar.bz2
+          printf '%s  %s\n' "$expected" agave-v4.2.1-linux.tar.bz2 | sha256sum -c -
+          mkdir extracted
+          tar -xjf agave-v4.2.1-linux.tar.bz2 -C extracted --strip-components=1
+          extracted/bin/solana-test-validator --version
+          extracted/bin/solana --version
+          printf '%s\n' "$expected" > SHA256.txt
+
+      - name: Upload verified release
+        uses: actions/upload-artifact@v4
+        with:
+          name: agave-v4.2.1-linux
+          path: |
+            agave-v4.2.1-linux.tar.bz2
+            SHA256.txt
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
