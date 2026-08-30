@@ -1,0 +1,271 @@
+name: Perena Read-Only Snapshot
+
+on:
+  push:
+    branches:
+      - perena-research-bootstrap-20260830
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AGAVE_SHA256: 7f35f92c15861263bc540c001466678d2da228149a107b51d5b65ce497603074
+  BANKINECO_PROGRAM: save8RQVPMWNTzU18t3GBvBkN9hT7jsGjiCQ28FpD9H
+  MARGINFI_PROGRAM: MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Install checksum-verified Agave 4.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-all-errors \
+            'https://github.com/anza-xyz/agave/releases/download/v4.2.1/solana-release-x86_64-unknown-linux-gnu.tar.bz2' \
+            -o /tmp/agave.tar.bz2
+          printf '%s  %s\n' "$AGAVE_SHA256" /tmp/agave.tar.bz2 | sha256sum -c -
+          mkdir -p /tmp/agave
+          tar -xjf /tmp/agave.tar.bz2 -C /tmp/agave --strip-components=1
+          echo '/tmp/agave/bin' >> "$GITHUB_PATH"
+          /tmp/agave/bin/solana --version
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Select a healthy public read-only RPC
+        shell: bash
+        run: |
+          set -euo pipefail
+          endpoints=(
+            'https://api.mainnet-beta.solana.com'
+            'https://solana-rpc.publicnode.com'
+            'https://rpc.ankr.com/solana'
+          )
+          for rpc in "${endpoints[@]}"; do
+            result="$(curl -sS --max-time 15 -X POST "$rpc" -H 'content-type: application/json' \
+              --data '{"jsonrpc":"2.0","id":1,"method":"getHealth","params":[]}' || true)"
+            if grep -q '"result":"ok"' <<<"$result"; then
+              echo "RPC_URL=$rpc" >> "$GITHUB_ENV"
+              echo "Selected $rpc"
+              exit 0
+            fi
+          done
+          echo 'No healthy public RPC endpoint' >&2
+          exit 1
+
+      - name: Install read-only snapshot dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/perena-snapshot
+          cd /tmp/perena-snapshot
+          npm init -y >/dev/null
+          npm pkg set type=module >/dev/null
+          npm install --no-audit --no-fund \
+            @solana/web3.js@1.98.4 \
+            @coral-xyz/anchor@0.32.1 \
+            bs58@6.0.0
+
+      - name: Dump deployed program binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/perena-snapshot
+          mkdir -p programs cli
+          solana program show "$BANKINECO_PROGRAM" --url "$RPC_URL" --output json > cli/bankineco-program-show.json
+          solana program dump "$BANKINECO_PROGRAM" programs/bankineco.so --url "$RPC_URL"
+          solana program show "$MARGINFI_PROGRAM" --url "$RPC_URL" --output json > cli/marginfi-program-show.json
+          solana program dump "$MARGINFI_PROGRAM" programs/marginfi.so --url "$RPC_URL"
+          sha256sum programs/*.so > programs/SHA256SUMS
+
+      - name: Capture accounts, IDL, signatures, transactions, and replay account sets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/perena-snapshot
+          cat > snapshot.mjs <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import { Connection, PublicKey, Keypair } from '@solana/web3.js';
+          import { AnchorProvider, Program } from '@coral-xyz/anchor';
+
+          const rpc = process.env.RPC_URL;
+          const out = process.cwd();
+          const connection = new Connection(rpc, { commitment: 'confirmed', confirmTransactionInitialTimeout: 60_000 });
+          const PROGRAM = new PublicKey(process.env.BANKINECO_PROGRAM);
+          const addresses = {
+            bankineco_program: process.env.BANKINECO_PROGRAM,
+            marginfi_program: process.env.MARGINFI_PROGRAM,
+            usd_star_bank: 'sM6P4mh53CnG4faN4Fo3seY7wMSAiHdy8o6gKjwQF7A',
+            main_usdc_vault: '3bZ1qY6wfzyDH7QMPiRKLr6k8p1asdtyjvJyJsJBdv23',
+            junior_tranche: 'hXfEYpB5FB3ZWjGNc5C5JqLixmGdmZFyjXKJB2xFPgc',
+            usd_star_mint: 'star9agSpjiFe3M49B3RniVU4CMBBEK3Qnaqn3RGiFM',
+            usdc_mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+            marginfi_group: '4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8',
+            marginfi_account: 'C8JLFVMuSFFFmDX2AEyMmP6zRXtXwJgptHeBUrnj4zLE',
+            marginfi_bank: '2s37akK2eyBbp8DZgCm7RtsaEz8eJP3Nxd4urLHQv7yB',
+            marginfi_liquidity_vault: '7jaiZR5Sk8hdYN9MxTpczTcwbWpb5WEoxSANuUwveuat',
+            marginfi_liquidity_vault_auth: '3uxNepDbmkDNq6JhRja5Z8QwbTrfmkKP8AKZV5chYDGG',
+            marginfi_oracle: 'Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX',
+          };
+
+          const mkdir = p => fs.mkdirSync(path.join(out, p), { recursive: true });
+          for (const d of ['accounts/known','accounts/program','transactions','replay_accounts','metadata']) mkdir(d);
+          fs.writeFileSync('metadata/addresses.json', JSON.stringify(addresses, null, 2));
+          fs.writeFileSync('metadata/rpc.json', JSON.stringify({rpc, capturedAt: new Date().toISOString()}, null, 2));
+
+          function safeJson(value) {
+            return JSON.stringify(value, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2);
+          }
+
+          function encodeAccount(pubkey, info) {
+            if (!info) return null;
+            return {
+              pubkey: pubkey.toBase58(),
+              account: {
+                lamports: info.lamports,
+                data: [Buffer.from(info.data).toString('base64'), 'base64'],
+                owner: info.owner.toBase58(),
+                executable: info.executable,
+                rentEpoch: info.rentEpoch,
+                space: info.data.length,
+              },
+            };
+          }
+
+          async function retry(label, fn, attempts=6) {
+            let last;
+            for (let i=0; i<attempts; i++) {
+              try { return await fn(); }
+              catch (e) { last=e; console.error(label, 'attempt', i+1, String(e)); await new Promise(r=>setTimeout(r, 1000*(i+1))); }
+            }
+            throw last;
+          }
+
+          for (const [name, value] of Object.entries(addresses)) {
+            const pk = new PublicKey(value);
+            const info = await retry(`account ${name}`, () => connection.getAccountInfo(pk, 'confirmed'));
+            fs.writeFileSync(`accounts/known/${name}.json`, safeJson(encodeAccount(pk, info)));
+          }
+
+          try {
+            const programAccounts = await retry('getProgramAccounts', () => connection.getProgramAccounts(PROGRAM, { commitment: 'confirmed' }), 3);
+            const index = [];
+            for (const row of programAccounts) {
+              const encoded = encodeAccount(row.pubkey, row.account);
+              fs.writeFileSync(`accounts/program/${row.pubkey.toBase58()}.json`, safeJson(encoded));
+              index.push({pubkey: row.pubkey.toBase58(), size: row.account.data.length, lamports: row.account.lamports});
+            }
+            fs.writeFileSync('accounts/program/index.json', safeJson(index));
+          } catch (e) {
+            fs.writeFileSync('accounts/program/ERROR.txt', String(e));
+          }
+
+          try {
+            const wallet = {
+              publicKey: Keypair.generate().publicKey,
+              signTransaction: async () => { throw new Error('read-only wallet'); },
+              signAllTransactions: async () => { throw new Error('read-only wallet'); },
+            };
+            const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' });
+            const idl = await Program.fetchIdl(PROGRAM, provider);
+            fs.writeFileSync('metadata/bankineco-idl.json', safeJson(idl));
+          } catch (e) {
+            fs.writeFileSync('metadata/bankineco-idl-error.txt', String(e));
+          }
+
+          const targets = [PROGRAM, ...Object.entries(addresses)
+            .filter(([name]) => !name.endsWith('_program'))
+            .map(([,v]) => new PublicKey(v))];
+          const sigMap = new Map();
+          for (const target of targets) {
+            let before;
+            for (let page=0; page<3; page++) {
+              const opts = { limit: 1000 };
+              if (before) opts.before = before;
+              let rows;
+              try { rows = await retry(`signatures ${target}`, () => connection.getSignaturesForAddress(target, opts, 'confirmed'), 4); }
+              catch (e) { fs.appendFileSync('metadata/signature-errors.txt', `${target}: ${e}\n`); break; }
+              for (const row of rows) sigMap.set(row.signature, row);
+              if (rows.length < 1000) break;
+              before = rows.at(-1).signature;
+              await new Promise(r=>setTimeout(r, 300));
+            }
+          }
+          const signatures = [...sigMap.values()].sort((a,b)=>(b.slot??0)-(a.slot??0));
+          fs.writeFileSync('metadata/signatures.json', safeJson(signatures));
+
+          const successful = signatures.filter(s => s.err == null).slice(0, 600);
+          const selected = [];
+          for (let i=0; i<successful.length; i+=20) {
+            const chunk = successful.slice(i, i+20);
+            let txs;
+            try {
+              txs = await retry(`transactions ${i}`, () => connection.getTransactions(chunk.map(x=>x.signature), {
+                commitment: 'confirmed', maxSupportedTransactionVersion: 0,
+              }), 5);
+            } catch (e) {
+              fs.appendFileSync('metadata/transaction-errors.txt', `${i}: ${e}\n`);
+              continue;
+            }
+            for (let j=0; j<txs.length; j++) {
+              const tx = txs[j];
+              if (!tx || tx.meta?.err) continue;
+              const staticKeys = tx.transaction.message.staticAccountKeys?.map(k=>k.toBase58()) ?? [];
+              const loadedW = tx.meta?.loadedAddresses?.writable?.map(k=>k.toBase58()) ?? [];
+              const loadedR = tx.meta?.loadedAddresses?.readonly?.map(k=>k.toBase58()) ?? [];
+              const allKeys = [...staticKeys, ...loadedW, ...loadedR];
+              if (!allKeys.includes(PROGRAM.toBase58())) continue;
+              const signature = chunk[j].signature;
+              fs.writeFileSync(`transactions/${signature}.json`, safeJson(tx));
+              selected.push({signature, slot: tx.slot, blockTime: tx.blockTime, keys: allKeys});
+            }
+            await new Promise(r=>setTimeout(r, 350));
+          }
+          fs.writeFileSync('transactions/index.json', safeJson(selected));
+
+          const replayKeys = new Set();
+          for (const row of selected.slice(0,120)) for (const key of row.keys) replayKeys.add(key);
+          const replayList = [...replayKeys];
+          const replayIndex = [];
+          for (let i=0; i<replayList.length; i+=100) {
+            const chunk = replayList.slice(i,i+100).map(x=>new PublicKey(x));
+            const infos = await retry(`replay accounts ${i}`, () => connection.getMultipleAccountsInfo(chunk, 'confirmed'), 5);
+            for (let j=0; j<chunk.length; j++) {
+              const encoded = encodeAccount(chunk[j], infos[j]);
+              if (!encoded) continue;
+              fs.writeFileSync(`replay_accounts/${chunk[j].toBase58()}.json`, safeJson(encoded));
+              replayIndex.push({pubkey: chunk[j].toBase58(), owner: encoded.account.owner, executable: encoded.account.executable, size: encoded.account.space});
+            }
+            await new Promise(r=>setTimeout(r, 250));
+          }
+          fs.writeFileSync('replay_accounts/index.json', safeJson(replayIndex));
+
+          for (const key of ['usd_star_mint','usdc_mint']) {
+            const pk = new PublicKey(addresses[key]);
+            try {
+              const supply = await retry(`supply ${key}`, () => connection.getTokenSupply(pk, 'confirmed'));
+              const largest = await retry(`largest ${key}`, () => connection.getTokenLargestAccounts(pk, 'confirmed'));
+              fs.writeFileSync(`metadata/${key}-token.json`, safeJson({supply, largest}));
+            } catch (e) {
+              fs.writeFileSync(`metadata/${key}-token-error.txt`, String(e));
+            }
+          }
+
+          console.log(safeJson({programAccounts: fs.existsSync('accounts/program/index.json'), signatures: signatures.length, transactions: selected.length, replayAccounts: replayIndex.length}));
+          NODE
+          node snapshot.mjs | tee metadata/summary.json
+          sha256sum programs/*.so metadata/bankineco-idl.json 2>/dev/null > metadata/SHA256SUMS || true
+
+      - name: Upload read-only deployment snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: perena-readonly-snapshot
+          path: /tmp/perena-snapshot
+          compression-level: 6
+          retention-days: 1
+          if-no-files-found: error
