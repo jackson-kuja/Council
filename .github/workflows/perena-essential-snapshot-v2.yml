@@ -1,0 +1,181 @@
+name: Perena Essential Read-Only Snapshot v2
+
+on:
+  push:
+    branches:
+      - perena-essential-snapshot-v2-20260830
+
+permissions:
+  contents: read
+
+env:
+  AGAVE_SHA256: 7f35f92c15861263bc540c001466678d2da228149a107b51d5b65ce497603074
+  BANKINECO_PROGRAM: save8RQVPMWNTzU18t3GBvBkN9hT7jsGjiCQ28FpD9H
+  MARGINFI_PROGRAM: MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Install checksum-verified Agave and Node
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-all-errors \
+            'https://github.com/anza-xyz/agave/releases/download/v4.2.1/solana-release-x86_64-unknown-linux-gnu.tar.bz2' \
+            -o /tmp/agave.tar.bz2
+          printf '%s  %s\n' "$AGAVE_SHA256" /tmp/agave.tar.bz2 | sha256sum -c -
+          mkdir -p /tmp/agave /tmp/perena-essential /tmp/perena-tools
+          tar -xjf /tmp/agave.tar.bz2 -C /tmp/agave --strip-components=1
+          echo '/tmp/agave/bin' >> "$GITHUB_PATH"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Select healthy public read-only RPC
+        shell: bash
+        run: |
+          set -euo pipefail
+          endpoints=(
+            'https://api.mainnet-beta.solana.com'
+            'https://solana-rpc.publicnode.com'
+            'https://rpc.ankr.com/solana'
+          )
+          for rpc in "${endpoints[@]}"; do
+            response="$(curl -sS --max-time 12 -X POST "$rpc" -H 'content-type: application/json' \
+              --data '{"jsonrpc":"2.0","id":1,"method":"getHealth","params":[]}' || true)"
+            if grep -q '"result":"ok"' <<<"$response"; then
+              echo "RPC_URL=$rpc" >> "$GITHUB_ENV"
+              echo "Selected $rpc"
+              exit 0
+            fi
+          done
+          exit 1
+
+      - name: Install client and create unfunded read-only CLI identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/perena-tools
+          npm init -y >/dev/null
+          npm pkg set type=module >/dev/null
+          npm install --no-audit --no-fund @solana/web3.js@1.98.4 @coral-xyz/anchor@0.32.1
+          solana-keygen new --no-bip39-passphrase --silent --force -o /tmp/read-only-id.json
+          solana config set --keypair /tmp/read-only-id.json --url "$RPC_URL" >/dev/null
+
+      - name: Dump deployed programs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/perena-essential
+          mkdir -p programs cli
+          solana program show "$BANKINECO_PROGRAM" --url "$RPC_URL" --output json > cli/bankineco-program-show.json
+          solana program dump "$BANKINECO_PROGRAM" programs/bankineco.so --url "$RPC_URL"
+          solana program show "$MARGINFI_PROGRAM" --url "$RPC_URL" --output json > cli/marginfi-program-show.json
+          solana program dump "$MARGINFI_PROGRAM" programs/marginfi.so --url "$RPC_URL"
+          sha256sum programs/*.so > programs/SHA256SUMS
+
+      - name: Capture IDL, core accounts, recent transactions, and replay accounts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/perena-tools
+          cat > snapshot.mjs <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import {Connection, PublicKey, Keypair} from '@solana/web3.js';
+          import {AnchorProvider, Program} from '@coral-xyz/anchor';
+
+          const OUT='/tmp/perena-essential';
+          const connection=new Connection(process.env.RPC_URL,{commitment:'confirmed'});
+          const programId=new PublicKey(process.env.BANKINECO_PROGRAM);
+          const addresses={
+            bankineco_program:process.env.BANKINECO_PROGRAM,
+            marginfi_program:process.env.MARGINFI_PROGRAM,
+            usd_star_bank:'sM6P4mh53CnG4faN4Fo3seY7wMSAiHdy8o6gKjwQF7A',
+            main_usdc_vault:'3bZ1qY6wfzyDH7QMPiRKLr6k8p1asdtyjvJyJsJBdv23',
+            junior_tranche:'hXfEYpB5FB3ZWjGNc5C5JqLixmGdmZFyjXKJB2xFPgc',
+            usd_star_mint:'star9agSpjiFe3M49B3RniVU4CMBBEK3Qnaqn3RGiFM',
+            usdc_mint:'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+            marginfi_group:'4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8',
+            marginfi_account:'C8JLFVMuSFFFmDX2AEyMmP6zRXtXwJgptHeBUrnj4zLE',
+            marginfi_bank:'2s37akK2eyBbp8DZgCm7RtsaEz8eJP3Nxd4urLHQv7yB',
+            marginfi_liquidity_vault:'7jaiZR5Sk8hdYN9MxTpczTcwbWpb5WEoxSANuUwveuat',
+            marginfi_liquidity_vault_auth:'3uxNepDbmkDNq6JhRja5Z8QwbTrfmkKP8AKZV5chYDGG',
+            marginfi_oracle:'Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX'
+          };
+          const safe=v=>JSON.stringify(v,(_,x)=>typeof x==='bigint'?x.toString():x,2);
+          const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+          const mkdir=r=>fs.mkdirSync(path.join(OUT,r),{recursive:true});
+          const write=(r,v)=>fs.writeFileSync(path.join(OUT,r),typeof v==='string'?v:safe(v));
+          const append=(r,v)=>fs.appendFileSync(path.join(OUT,r),`${v}\n`);
+          for(const r of ['accounts/core','accounts/replay','transactions','metadata'])mkdir(r);
+          write('metadata/addresses.json',addresses);
+          write('metadata/capture.json',{rpc:process.env.RPC_URL,capturedAt:new Date().toISOString()});
+          async function retry(label,fn,n=5){let last;for(let i=0;i<n;i++){try{return await fn();}catch(e){last=e;append('metadata/errors.log',`${label} attempt ${i+1}: ${e}`);await sleep(700*(i+1));}}throw last;}
+          function encode(pk,info){if(!info)return null;return{pubkey:pk.toBase58(),account:{lamports:info.lamports,data:[Buffer.from(info.data).toString('base64'),'base64'],owner:info.owner.toBase58(),executable:info.executable,rentEpoch:info.rentEpoch,space:info.data.length}};}
+          for(const [name,value] of Object.entries(addresses)){
+            try{const pk=new PublicKey(value);write(`accounts/core/${name}.json`,encode(pk,await retry(name,()=>connection.getAccountInfo(pk,'confirmed'))));}
+            catch(e){write(`accounts/core/${name}.error.txt`,String(e));}
+          }
+          try{
+            const wallet={publicKey:Keypair.generate().publicKey,signTransaction:async()=>{throw new Error('read only')},signAllTransactions:async()=>{throw new Error('read only')}};
+            const provider=new AnchorProvider(connection,wallet,{commitment:'confirmed'});
+            write('metadata/bankineco-idl.json',await retry('idl',()=>Program.fetchIdl(programId,provider),4));
+          }catch(e){write('metadata/bankineco-idl-error.txt',String(e));}
+          const signatures=await retry('signatures',()=>connection.getSignaturesForAddress(programId,{limit:150},'confirmed'));
+          write('metadata/program-signatures.json',signatures);
+          const candidates=signatures.filter(x=>x.err===null).slice(0,60);
+          const txIndex=[];const replayKeys=new Set(Object.values(addresses));
+          for(let i=0;i<candidates.length;i++){
+            const sig=candidates[i].signature;
+            let tx=null;
+            try{tx=await retry(`tx ${sig}`,()=>connection.getTransaction(sig,{commitment:'confirmed',maxSupportedTransactionVersion:0}),3);}catch(e){continue;}
+            if(!tx||tx.meta?.err)continue;
+            const staticKeys=tx.transaction.message.staticAccountKeys?.map(k=>k.toBase58())??[];
+            const writable=tx.meta?.loadedAddresses?.writable?.map(k=>k.toBase58())??[];
+            const readonly=tx.meta?.loadedAddresses?.readonly?.map(k=>k.toBase58())??[];
+            const keys=[...staticKeys,...writable,...readonly];
+            if(!keys.includes(programId.toBase58()))continue;
+            write(`transactions/${sig}.json`,tx);
+            txIndex.push({signature:sig,slot:tx.slot,blockTime:tx.blockTime,keys});
+            for(const key of keys)replayKeys.add(key);
+            await sleep(120);
+          }
+          write('transactions/index.json',txIndex);
+          const allKeys=[...replayKeys];const replayIndex=[];
+          for(let i=0;i<allKeys.length;i+=50){
+            const pks=allKeys.slice(i,i+50).map(x=>new PublicKey(x));
+            let infos=[];
+            try{infos=await retry(`accounts ${i}`,()=>connection.getMultipleAccountsInfo(pks,'confirmed'),4);}catch(e){continue;}
+            for(let j=0;j<pks.length;j++){
+              const row=encode(pks[j],infos[j]);if(!row)continue;
+              write(`accounts/replay/${pks[j].toBase58()}.json`,row);
+              replayIndex.push({pubkey:pks[j].toBase58(),owner:row.account.owner,executable:row.account.executable,size:row.account.space});
+            }
+            await sleep(150);
+          }
+          write('accounts/replay/index.json',replayIndex);
+          for(const [name,value] of Object.entries({usd_star_mint:addresses.usd_star_mint,usdc_mint:addresses.usdc_mint})){
+            try{write(`metadata/${name}-supply.json`,await retry(name,()=>connection.getTokenSupply(new PublicKey(value),'confirmed'),3));}
+            catch(e){write(`metadata/${name}-supply-error.txt`,String(e));}
+          }
+          console.log(safe({signatures:signatures.length,successfulTransactions:txIndex.length,replayAccounts:replayIndex.length}));
+          NODE
+          node snapshot.mjs | tee /tmp/perena-essential/summary.json
+          sha256sum /tmp/perena-essential/programs/*.so /tmp/perena-essential/metadata/bankineco-idl.json 2>/dev/null > /tmp/perena-essential/SHA256SUMS || true
+
+      - name: Upload essential snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: perena-essential-snapshot-v2
+          path: /tmp/perena-essential
+          compression-level: 6
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Remove unfunded identity
+        if: always()
+        run: rm -f /tmp/read-only-id.json
