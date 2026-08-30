@@ -1,0 +1,52 @@
+name: Perena Offline Client Bundle
+
+on:
+  push:
+    branches:
+      - perena-research-bootstrap-20260830
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pinned replay dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/perena-client
+          cd /tmp/perena-client
+          npm init -y >/dev/null
+          npm pkg set type=module >/dev/null
+          npm install --no-audit --no-fund --save-exact \
+            @solana/web3.js@1.98.4 \
+            @coral-xyz/anchor@0.32.1 \
+            @solana/spl-token@0.4.14 \
+            bs58@6.0.0 \
+            bn.js@5.2.2
+          node --input-type=module - <<'NODE'
+          import { Keypair, PublicKey } from '@solana/web3.js';
+          import { Program } from '@coral-xyz/anchor';
+          import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+          import bs58 from 'bs58';
+          console.log(Keypair.generate().publicKey.toBase58().length, PublicKey.default.toBase58(), typeof Program, TOKEN_PROGRAM_ID.toBase58(), typeof bs58.encode);
+          NODE
+          npm ls --all --json > dependency-tree.json
+          find . -type f -print0 | sort -z | xargs -0 sha256sum > FILE_SHA256SUMS
+
+      - name: Upload offline replay client
+        uses: actions/upload-artifact@v4
+        with:
+          name: perena-offline-client
+          path: /tmp/perena-client
+          compression-level: 6
+          retention-days: 1
+          if-no-files-found: error
