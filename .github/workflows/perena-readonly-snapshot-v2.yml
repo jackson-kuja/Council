@@ -1,0 +1,120 @@
+name: Perena Read-Only Snapshot v2
+
+on:
+  push:
+    branches:
+      - perena-research-bootstrap-20260830
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AGAVE_SHA256: 7f35f92c15861263bc540c001466678d2da228149a107b51d5b65ce497603074
+  BANKINECO_PROGRAM: save8RQVPMWNTzU18t3GBvBkN9hT7jsGjiCQ28FpD9H
+  MARGINFI_PROGRAM: MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install checksum-verified Agave 4.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-all-errors \
+            'https://github.com/anza-xyz/agave/releases/download/v4.2.1/solana-release-x86_64-unknown-linux-gnu.tar.bz2' \
+            -o /tmp/agave.tar.bz2
+          printf '%s  %s\n' "$AGAVE_SHA256" /tmp/agave.tar.bz2 | sha256sum -c -
+          mkdir -p /tmp/agave
+          tar -xjf /tmp/agave.tar.bz2 -C /tmp/agave --strip-components=1
+          echo '/tmp/agave/bin' >> "$GITHUB_PATH"
+          /tmp/agave/bin/solana --version
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Select a healthy public read-only RPC
+        shell: bash
+        run: |
+          set -euo pipefail
+          endpoints=(
+            'https://api.mainnet-beta.solana.com'
+            'https://solana-rpc.publicnode.com'
+            'https://rpc.ankr.com/solana'
+          )
+          for rpc in "${endpoints[@]}"; do
+            result="$(curl -sS --max-time 15 -X POST "$rpc" -H 'content-type: application/json' \
+              --data '{"jsonrpc":"2.0","id":1,"method":"getHealth","params":[]}' || true)"
+            if grep -q '"result":"ok"' <<<"$result"; then
+              echo "RPC_URL=$rpc" >> "$GITHUB_ENV"
+              echo "Selected $rpc"
+              exit 0
+            fi
+          done
+          echo 'No healthy public RPC endpoint' >&2
+          exit 1
+
+      - name: Create an unfunded CLI identity for read-only commands
+        shell: bash
+        run: |
+          set -euo pipefail
+          solana-keygen new --no-bip39-passphrase --silent --force -o /tmp/perena-readonly-id.json
+          solana config set --keypair /tmp/perena-readonly-id.json --url "$RPC_URL"
+          solana address
+
+      - name: Install snapshot dependencies outside the artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/perena-tools /tmp/perena-snapshot
+          cp scripts/perena-readonly-snapshot.mjs /tmp/perena-tools/snapshot.mjs
+          cd /tmp/perena-tools
+          npm init -y >/dev/null
+          npm pkg set type=module >/dev/null
+          npm install --no-audit --no-fund \
+            @solana/web3.js@1.98.4 \
+            @coral-xyz/anchor@0.32.1 \
+            bs58@6.0.0
+
+      - name: Dump deployed program binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/perena-snapshot
+          mkdir -p programs cli
+          solana program show "$BANKINECO_PROGRAM" --url "$RPC_URL" --output json > cli/bankineco-program-show.json
+          solana program dump "$BANKINECO_PROGRAM" programs/bankineco.so --url "$RPC_URL"
+          solana program show "$MARGINFI_PROGRAM" --url "$RPC_URL" --output json > cli/marginfi-program-show.json
+          solana program dump "$MARGINFI_PROGRAM" programs/marginfi.so --url "$RPC_URL"
+          sha256sum programs/*.so > programs/SHA256SUMS
+
+      - name: Capture accounts, IDL, signatures, transactions, and replay account sets
+        shell: bash
+        env:
+          SNAPSHOT_DIR: /tmp/perena-snapshot
+        run: |
+          set -euo pipefail
+          cd /tmp/perena-tools
+          node snapshot.mjs | tee /tmp/perena-snapshot/metadata-summary.json
+          sha256sum /tmp/perena-snapshot/programs/*.so \
+            /tmp/perena-snapshot/metadata/bankineco-idl.json 2>/dev/null \
+            > /tmp/perena-snapshot/SHA256SUMS || true
+
+      - name: Upload read-only deployment snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: perena-readonly-snapshot-v2
+          path: /tmp/perena-snapshot
+          compression-level: 6
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Remove unfunded temporary identity
+        if: always()
+        shell: bash
+        run: rm -f /tmp/perena-readonly-id.json
